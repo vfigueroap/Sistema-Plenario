@@ -1,0 +1,939 @@
+<title>Administración del Pleno</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap">
+<style>
+  :root{
+    --bg:#FFFFFF;--panel:#FFFFFF;--tint:#F7F9FC;--line:#E6ECF5;--line2:#F0F4FA;
+    --c-blue:#0B5FFF;--c-orange:#FF7A00;--c-green:#00B368;--c-violet:#7C3AFF;
+    --c-red:#FF2D55;--c-cyan:#00B4D8;--c-lime:#3DBE00;--c-pink:#E5006D;
+    --c-amber:#FFB300;--c-teal:#00A99D;
+    --t-blue:#EAF1FF;--t-orange:#FFF3E6;--t-green:#E5F8F0;--t-violet:#F2ECFF;
+    --t-red:#FFEBF0;--t-cyan:#E2F7FC;--t-lime:#EFFAE8;--t-pink:#FFE9F3;--t-amber:#FFF6E0;
+    --ink:#0A1628;--ink2:#4B5C75;--ink3:#8494AC;
+    --sh:0 1px 2px rgba(10,22,40,.05);--sh-lg:0 10px 30px rgba(10,22,40,.09);
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --bg:#060A12;--panel:#0C1220;--tint:#101A2C;--line:#1A2740;--line2:#141F33;
+    --c-blue:#4D8AFF;--c-orange:#FF9D3D;--c-green:#22D68B;--c-violet:#A47BFF;
+    --c-red:#FF5C7C;--c-cyan:#38D0F0;--c-lime:#72E03A;--c-pink:#FF4D96;
+    --c-amber:#FFC53D;--c-teal:#2ECEC1;
+    --t-blue:#0A1730;--t-orange:#1F1206;--t-green:#042014;--t-violet:#150C2B;
+    --t-red:#20080F;--t-cyan:#041A22;--t-lime:#0E1C06;--t-pink:#210617;--t-amber:#1C1405;
+    --ink:#E8EFFA;--ink2:#9FB1CA;--ink3:#5F7391;
+    --sh:0 1px 2px rgba(0,0,0,.5);--sh-lg:0 10px 30px rgba(0,0,0,.6);
+  }}
+  :root[data-theme="dark"]{
+    --bg:#060A12;--panel:#0C1220;--tint:#101A2C;--line:#1A2740;--line2:#141F33;
+    --c-blue:#4D8AFF;--c-orange:#FF9D3D;--c-green:#22D68B;--c-violet:#A47BFF;
+    --c-red:#FF5C7C;--c-cyan:#38D0F0;--c-lime:#72E03A;--c-pink:#FF4D96;
+    --c-amber:#FFC53D;--c-teal:#2ECEC1;
+    --t-blue:#0A1730;--t-orange:#1F1206;--t-green:#042014;--t-violet:#150C2B;
+    --t-red:#20080F;--t-cyan:#041A22;--t-lime:#0E1C06;--t-pink:#210617;--t-amber:#1C1405;
+    --ink:#E8EFFA;--ink2:#9FB1CA;--ink3:#5F7391;
+    --sh:0 1px 2px rgba(0,0,0,.5);--sh-lg:0 10px 30px rgba(0,0,0,.6);
+  }
+
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  h1,h2,h3,h4{font-family:'Libre Baskerville',Georgia,serif;text-wrap:balance;color:var(--ink)}
+  button{font-family:inherit}
+  .wrap{max-width:940px;margin:0 auto;padding:0 20px}
+  .sample{background:var(--t-amber);border-bottom:1px solid var(--c-amber);color:var(--ink2);font-size:12px;font-weight:500;text-align:center;padding:6px 16px}
+
+  /* Header */
+  .hdr{position:sticky;top:0;z-index:100;background:var(--panel);border-bottom:1px solid var(--line)}
+  .hdr-in{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 20px;max-width:940px;margin:0 auto}
+  .brand{display:flex;align-items:center;gap:11px;min-width:0;cursor:pointer;background:none;border:0;padding:0}
+  .crest{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+   background:conic-gradient(from 140deg,var(--c-blue),var(--c-violet),var(--c-pink),var(--c-orange),var(--c-green),var(--c-blue))}
+  .crest svg{width:16px;height:16px;fill:#fff}
+  .brand-t{font-size:14.5px;font-weight:700;letter-spacing:-.015em;line-height:1.2;text-align:left;color:var(--ink)}
+  .brand-s{font-size:11px;color:var(--ink3);line-height:1.2;text-align:left}
+  .hdr-r{display:flex;align-items:center;gap:8px;flex-shrink:0}
+  .hlink{background:none;border:1px solid var(--line);color:var(--ink2);border-radius:8px;padding:7px 13px;font-size:12.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+  .hlink svg{width:14px;height:14px}
+  .hlink:hover{border-color:var(--c-teal);color:var(--c-teal)}
+  .hlink.on{border-color:var(--c-teal);color:var(--c-teal);background:var(--t-green)}
+  .who{display:flex;align-items:center;gap:9px;padding-left:9px;border-left:1px solid var(--line)}
+  .who-t{text-align:right;line-height:1.25}
+  .who-t b{display:block;font-size:12.5px;font-weight:650}
+  .who-t span{font-size:10px;color:var(--c-pink);font-weight:700;letter-spacing:.05em}
+  .avatar{width:32px;height:32px;border-radius:50%;background:var(--t-pink);color:var(--c-pink);display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700}
+  .btn-out{background:none;border:1px solid var(--line);color:var(--ink3);border-radius:8px;padding:7px 9px;cursor:pointer;display:flex}
+  .btn-out svg{width:14px;height:14px}
+  .btn-out:hover{border-color:var(--c-red);color:var(--c-red)}
+
+  main{padding:26px 0 70px}
+
+  /* Encabezado de vista */
+  .vh{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:20px;flex-wrap:wrap}
+  .vh h1{font-size:24px;line-height:1.2}
+  .vh p{font-size:12.5px;color:var(--ink3);margin-top:3px}
+
+  /* Listado de sesiones */
+  .slist{display:flex;flex-direction:column;gap:11px}
+  .srow{display:flex;align-items:center;gap:16px;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--sc);border-radius:13px;padding:16px 18px;cursor:pointer;transition:all .16s;text-align:left;width:100%;font-family:inherit}
+  .srow:hover{border-color:var(--sc);box-shadow:var(--sh-lg);transform:translateY(-1px)}
+  .srow-b{flex:1;min-width:0}
+  .srow-top{display:flex;align-items:center;gap:9px;margin-bottom:6px;flex-wrap:wrap}
+  .srow h3{font-size:16px;line-height:1.25;font-family:'Libre Baskerville',serif}
+  .state{border-radius:100px;padding:2.5px 11px;font-size:10px;font-weight:700;letter-spacing:.06em;color:#fff;display:inline-flex;align-items:center;gap:6px;flex-shrink:0}
+  .pip{width:6px;height:6px;border-radius:50%;background:#fff;animation:pulse 1.5s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  @media(prefers-reduced-motion:reduce){.pip{animation:none}}
+  .srow-m{display:flex;flex-wrap:wrap;gap:5px}
+  .srow-m span{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;border-radius:6px;padding:2.5px 8px}
+  .srow-m svg{width:11px;height:11px;flex-shrink:0}
+  .srow-go{flex-shrink:0;color:var(--sc);display:flex;align-items:center;gap:7px;font-size:13px;font-weight:650}
+  .srow-go svg{width:16px;height:16px}
+
+  .newbtn{background:var(--c-blue);color:#fff;border:0;border-radius:10px;padding:10px 18px;font-size:13.5px;font-weight:650;cursor:pointer;display:inline-flex;align-items:center;gap:8px;flex-shrink:0}
+  .newbtn svg{width:15px;height:15px}
+  .newbtn:hover{filter:brightness(1.08)}
+
+  .yr{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink3);margin:22px 0 10px;display:flex;align-items:center;gap:11px}
+  .yr::after{content:"";flex:1;height:1px;background:var(--line)}
+  .yr:first-child{margin-top:0}
+
+  /* Editor de sesión */
+  .back{background:none;border:0;color:var(--ink3);font-size:12.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:7px;padding:0;margin-bottom:14px}
+  .back svg{width:14px;height:14px}
+  .back:hover{color:var(--c-blue)}
+
+  .ehead{background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--sc);border-radius:14px;padding:20px 22px;margin-bottom:16px}
+  .ehead h1{font-size:23px;line-height:1.2;margin:11px 0 9px}
+  .ehead .m{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:15px}
+  .ehead .m span{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;border-radius:7px;padding:4px 10px}
+  .ehead .m svg{width:13px;height:13px;flex-shrink:0}
+
+  .sec{background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-bottom:13px;overflow:hidden}
+  .sec-h{width:100%;background:none;border:0;padding:15px 19px;display:flex;align-items:center;gap:13px;cursor:pointer;text-align:left}
+  .sec-h:hover{background:var(--tint)}
+  .sec-ic{width:34px;height:34px;border-radius:10px;background:var(--kt);color:var(--kc);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .sec-ic svg{width:16px;height:16px}
+  .sec-t{flex:1;min-width:0}
+  .sec-t b{display:block;font-size:15px;font-weight:650;line-height:1.3;font-family:'Libre Baskerville',serif}
+  .sec-t span{font-size:12px;color:var(--ink3);line-height:1.4}
+  .sec-n{flex-shrink:0;font-size:11px;font-weight:700;border-radius:100px;padding:2px 9px;background:var(--kt);color:var(--kc);font-variant-numeric:tabular-nums}
+  .chev{width:17px;height:17px;color:var(--ink3);transition:transform .22s;flex-shrink:0}
+  .sec.open .chev{transform:rotate(180deg);color:var(--kc)}
+  .sec-b{display:none;padding:2px 19px 19px}
+  .sec.open .sec-b{display:block}
+
+  .blk{background:var(--tint);border-radius:11px;padding:14px 15px}
+  .blk+.blk{margin-top:11px}
+  .blk>h5{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:7px;color:var(--bc,var(--ink2))}
+  .blk>h5 svg{width:13px;height:13px}
+
+  /* formularios */
+  .frow{display:grid;gap:11px;margin-bottom:12px}
+  .f3{grid-template-columns:repeat(3,1fr)}
+  .f2{grid-template-columns:1fr 1fr}
+  label{display:block;font-size:11.5px;font-weight:650;margin-bottom:6px;color:var(--ink2)}
+  input,select,textarea{width:100%;border:1.5px solid var(--line);border-radius:9px;padding:9px 12px;font-family:inherit;font-size:13.5px;background:var(--panel);color:var(--ink)}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--c-blue)}
+  textarea{min-height:76px;resize:vertical;line-height:1.55}
+  .btn{border:0;border-radius:9px;padding:10px 17px;font-size:13.5px;font-weight:650;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;color:#fff}
+  .btn svg{width:15px;height:15px}
+  .btn:hover{filter:brightness(1.08)}
+  .btn-sm{padding:7px 13px;font-size:12.5px;border-radius:8px}
+  .btn-o{background:none;border:1.5px solid var(--line);color:var(--ink2);border-radius:9px;padding:10px 17px;font-size:13.5px;font-weight:650;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+  .btn-o:hover{border-color:var(--bc);color:var(--bc)}
+  .btn-o svg{width:15px;height:15px}
+  .row{display:flex;gap:9px;flex-wrap:wrap}
+
+  /* tabla agenda */
+  .tabla{list-style:none;counter-reset:pt;display:flex;flex-direction:column;gap:6px}
+  .tabla li{counter-increment:pt;display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:8px 12px}
+  .tabla li.now{border-color:var(--c-red);background:var(--t-red)}
+  .tabla li.done{opacity:.5}
+  .tabla li::before{content:counter(pt,decimal-leading-zero);font-size:11px;font-weight:700;color:var(--c-blue);font-variant-numeric:tabular-nums;flex-shrink:0;min-width:19px}
+  .tabla li.now::before{color:var(--c-red)}
+  .tabla .pt{flex:1;font-size:13px;line-height:1.45;min-width:0}
+  .tabla .mins{flex-shrink:0;font-size:11px;color:var(--ink3);font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:5px}
+  .tabla .mins svg{width:11px;height:11px}
+  .tb{flex-shrink:0;font-size:9.5px;font-weight:700;letter-spacing:.05em;border-radius:100px;padding:2px 8px;color:#fff}
+  .mb{border:0;background:var(--tint);color:var(--ink3);border-radius:7px;width:25px;height:25px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .mb svg{width:12px;height:12px}
+  .mb:hover{background:var(--mt);color:var(--mc)}
+  .tfoot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:11.5px;color:var(--ink3);margin-top:10px;padding:0 3px}
+  .tfoot b{color:var(--ink2);font-variant-numeric:tabular-nums}
+
+  /* quórum */
+  .qtop{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:14px}
+  .qring{flex-shrink:0}
+  .qinfo{flex:1;min-width:190px}
+  .qrow{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink2);margin-bottom:7px}
+  .qrow b{color:var(--ink);font-variant-numeric:tabular-nums}
+  .bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+  .bar>i{display:block;height:100%;border-radius:4px}
+  .bars{display:flex;flex-direction:column;gap:9px;margin-top:13px}
+  .brow{display:grid;grid-template-columns:104px 1fr auto;gap:10px;align-items:center}
+  .brow .bl{font-size:11.5px;font-weight:650;color:var(--bc)}
+  .brow .bv{font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--bc);white-space:nowrap}
+  .btrack{height:14px;background:var(--line2);border-radius:5px;overflow:hidden}
+  .btrack>i{display:block;height:100%}
+
+  .alert{display:flex;gap:11px;align-items:flex-start;border-radius:11px;padding:13px 15px;margin-bottom:13px}
+  .alert svg{width:17px;height:17px;flex-shrink:0;margin-top:1px}
+  .alert b{display:block;font-size:13px;font-weight:700;margin-bottom:2px}
+  .alert p{font-size:12.5px;line-height:1.55}
+
+  .rc-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:11px}
+  .rc{display:inline-flex;align-items:center;gap:6px;border-radius:100px;padding:3.5px 12px;font-size:11.5px;font-weight:650;color:#fff}
+  .rc svg{width:12px;height:12px}
+  .names{display:flex;flex-wrap:wrap;gap:5px}
+  .nchip{border-radius:100px;padding:2.5px 10px;font-size:11.5px;font-weight:500}
+  .nchip.click{cursor:pointer;border:1px solid var(--line)}
+  .nchip.click:hover{border-color:var(--c-amber);color:var(--c-amber)}
+
+  /* mociones */
+  .moc{border:1px solid var(--line);border-left:3px solid var(--mc);border-radius:11px;padding:14px 15px;background:var(--panel)}
+  .moc+.moc{margin-top:10px}
+  .moc-h{display:flex;justify-content:space-between;gap:11px;align-items:flex-start;margin-bottom:5px}
+  .moc-h b{font-size:14px;font-weight:650;line-height:1.35}
+  .moc .d{font-size:12.5px;color:var(--ink3);line-height:1.55;margin-bottom:11px}
+  .pill{border-radius:100px;padding:2.5px 10px;font-size:10px;font-weight:700;letter-spacing:.05em;color:#fff;white-space:nowrap;flex-shrink:0}
+  .rbar{display:flex;height:27px;border-radius:8px;overflow:hidden;margin-bottom:9px;background:var(--line);gap:2px}
+  .rbar>div{display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:#fff;min-width:0;overflow:hidden;font-variant-numeric:tabular-nums}
+  .rkey{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:11px}
+  .rkey span{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;border-radius:7px;padding:4px 10px}
+  .note{font-size:11.5px;color:var(--ink3);margin-bottom:10px;display:flex;align-items:center;gap:7px}
+  .note svg{width:13px;height:13px;flex-shrink:0}
+
+  /* palabra */
+  .snow{border:1.5px solid var(--c-orange);background:var(--t-orange);border-radius:11px;padding:14px 15px;margin-bottom:12px;display:flex;align-items:center;gap:13px;flex-wrap:wrap}
+  .sav{width:42px;height:42px;border-radius:11px;background:var(--c-orange);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+  .sb{flex:1;min-width:130px}
+  .sb .l{font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--c-orange);margin-bottom:2px}
+  .sb b{font-size:14.5px;font-weight:650;display:block;line-height:1.25}
+  .sb span{font-size:11.5px;color:var(--ink3)}
+  .timer{font-family:'Libre Baskerville',serif;font-size:25px;font-weight:700;color:var(--c-orange);font-variant-numeric:tabular-nums}
+  .queue{display:flex;flex-direction:column;gap:6px}
+  .qrw{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:8px 11px}
+  .qn{width:21px;height:21px;border-radius:6px;background:var(--tint);color:var(--ink3);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .qrw .qb{flex:1;min-width:0;font-size:12.5px;font-weight:550}
+  .qrw .qb em{font-style:normal;font-size:11px;color:var(--ink3);display:block}
+  .qtag{font-size:9.5px;font-weight:700;border-radius:100px;padding:2px 8px;flex-shrink:0;color:#fff}
+
+  /* confirmaciones */
+  .cgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+  .cbox{border:1px solid var(--line);border-top:3px solid var(--cc);border-radius:11px;padding:13px}
+  .cbox b{display:block;font-family:'Libre Baskerville',serif;font-size:24px;line-height:1;color:var(--cc);font-variant-numeric:tabular-nums;margin-bottom:4px}
+  .cbox span{font-size:10.5px;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em;display:block;line-height:1.3}
+  .just{border:1px solid var(--line);border-left:3px solid var(--c-orange);border-radius:11px;padding:14px 16px;background:var(--panel)}
+  .just+.just{margin-top:10px}
+  .just.ok{border-left-color:var(--c-green);background:var(--t-green)}
+  .just.no{border-left-color:var(--c-red);background:var(--t-red)}
+  .just-h{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap;margin-bottom:4px}
+  .just-h b{font-size:13.5px;font-weight:650}
+  .just-h time{font-size:11px;color:var(--ink3)}
+  .just-m{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:9px}
+  .just-m span{font-size:10.5px;font-weight:650;border-radius:6px;padding:2.5px 9px}
+  .just-b{font-size:12.5px;color:var(--ink2);line-height:1.6;background:var(--tint);border-radius:8px;padding:10px 12px;margin-bottom:11px}
+  .just.ok .just-b,.just.no .just-b{background:var(--panel)}
+
+  /* exportar dentro de sesión */
+  .exp-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:10px}
+  .exp{border:1px solid var(--line);border-top:3px solid var(--ec);border-radius:11px;padding:14px;background:var(--panel)}
+  .exp .ic{width:32px;height:32px;border-radius:9px;background:var(--et);color:var(--ec);display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+  .exp .ic svg{width:15px;height:15px}
+  .exp b{display:block;font-size:13.5px;font-weight:650;margin-bottom:3px}
+  .exp span{font-size:11.5px;color:var(--ink3);line-height:1.5;display:block;margin-bottom:11px}
+
+  /* integrantes */
+  .tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+  table{width:100%;border-collapse:collapse;font-size:13px;min-width:620px}
+  thead th{text-align:left;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);padding:11px 13px;border-bottom:1px solid var(--line);background:var(--tint);white-space:nowrap}
+  tbody td{padding:9px 13px;border-bottom:1px solid var(--line2)}
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr:hover{background:var(--tint)}
+  td.num{font-variant-numeric:tabular-nums;font-weight:650}
+  .est{border-radius:100px;padding:2px 9px;font-size:11px;font-weight:650;white-space:nowrap}
+  .dot{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:650}
+  .dot i{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+  .acts{display:flex;gap:5px}
+  .filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:13px;align-items:center}
+  .filters input{max-width:240px}
+  .tab{border-radius:100px;padding:6px 14px;font-size:12.5px;font-weight:600;cursor:pointer;border:1.5px solid var(--line);background:var(--panel);color:var(--ink2)}
+  .tab:hover{border-color:var(--tc);color:var(--tc)}
+  .tab.on{background:var(--tc);border-color:var(--tc);color:#fff}
+
+  .empty{background:var(--panel);border:1px dashed var(--line);border-radius:12px;padding:32px 20px;text-align:center;color:var(--ink3)}
+  .empty b{display:block;color:var(--ink2);font-weight:650;margin-bottom:4px;font-size:14px}
+  .empty span{font-size:12.5px}
+
+  .danger{border-color:var(--c-red)}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(90px);background:var(--ink);color:var(--bg);border-radius:11px;padding:13px 20px;font-size:13.5px;font-weight:600;box-shadow:var(--sh-lg);z-index:400;transition:transform .3s;display:flex;align-items:center;gap:10px;max-width:90vw}
+  .toast.on{transform:translateX(-50%) translateY(0)}
+  .toast svg{width:16px;height:16px;color:var(--c-lime);flex-shrink:0}
+
+  @media(max-width:700px){
+    .f3,.f2{grid-template-columns:1fr}
+    .brow{grid-template-columns:82px 1fr auto}
+    .srow{flex-wrap:wrap}
+    .srow-go span{display:none}
+    .who-t{display:none}
+  }
+</style>
+
+<div class="sample" style="background:#FFEBF0;border-bottom-color:#FF2D55;color:#8A0B27">
+  <b>Maqueta de navegación únicamente.</b> No representa toda la funcionalidad del panel real:
+  faltan la ponderación alternativa, el multivoto, las restricciones por estamento, la edición de
+  votos emitidos, las unidades académicas, la gestión de contraseñas y —sobre todo— el sistema de
+  palabra completo (categorías pleno/base, palabra colectiva por unidad, pausar, ajustar ±30 s,
+  reordenar la cola). La especificación de comportamiento está en
+  <b>docs/rediseno-2025.md §4.0</b>, no aquí.
+</div>
+
+<header class="hdr">
+  <div class="hdr-in">
+    <button class="brand" onclick="verLista()">
+      <div class="crest"><svg viewBox="0 0 24 24"><path d="M12 2L4 5v6c0 5.5 3.5 10.7 8 12 4.5-1.3 8-6.5 8-12V5l-8-3z"/></svg></div>
+      <div><div class="brand-t">Pleno FECh</div><div class="brand-s">Administración</div></div>
+    </button>
+    <div class="hdr-r">
+      <button class="hlink" id="lnk-mem" onclick="verIntegrantes()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Integrantes
+      </button>
+      <div class="who">
+        <div class="who-t"><b>Valentina Morales</b><span>ADMINISTRADORA</span></div>
+        <div class="avatar">VM</div>
+      </div>
+      <button class="btn-out" title="Cerrar sesión">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap"><div id="view"></div></main>
+
+<div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span id="toast-t"></span></div>
+
+<script>
+const I={
+ cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+ pin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+ clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+ users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+ wifi:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>',
+ video:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>',
+ archive:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>',
+ check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg>',
+ x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+ plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+ trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+ edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
+ key:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>',
+ hand:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>',
+ mic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>',
+ vote:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
+ scale:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18"/><path d="M5 7h14"/><path d="M5 7l-3 7h6z"/><path d="M19 7l-3 7h6z"/></svg>',
+ flag:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>',
+ mail:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
+ alert:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+ play:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>',
+ stop:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>',
+ down:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+ up:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',
+ sheet:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>',
+ chev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>',
+ arrow:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>',
+ back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>',
+ qr:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/></svg>'
+};
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(m){const t=document.getElementById("toast");document.getElementById("toast-t").textContent=m;t.classList.add("on");setTimeout(()=>t.classList.remove("on"),3600);}
+const mmss=s=>Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
+
+// ══ DATOS ══
+const EST={
+ cosefech:{label:"COSEFECH",c:"--c-orange",t:"--t-orange",w:1.00},
+ consejero:{label:"Consejería FECh",c:"--c-blue",t:"--t-blue",w:0.75},
+ cee:{label:"CEE",c:"--c-green",t:"--t-green",w:1.00}
+};
+const NOMS=[
+ ["Valentina Morales Ríos","cosefech","Derecho",1],["Andrés Figueroa Pinto","cosefech","Ingeniería",1],
+ ["Camila Herrera Lagos","cosefech","Filosofía",1],["Diego Sepúlveda Cruz","cosefech","Cs. Sociales",1],
+ ["Isidora Fuentes Vega","cosefech","Economía",1],["Matías Contreras Rojas","cosefech","Arquitectura",1],
+ ["Sofía Vargas Medina","cosefech","Medicina",1],["Tomás Riquelme Bravo","cosefech","Agronomía",0],
+ ["Alejandro Castro Muñoz","consejero","Ingeniería",1],["Antonia Beltrán Soto","consejero","Cs. Sociales",1],
+ ["Bárbara Muñoz Peña","consejero","Derecho",1],["Benjamín Cruz Araya","consejero","Ingeniería",1],
+ ["Carlos Pérez Díaz","consejero","Filosofía",1],["Carolina Meza Leal","consejero","Derecho",1],
+ ["Daniela González López","consejero","Economía",1],["David Núñez Flores","consejero","Filosofía",1],
+ ["Emilio Rojas Vera","consejero","Medicina",1],["Fernanda López Castro","consejero","Arquitectura",1],
+ ["Gabriel Soto Ibáñez","consejero","Ciencias",1],["Hanna Wolff Steiner","consejero","Filosofía",1],
+ ["Ignacio Bravo Campos","consejero","INAP",1],["Javiera Díaz Salinas","consejero","Cs. Sociales",1],
+ ["Kevin Araya Morales","consejero","Ingeniería",1],["Laura Espinoza Tapia","consejero","Derecho",1],
+ ["Manuel Torres Reyes","consejero","Economía",1],["Natalia Vidal Guzmán","consejero","Medicina",1],
+ ["Óscar Mendoza Rivas","consejero","Filosofía",1],["Paula Reyes Núñez","consejero","Arquitectura",1],
+ ["Rocío Navarro Pino","consejero","Cs. Sociales",1],["Sebastián Campos Meza","consejero","Ingeniería",1],
+ ["Tamara Ibáñez Saavedra","consejero","Filosofía",1],["Ulises Pinto Carrasco","consejero","Derecho",0],
+ ["Valentín Flores Ríos","consejero","Economía",1],["Wendy Saavedra Ortiz","consejero","Medicina",1],
+ ["Zacarías Alvarado Meza","consejero","INAP",1],
+ ["Agustín Leal Vargas","cee","CEE Ingeniería",1],["Belén Carrasco Díaz","cee","CEE Derecho",1],
+ ["Cristóbal Ríos Herrera","cee","CEE Medicina",1],["Diana Tapia Moreno","cee","CEE Arquitectura",1],
+ ["Elías Mora Fuentes","cee","CEE Ciencias",1],["Francisca Salinas Cruz","cee","CEE Cs. Sociales",1],
+ ["Gonzalo Acevedo Bravo","cee","CEE Filosofía",1],["Helena Stange Koch","cee","CEE Economía",1],
+ ["Ian Vergara Solís","cee","CEE Odontología",1],["Julia Pizarro Lagos","cee","CEE Veterinaria",1]
+];
+const MEMBERS=NOMS.map(([n,e,f,a],i)=>({id:i+1,n,e,f,active:!!a,w:EST[e].w}));
+const ACTIVOS=MEMBERS.filter(m=>m.active);
+const TOTAL_W=ACTIVOS.reduce((s,m)=>s+m.w,0);
+const QUORUM=0.5;
+const memOf=id=>MEMBERS.find(m=>m.id===id);
+
+const PRES=new Set([1,2,3,4,5,6,9,10,11,12,14,15,17,18,19,21,23,24,26,27,29,31,33,35,36,37,39,40,42,43,45]);
+const ONL=new Set([4,10,12,15,21,27,33,39,45]);
+const CONF=new Set([1,2,3,5,6,9,11,12,14,16,17,19,21,23,24,26,28,30,31,33,36,37,39,40,42,44,45]);
+
+const SESIONES=[
+ {id:8,estado:"futura",title:"4.º Pleno Ordinario 2025",fecha:"Miércoles 2 de julio de 2025, 18:30",
+  lugar:"Salón de Honor, Casa Central",link:"https://meet.google.com/xxx-yyyy-zzz",
+  plazo:"Lunes 30 de junio, 23:59",
+  tabla:[{t:"Verificación de quórum y lectura del acta anterior",min:15},
+   {t:"Cuenta de la Mesa Directiva",min:20},
+   {t:"Informe de la Comisión de Bienestar Estudiantil",min:25},
+   {t:"Votación: Reforma al Reglamento de Comisiones",min:35,vote:true},
+   {t:"Votación: Convenio con la Dirección de Deportes",min:25,vote:true},
+   {t:"Puntos varios",min:15}],
+  mociones:[
+   {title:"Reforma al Reglamento de Comisiones",
+    detail:"Redefine la composición y el mandato de las comisiones permanentes, y crea la Comisión de Salud Mental.",open:false},
+   {title:"Convenio con la Dirección de Deportes",
+    detail:"Autoriza a la Mesa Directiva a suscribir el convenio de acceso preferente a instalaciones deportivas.",open:false}],
+  justif:[
+   {id:22,estado:null,motivo:"Motivos académicos",fecha:"25 jun, 14:02",
+    texto:"Tengo una evaluación de Metodología ese mismo día a las 18:00 que no puedo reagendar."},
+   {id:35,estado:null,motivo:"Motivos de salud",fecha:"25 jun, 09:41",
+    texto:"Estoy con licencia médica por cinco días. Adjunté el certificado al correo de la Mesa."},
+   {id:13,estado:null,motivo:"Motivos laborales",fecha:"24 jun, 20:15",
+    texto:"Tengo turno de trabajo hasta las 21:00 ese miércoles y no alcanzo a llegar ni a conectarme."},
+   {id:41,estado:"ok",motivo:"Conectividad o transporte",fecha:"23 jun, 11:30",
+    texto:"Estaré en terreno en la Región de Los Lagos sin conexión estable."}]},
+
+ {id:7,estado:"viva",title:"3.er Pleno Ordinario 2025",fecha:"Miércoles 4 de junio de 2025, 18:30",
+  lugar:"Salón de Honor, Casa Central",link:"https://meet.google.com/abc-defg-hij",code:"K7M2P",
+  tabla:[{t:"Verificación de quórum y lectura del acta anterior",min:15,done:true},
+   {t:"Cuenta de la Mesa Directiva",min:20,done:true},
+   {t:"Informe de la Comisión de Bienestar Estudiantil",min:25,curr:true},
+   {t:"Votación: Presupuesto de Bienestar, 2.º semestre",min:30,vote:true},
+   {t:"Votación: Convenio con la Dirección de Deportes",min:20,vote:true},
+   {t:"Puntos varios",min:15}],
+  mociones:[
+   {title:"Presupuesto de Bienestar Estudiantil, 2.º semestre",
+    detail:"Asignación de $22.600.000 al fondo de emergencia y ayudas socioeconómicas.",
+    open:true,emitidos:24,pct:{a:61.2,c:27.5,b:11.3},w:{a:19.75,c:8.90,b:3.65}},
+   {title:"Convenio con la Dirección de Deportes",
+    detail:"Autoriza a la Mesa Directiva a suscribir el convenio de acceso preferente.",open:false}],
+  palabra:{punto:"Informe de la Comisión de Bienestar Estudiantil",
+   actual:{n:"Gonzalo Acevedo Bravo",f:"CEE Filosofía",left:84},
+   cola:[["Bárbara Muñoz Peña","Consejería Derecho","Individual"],
+         ["Javiera Díaz Salinas","Consejería Cs. Sociales","Individual"],
+         ["CEE Medicina","Intervención colectiva","Colectiva"]]}},
+
+ {id:6,estado:"cerrada",title:"1.er Pleno Extraordinario 2025",fecha:"Lunes 28 de abril de 2025, 19:00",
+  lugar:"Modalidad telemática",acta:"acta-pleno-extra-1-2025.pdf",presentes:35,pesoPres:29.75,
+  tabla:[{t:"Verificación de quórum",min:10},{t:"Exposición de la Mesa Directiva",min:20},
+   {t:"Debate general",min:40},{t:"Votación: Convocatoria a paro reflexivo",min:25,vote:true},
+   {t:"Votación: Mandato de negociación con Rectoría",min:30,vote:true}],
+  mociones:[
+   {title:"Convocatoria a paro reflexivo estudiantil",detail:"Moción de urgencia presentada por 12 consejerías.",
+    cerrada:true,aprobada:true,pct:{a:56.8,c:35.4,b:7.8},w:{a:19.45,c:12.10,b:2.65}},
+   {title:"Mandato de negociación con Rectoría",detail:"Define el pliego de demandas y la comisión negociadora.",
+    cerrada:true,aprobada:true,pct:{a:79.1,c:12.6,b:8.3},w:{a:27.05,c:4.30,b:2.85}}]},
+
+ {id:5,estado:"cerrada",title:"2.º Pleno Ordinario 2025",fecha:"Miércoles 9 de abril de 2025, 18:30",
+  lugar:"Salón de Honor, Casa Central",acta:"acta-pleno-2-2025.pdf",presentes:40,pesoPres:33.50,
+  tabla:[{t:"Verificación de quórum y lectura del acta",min:15},{t:"Cuenta de la Mesa Directiva",min:20},
+   {t:"Presentación de candidaturas",min:20},{t:"Votación: Secretaría de Comunicaciones",min:25,vote:true},
+   {t:"Votación: Declaración sobre financiamiento",min:25,vote:true},
+   {t:"Votación: Presupuesto de Bienestar",min:30,vote:true},{t:"Puntos varios",min:15}],
+  mociones:[
+   {title:"Elección de Secretaría de Comunicaciones",detail:"Votación por candidaturas (art. 41).",
+    cerrada:true,aprobada:null,cands:[["Camila Herrera",18.75],["Kevin Araya",12.50],["Abstención",4.25]]},
+   {title:"Declaración pública sobre financiamiento universitario",detail:"Moción de la Consejería de Cs. Sociales.",
+    cerrada:true,aprobada:true,pct:{a:88.6,c:5.2,b:6.2},w:{a:31.40,c:1.85,b:2.20}},
+   {title:"Presupuesto de Bienestar Estudiantil, 1.er semestre",detail:"Asignación de $18.400.000 al fondo de emergencia.",
+    cerrada:true,aprobada:true,pct:{a:64.9,c:26.3,b:8.8},w:{a:23.00,c:9.30,b:3.15}}]},
+
+ {id:4,estado:"cerrada",title:"1.er Pleno Ordinario 2025",fecha:"Miércoles 12 de marzo de 2025, 18:30",
+  lugar:"Salón de Honor, Casa Central",acta:"acta-pleno-1-2025.pdf",presentes:35,pesoPres:29.00,
+  tabla:[{t:"Verificación de quórum e instalación",min:15},{t:"Cuenta de la Mesa Directiva",min:20},
+   {t:"Presentación del Plan de Trabajo Anual",min:30},{t:"Votación: Plan de Trabajo Anual 2025",min:25,vote:true},
+   {t:"Votación: Reglamento de Elecciones",min:30,vote:true},{t:"Puntos varios",min:15}],
+  mociones:[
+   {title:"Aprobación del Plan de Trabajo Anual 2025",detail:"Presentado por la Mesa Directiva (art. 34).",
+    cerrada:true,aprobada:true,pct:{a:72.4,c:18.1,b:9.5},w:{a:24.75,c:6.20,b:3.25}},
+   {title:"Modificación al Reglamento de Elecciones",detail:"Ajuste de plazos de inscripción (art. 12 y 14).",
+    cerrada:true,aprobada:false,pct:{a:41.2,c:50.8,b:8.0},w:{a:14.10,c:17.35,b:2.75}}]}
+];
+
+const ESTADO={
+ viva:{label:"EN VIVO",c:"--c-red",t:"--t-red",pip:true},
+ futura:{label:"PRÓXIMA",c:"--c-violet",t:"--t-violet"},
+ cerrada:{label:"CERRADA",c:"--ink3",t:"--tint"}
+};
+
+function tablaHTML(t,ed){
+  const tot=t.reduce((s,p)=>s+(p.min||0),0),h=Math.floor(tot/60),m=tot%60;
+  return `<ol class="tabla">${t.map((p,i)=>`<li class="${p.curr?"now":""}${p.done?" done":""}">
+    <span class="pt">${esc(p.t)}</span>
+    ${p.done?`<span class="tb" style="background:var(--ink3)">TRATADO</span>`:""}
+    ${p.curr?`<span class="tb" style="background:var(--c-red)">EN DEBATE</span>`:""}
+    ${p.vote?`<span class="tb" style="background:var(--c-violet)">SE VOTA</span>`:""}
+    <span class="mins">${I.clock}${p.min}′</span>
+    ${ed?`<button class="mb" style="--mc:var(--c-red);--mt:var(--t-red)" title="Eliminar" onclick="event.stopPropagation();toast('Se eliminaría el punto ${i+1}')">${I.trash}</button>`:""}
+   </li>`).join("")}</ol>
+   <div class="tfoot"><span>${t.length} puntos</span><span>Duración estimada <b>${h?h+" h "+(m?m+"′":""):m+"′"}</b></span></div>`;
+}
+function bars(set){
+  return Object.entries(EST).map(([k,c])=>{
+    const tot=ACTIVOS.filter(m=>m.e===k),pre=tot.filter(m=>set.has(m.id)).length;
+    return `<div class="brow" style="--bc:var(${c.c})"><span class="bl">${c.label}</span>
+     <div class="btrack"><i style="width:${(pre/tot.length*100).toFixed(1)}%;background:var(${c.c})"></i></div>
+     <span class="bv">${pre}/${tot.length}</span></div>`;}).join("");
+}
+function ring(pct,val,sub,color){
+  const R=46,C=2*Math.PI*R;
+  return `<svg width="122" height="122" viewBox="0 0 122 122">
+    <circle cx="61" cy="61" r="${R}" fill="none" stroke="var(--line)" stroke-width="13"/>
+    <circle cx="61" cy="61" r="${R}" fill="none" stroke="var(${color})" stroke-width="13"
+      stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C*(1-pct/100)).toFixed(1)}"
+      stroke-linecap="round" transform="rotate(-90 61 61)"/>
+    <text x="61" y="58" text-anchor="middle" font-family="Libre Baskerville,serif" font-size="27" font-weight="700" fill="var(${color})">${val}</text>
+    <text x="61" y="76" text-anchor="middle" font-family="IBM Plex Sans,sans-serif" font-size="10" fill="var(--ink3)">${sub}</text>
+  </svg>`;
+}
+function sec(id,ic,kc,kt,titulo,sub,cuerpo,n,abierta){
+  return `<div class="sec${abierta?" open":""}" style="--kc:var(${kc});--kt:var(${kt})" data-s="${id}">
+    <button class="sec-h" onclick="this.parentElement.classList.toggle('open')">
+      <span class="sec-ic">${ic}</span>
+      <span class="sec-t"><b>${titulo}</b><span>${sub}</span></span>
+      ${n!=null?`<span class="sec-n">${n}</span>`:""}
+      <span class="chev">${I.chev}</span>
+    </button>
+    <div class="sec-b">${cuerpo}</div></div>`;
+}
+
+// ══ VISTA: LISTADO ══
+function verLista(){
+  document.getElementById("lnk-mem").classList.remove("on");
+  const orden={viva:0,futura:1,cerrada:2};
+  const list=[...SESIONES].sort((a,b)=>orden[a.estado]-orden[b.estado]);
+  const activas=list.filter(s=>s.estado!=="cerrada"),cerradas=list.filter(s=>s.estado==="cerrada");
+
+  const fila=s=>{
+    const e=ESTADO[s.estado];
+    let extra="";
+    if(s.estado==="viva"){
+      const pw=[...PRES].reduce((a,id)=>{const m=memOf(id);return a+(m&&m.active?m.w:0);},0);
+      extra=`<span style="color:var(--c-green);background:var(--t-green)">${I.users}${PRES.size}/${ACTIVOS.length} presentes · quórum ${(pw/TOTAL_W*100).toFixed(0)}%</span>`;
+    } else if(s.estado==="futura"){
+      const pend=s.justif.filter(j=>!j.estado).length;
+      extra=`<span style="color:var(--c-green);background:var(--t-green)">${I.check}${CONF.size} confirmades</span>
+       ${pend?`<span style="color:var(--c-orange);background:var(--t-orange)">${I.flag}${pend} justificación${pend!==1?"es":""} por revisar</span>`:""}`;
+    } else {
+      extra=`<span style="color:var(--c-green);background:var(--t-green)">${I.users}${s.presentes}/${ACTIVOS.length} presentes</span>
+       ${s.acta?`<span style="color:var(--c-orange);background:var(--t-orange)">${I.archive}Acta subida</span>`
+              :`<span style="color:var(--c-red);background:var(--t-red)">${I.alert}Sin acta</span>`}`;
+    }
+    return `<button class="srow" style="--sc:var(${e.c})" onclick="verSesion(${s.id})">
+      <span class="srow-b">
+        <span class="srow-top">
+          <span class="state" style="background:var(${e.c})">${e.pip?'<i class="pip"></i>':""}${e.label}</span>
+          <h3>${esc(s.title)}</h3>
+        </span>
+        <span class="srow-m">
+          <span style="color:var(--c-violet);background:var(--t-violet)">${I.clock}${esc(s.fecha)}</span>
+          <span style="color:var(--c-blue);background:var(--t-blue)">${I.pin}${esc(s.lugar)}</span>
+          <span style="color:var(--ink3);background:var(--tint)">${s.tabla.length} puntos · ${s.mociones.length} mociones</span>
+          ${extra}
+        </span>
+      </span>
+      <span class="srow-go"><span>${s.estado==="viva"?"Conducir":s.estado==="futura"?"Preparar":"Ver"}</span>${I.arrow}</span>
+    </button>`;
+  };
+
+  document.getElementById("view").innerHTML=`
+   <div class="vh">
+     <div><h1>Sesiones del pleno</h1><p>Entra a cualquier sesión para editarla y conducirla.</p></div>
+     <button class="newbtn" onclick="nuevaSesion()">${I.plus}Nueva sesión</button>
+   </div>
+   <div id="nueva"></div>
+   ${activas.length?`<div class="yr">En curso y próximas</div><div class="slist">${activas.map(fila).join("")}</div>`:""}
+   ${cerradas.length?`<div class="yr">Cerradas</div><div class="slist">${cerradas.map(fila).join("")}</div>`:""}`;
+  window.scrollTo({top:0});
+}
+
+function nuevaSesion(){
+  document.getElementById("nueva").innerHTML=`
+   <div class="sec open" style="--kc:var(--c-blue);--kt:var(--t-blue);margin-bottom:18px">
+     <div class="sec-h" style="cursor:default">
+       <span class="sec-ic">${I.plus}</span>
+       <span class="sec-t"><b>Nueva sesión</b><span>Al crearla se congela la ponderación de cada integrante para esta sesión.</span></span>
+       <button class="mb" style="--mc:var(--c-red);--mt:var(--t-red)" onclick="document.getElementById('nueva').innerHTML=''">${I.x}</button>
+     </div>
+     <div class="sec-b">
+       <div class="frow f3">
+         <div><label>Título</label><input id="n1" placeholder="Ej: 5.º Pleno Ordinario 2025" autofocus></div>
+         <div><label>Lugar</label><input id="n2" placeholder="Ej: Salón de Honor, Casa Central"></div>
+         <div><label>Fecha y hora</label><input id="n3" type="datetime-local"></div>
+       </div>
+       <div class="frow f2">
+         <div><label>Enlace de la sesión</label><input id="n4" type="url" placeholder="https://meet.google.com/..."></div>
+         <div><label>Plazo para confirmar asistencia</label><input id="n5" type="datetime-local"></div>
+       </div>
+       <div class="row">
+         <button class="btn" style="background:var(--c-blue)" onclick="toast('Se crearía la sesión y se abriría su editor')">${I.check}Crear y editar</button>
+         <button class="btn-o" style="--bc:var(--c-violet)" onclick="toast('Se crearía la sesión y se enviaría la citación al pleno')">${I.mail}Crear y citar al pleno</button>
+       </div>
+     </div>
+   </div>`;
+  document.getElementById("n1")?.focus();
+}
+
+// ══ VISTA: EDITOR DE SESIÓN ══
+function verSesion(id){
+  document.getElementById("lnk-mem").classList.remove("on");
+  const s=SESIONES.find(x=>x.id===id),e=ESTADO[s.estado];
+  let cuerpo="";
+
+  // ── datos (siempre) ──
+  const datos=`
+   <div class="frow f3">
+     <div><label>Título</label><input value="${esc(s.title)}"></div>
+     <div><label>Lugar</label><input value="${esc(s.lugar)}"></div>
+     <div><label>Fecha y hora</label><input type="datetime-local" value="2025-07-02T18:30"></div>
+   </div>
+   <div class="frow f2">
+     <div><label>Enlace de la sesión</label><input type="url" value="${esc(s.link||"")}" placeholder="https://..."></div>
+     ${s.estado==="futura"?`<div><label>Plazo para confirmar asistencia</label><input type="datetime-local" value="2025-06-30T23:59"></div>`:""}
+   </div>
+   <div class="row"><button class="btn btn-sm" style="background:var(--c-blue)" onclick="toast('Se guardarían los cambios')">${I.check}Guardar cambios</button></div>`;
+
+  // ── tabla (siempre) ──
+  const tabla=`${tablaHTML(s.tabla,s.estado!=="cerrada")}
+   ${s.estado!=="cerrada"?`
+   <div class="frow f3" style="margin-top:13px">
+     <div style="grid-column:span 2"><label>Nuevo punto</label><input placeholder="Título del punto de tabla"></div>
+     <div><label>Minutos</label><input type="number" placeholder="20"></div>
+   </div>
+   <button class="btn btn-sm" style="background:var(--c-blue)" onclick="toast('Se agregaría el punto')">${I.plus}Agregar punto</button>`:""}`;
+
+  // ── mociones ──
+  const mocHTML=s.mociones.map(m=>{
+    const c=m.open?"--c-lime":m.cerrada?(m.aprobada===false?"--c-red":m.aprobada?"--c-lime":"--c-violet"):"--ink3";
+    let res="";
+    if(m.cands){
+      const max=Math.max(...m.cands.map(c=>c[1])),cs=["--c-blue","--c-violet","--c-cyan"];
+      res=m.cands.map(([n,v],i)=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px">
+        <span style="font-size:12.5px;width:120px;flex-shrink:0;font-weight:600;color:var(${cs[i%3]})">${esc(n)}</span>
+        <div style="flex:1;height:20px;background:var(--line2);border-radius:6px;overflow:hidden"><i style="display:block;height:100%;width:${(v/max*100).toFixed(1)}%;background:var(${cs[i%3]})"></i></div>
+        <span style="font-size:12px;font-weight:700;width:50px;text-align:right;font-variant-numeric:tabular-nums;color:var(${cs[i%3]})">${v.toFixed(2)}</span></div>`).join("");
+    } else if(m.pct){
+      res=`<div class="rbar">
+        <div style="width:${m.pct.a}%;background:var(--c-lime)">${m.pct.a>12?m.pct.a.toFixed(1)+"%":""}</div>
+        <div style="width:${m.pct.c}%;background:var(--c-red)">${m.pct.c>12?m.pct.c.toFixed(1)+"%":""}</div>
+        <div style="width:${m.pct.b}%;background:var(--c-amber)">${m.pct.b>12?m.pct.b.toFixed(1)+"%":""}</div></div>
+       <div class="rkey">
+        <span style="color:var(--c-lime);background:var(--t-lime)">A favor <b>${m.w.a.toFixed(2)}</b></span>
+        <span style="color:var(--c-red);background:var(--t-red)">En contra <b>${m.w.c.toFixed(2)}</b></span>
+        <span style="color:var(--c-amber);background:var(--t-amber)">Abstención <b>${m.w.b.toFixed(2)}</b></span></div>`;
+    }
+    let ctl="";
+    if(m.open) ctl=`<div class="note">${I.users}<span><b>${m.emitidos}</b> de ${PRES.size} presentes votaron · faltan ${PRES.size-m.emitidos}</span></div>${res}
+      <div class="row"><button class="btn btn-sm" style="background:var(--c-red)" onclick="toast('Se cerraría la votación y se fijaría el resultado')">${I.stop}Cerrar votación</button>
+      <button class="btn-o btn-sm" style="--bc:var(--c-blue)" onclick="toast('Se mostraría el detalle nominal')">Ver votos por integrante</button></div>`;
+    else if(m.cerrada) ctl=res+`<div class="row"><button class="btn-o btn-sm" style="--bc:var(--c-blue)" onclick="toast('Se mostraría el detalle nominal')">Ver votos por integrante</button></div>`;
+    else ctl=`<div class="row">
+      ${s.estado==="viva"?`<button class="btn btn-sm" style="background:var(--c-lime)" onclick="toast('Se abriría la votación')">${I.play}Abrir votación</button>`:""}
+      <button class="btn-o btn-sm" style="--bc:var(--c-blue)" onclick="toast('Se editaría la moción')">${I.edit}Editar</button>
+      <button class="btn-o btn-sm" style="--bc:var(--c-red)" onclick="toast('Se eliminaría la moción')">${I.trash}Eliminar</button></div>`;
+
+    return `<div class="moc" style="--mc:var(${c})">
+      <div class="moc-h"><b>${esc(m.title)}</b>
+        <span class="pill" style="background:var(${c})">${m.open?"VOTACIÓN ABIERTA":m.cerrada?(m.aprobada===null?"RESUELTA":m.aprobada?"APROBADA":"RECHAZADA"):"PREPARADA"}</span></div>
+      <p class="d">${esc(m.detail)}</p>${ctl}</div>`;}).join("");
+
+  const mociones=mocHTML+(s.estado!=="cerrada"?`
+   <div class="frow" style="margin-top:13px">
+     <div><label>Nueva moción</label><input placeholder="Título de la moción"></div>
+     <div><label>Detalle</label><textarea placeholder="Qué se somete a votación. Este texto lo verán los integrantes al votar y queda en el histórico."></textarea></div>
+   </div>
+   <button class="btn btn-sm" style="background:var(--c-violet)" onclick="toast('Se crearía la moción')">${I.plus}Crear moción</button>`:"");
+
+  // ══ SESIÓN EN VIVO ══
+  if(s.estado==="viva"){
+    const pw=[...PRES].reduce((a,id)=>{const m=memOf(id);return a+(m&&m.active?m.w:0);},0);
+    const q=pw/TOTAL_W*100,hayQ=q>=QUORUM*100;
+    const pres=ACTIVOS.filter(m=>PRES.has(m.id)&&!ONL.has(m.id));
+    const onl=ACTIVOS.filter(m=>PRES.has(m.id)&&ONL.has(m.id));
+    const aus=ACTIVOS.filter(m=>!PRES.has(m.id));
+    const p=s.palabra;
+
+    cuerpo=
+     sec("cod",I.qr,"--c-blue","--t-blue","Código de asistencia","Los integrantes lo ingresan para registrarse.",`
+       <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+         <div style="font-family:'Libre Baskerville',serif;font-size:38px;font-weight:700;letter-spacing:.18em;color:var(--c-blue);background:var(--t-blue);border-radius:12px;padding:11px 22px">${s.code}</div>
+         <div class="row">
+           <button class="btn-o btn-sm" style="--bc:var(--c-violet)" onclick="toast('Se mostraría el QR a pantalla completa')">${I.qr}Mostrar QR</button>
+           <button class="btn-o btn-sm" style="--bc:var(--c-orange)" onclick="toast('Se generaría un código nuevo')">Regenerar</button>
+         </div></div>`,null,true)+
+
+     sec("asi",I.users,"--c-green","--t-green","Asistencia y quórum",
+       `${PRES.size} de ${ACTIVOS.length} presentes · ponderación ${pw.toFixed(2)} / ${TOTAL_W.toFixed(2)}`,`
+       <div class="alert" style="background:var(${hayQ?"--t-green":"--t-red"});color:var(${hayQ?"--c-green":"--c-red"})">
+         ${hayQ?I.check:I.alert}
+         <div><b>${hayQ?"Quórum alcanzado":"Sin quórum"}</b>
+         <p>${pw.toFixed(2)} de ${TOTAL_W.toFixed(2)} (${q.toFixed(1)}%). Mínimo reglamentario ${(QUORUM*100).toFixed(0)}% = ${(TOTAL_W*QUORUM).toFixed(2)}.
+         ${hayQ?"El pleno puede votar válidamente.":"No se pueden abrir votaciones."}</p></div></div>
+       <div class="qtop">
+         <div class="qring">${ring(PRES.size/ACTIVOS.length*100,PRES.size,"de "+ACTIVOS.length,"--c-green")}</div>
+         <div class="qinfo">
+           <div class="qrow"><span>Ponderación presente</span><b>${pw.toFixed(2)} / ${TOTAL_W.toFixed(2)}</b></div>
+           <div class="bar"><i style="width:${q.toFixed(1)}%;background:linear-gradient(90deg,var(--c-green),var(--c-teal))"></i></div>
+           <div class="bars">${bars(PRES)}</div>
+         </div></div>
+       <div class="rc-row">
+         <span class="rc" style="background:var(--c-green)">${I.pin}Presencial ${pres.length}</span>
+         <span class="rc" style="background:var(--c-cyan)">${I.wifi}Online ${onl.length}</span>
+         <span class="rc" style="background:var(--ink3)">${I.users}Ausentes ${aus.length}</span></div>
+       <div class="names">
+         ${pres.map(m=>`<span class="nchip" style="color:var(--c-green);background:var(--t-green)">${esc(m.n)}</span>`).join("")}
+         ${onl.map(m=>`<span class="nchip" style="color:var(--c-cyan);background:var(--t-cyan)">${esc(m.n)}</span>`).join("")}</div>
+       <div class="blk" style="--bc:var(--c-amber);margin-top:13px">
+         <h5>${I.flag}Marcar inasistencia justificada</h5>
+         <div class="names">${aus.map(m=>`<span class="nchip click" style="color:var(--ink3);background:var(--panel)" onclick="toast('${esc(m.n)} quedaría con Inasistencia Justificada')">${esc(m.n)} +</span>`).join("")}</div>
+       </div>`,`${PRES.size}/${ACTIVOS.length}`,true)+
+
+     sec("tab",I.archive,"--c-violet","--t-violet","Tabla de la sesión","Marca el avance y agrega puntos.",tabla,s.tabla.length)+
+
+     sec("moc",I.vote,"--c-lime","--t-lime","Mociones","Abre y cierra las votaciones.",mociones,s.mociones.length,true)+
+
+     sec("pal",I.mic,"--c-orange","--t-orange","Sistema de palabra",`Ronda abierta · ${esc(p.punto)}`,`
+       <div class="snow">
+         <div class="sav">${p.actual.n.split(" ").map(w=>w[0]).slice(0,2).join("")}</div>
+         <div class="sb"><div class="l">Con la palabra</div><b>${esc(p.actual.n)}</b><span>${esc(p.actual.f)}</span></div>
+         <div class="timer">${mmss(p.actual.left)}</div>
+         <div class="row">
+           <button class="btn btn-sm" style="background:var(--c-red)" onclick="toast('Se finalizaría la intervención')">${I.stop}Finalizar</button>
+           <button class="btn-o btn-sm" style="--bc:var(--c-green)" onclick="toast('Se agregaría 1 minuto')">+1′</button>
+         </div></div>
+       <div class="blk" style="--bc:var(--c-violet)">
+         <h5>${I.hand}Cola de oradores (${p.cola.length})</h5>
+         <div class="queue">${p.cola.map(([n,f,k],i)=>`
+           <div class="qrw"><span class="qn">${i+1}</span>
+             <span class="qb">${esc(n)}<em>${esc(f)}</em></span>
+             <span class="qtag" style="background:var(${k==="Colectiva"?"--c-teal":"--c-blue"})">${k}</span>
+             <button class="mb" style="--mc:var(--c-green);--mt:var(--t-green)" title="Dar la palabra" onclick="toast('Se le daría la palabra a ${esc(n)}')">${I.mic}</button>
+             <button class="mb" style="--mc:var(--c-red);--mt:var(--t-red)" title="Quitar" onclick="toast('Se quitaría a ${esc(n)} de la cola')">${I.x}</button>
+           </div>`).join("")}</div>
+         <div class="row" style="margin-top:11px">
+           <button class="btn btn-sm" style="background:var(--c-orange)" onclick="toast('Se cerraría la ronda')">${I.stop}Cerrar ronda</button>
+           <button class="btn-o btn-sm" style="--bc:var(--c-violet)" onclick="toast('Se abriría una ronda para otro punto')">Nueva ronda</button>
+         </div></div>`,p.cola.length)+
+
+     sec("dat",I.edit,"--c-blue","--t-blue","Datos de la sesión","Título, lugar, fecha y enlace.",datos)+
+
+     `<div class="sec open danger" style="--kc:var(--c-red);--kt:var(--t-red)">
+        <div class="sec-h" style="cursor:default">
+          <span class="sec-ic">${I.stop}</span>
+          <span class="sec-t"><b>Cerrar la sesión</b><span>Los resultados quedan fijos y se publican en el portal. No se puede deshacer.</span></span>
+        </div>
+        <div class="sec-b"><div class="row">
+          <button class="btn" style="background:var(--c-red)" onclick="toast('Se pediría confirmación antes de cerrar')">${I.stop}Cerrar sesión del pleno</button>
+          <button class="btn-o" style="--bc:var(--c-orange)" onclick="toast('Se abriría el selector de PDF')">${I.up}Subir acta</button>
+        </div></div></div>`;
+  }
+
+  // ══ PRÓXIMA ══
+  else if(s.estado==="futura"){
+    const justIds=new Set(s.justif.map(j=>j.id));
+    const conf=ACTIVOS.filter(m=>CONF.has(m.id));
+    const just=ACTIVOS.filter(m=>justIds.has(m.id));
+    const sin=ACTIVOS.filter(m=>!CONF.has(m.id)&&!justIds.has(m.id));
+    const cw=conf.reduce((a,m)=>a+m.w,0),q=cw/TOTAL_W*100,hayQ=q>=QUORUM*100;
+    const pend=s.justif.filter(j=>!j.estado).length;
+
+    cuerpo=
+     sec("dat",I.edit,"--c-blue","--t-blue","Datos de la sesión","Título, lugar, fecha, enlace y plazo de confirmación.",datos,null,true)+
+
+     sec("tab",I.archive,"--c-violet","--t-violet","Tabla de la sesión","Los integrantes ya la ven en su panel.",
+       tabla+`<div class="row" style="margin-top:10px"><button class="btn-o btn-sm" style="--bc:var(--c-violet)" onclick="toast('Se reenviaría la citación con la tabla actualizada')">${I.mail}Reenviar citación con la tabla</button></div>`,
+       s.tabla.length,true)+
+
+     sec("con",I.check,"--c-green","--t-green","Confirmaciones de asistencia",
+       `${conf.length} confirmades · ${just.length} justificades · ${sin.length} sin responder`,`
+       <div class="alert" style="background:var(${hayQ?"--t-green":"--t-amber"});color:var(${hayQ?"--c-green":"--c-orange"})">
+         ${hayQ?I.check:I.alert}
+         <div><b>${hayQ?"Quórum proyectado suficiente":"Quórum proyectado en riesgo"}</b>
+         <p>Ponderación confirmada <b>${cw.toFixed(2)}</b> de ${TOTAL_W.toFixed(2)} (${q.toFixed(1)}%).
+         ${hayQ?"Alcanza el mínimo.":`Faltan ${(TOTAL_W*QUORUM-cw).toFixed(2)} puntos de ponderación.`}
+         Plazo: <b>${esc(s.plazo)}</b>.</p></div></div>
+       <div class="cgrid">
+         <div class="cbox" style="--cc:var(--c-green)"><b>${conf.length}</b><span>Confirmades</span></div>
+         <div class="cbox" style="--cc:var(--c-orange)"><b>${just.length}</b><span>Justificades</span></div>
+         <div class="cbox" style="--cc:var(--ink3)"><b>${sin.length}</b><span>Sin responder</span></div>
+         <div class="cbox" style="--cc:var(--c-violet)"><b>${q.toFixed(0)}%</b><span>Quórum proyectado</span></div>
+       </div>
+       <div class="blk" style="--bc:var(--c-green)"><h5>${I.check}Confirmades (${conf.length})</h5>
+         <div class="names">${conf.map(m=>`<span class="nchip" style="color:var(--c-green);background:var(--t-green)">${esc(m.n)}</span>`).join("")}</div></div>
+       <div class="blk" style="--bc:var(--ink3)"><h5>${I.clock}Sin responder (${sin.length})</h5>
+         <div class="names">${sin.map(m=>`<span class="nchip" style="color:var(--ink3);background:var(--panel);border:1px solid var(--line)">${esc(m.n)}</span>`).join("")}</div>
+         <button class="btn btn-sm" style="background:var(--c-blue);margin-top:11px" onclick="toast('Se enviaría recordatorio a ${sin.length} integrantes')">${I.mail}Enviar recordatorio</button></div>`,
+       `${conf.length}/${ACTIVOS.length}`,true)+
+
+     sec("jus",I.flag,"--c-orange","--t-orange","Justificaciones",
+       "Aceptar deja la etiqueta de Inasistencia Justificada en el acta. Siguen contando como ausentes.",
+       s.justif.map((j,i)=>{
+         const m=memOf(j.id),c=EST[m.e];
+         return `<div class="just ${j.estado==="ok"?"ok":j.estado==="no"?"no":""}">
+           <div class="just-h"><b>${esc(m.n)}</b><time>${esc(j.fecha)}</time></div>
+           <div class="just-m">
+             <span style="color:var(${c.c});background:var(${c.t})">${c.label}</span>
+             <span style="color:var(--ink3);background:var(--tint)">${esc(m.f)}</span>
+             <span style="color:var(--c-orange);background:var(--t-orange)">${esc(j.motivo)}</span>
+           </div>
+           <div class="just-b">${esc(j.texto)}</div>
+           ${j.estado?`<span class="pill" style="background:var(${j.estado==="ok"?"--c-green":"--c-red"})">${j.estado==="ok"?"ACEPTADA":"RECHAZADA"}</span>`
+             :`<div class="row">
+                <button class="btn btn-sm" style="background:var(--c-green)" onclick="resolver(${s.id},${i},'ok')">${I.check}Aceptar</button>
+                <button class="btn-o btn-sm" style="--bc:var(--c-red)" onclick="resolver(${s.id},${i},'no')">${I.x}Rechazar</button>
+                <button class="btn-o btn-sm" style="--bc:var(--c-blue)" onclick="toast('Se abriría la respuesta por correo interno')">${I.mail}Responder</button>
+              </div>`}</div>`;}).join(""),
+       pend||null,pend>0)+
+
+     sec("moc",I.vote,"--c-violet","--t-violet","Mociones preparadas","Se abrirán a votación durante la sesión.",mociones,s.mociones.length)+
+
+     `<div class="sec open" style="--kc:var(--c-lime);--kt:var(--t-lime)">
+        <div class="sec-h" style="cursor:default">
+          <span class="sec-ic">${I.play}</span>
+          <span class="sec-t"><b>Abrir la sesión</b><span>Genera el código de asistencia y habilita el registro de los integrantes.</span></span>
+        </div>
+        <div class="sec-b"><button class="btn" style="background:var(--c-lime)" onclick="toast('Se abriría la sesión y se generaría el código')">${I.play}Abrir sesión del pleno</button></div>
+      </div>`;
+  }
+
+  // ══ CERRADA ══
+  else {
+    const q=s.pesoPres/TOTAL_W*100;
+    cuerpo=
+     sec("res",I.vote,"--c-violet","--t-violet","Resultados","Votaciones de la sesión con su ponderación.",mociones,s.mociones.length,true)+
+
+     sec("asi",I.users,"--c-green","--t-green","Asistencia registrada",
+       `${s.presentes} de ${ACTIVOS.length} presentes · ponderación ${s.pesoPres.toFixed(2)}`,`
+       <div class="qtop">
+         <div class="qring">${ring(s.presentes/ACTIVOS.length*100,s.presentes,"de "+ACTIVOS.length,"--c-green")}</div>
+         <div class="qinfo">
+           <div class="qrow"><span>Ponderación presente</span><b>${s.pesoPres.toFixed(2)} / ${TOTAL_W.toFixed(2)} · ${q.toFixed(1)}%</b></div>
+           <div class="bar"><i style="width:${q.toFixed(1)}%;background:linear-gradient(90deg,var(--c-green),var(--c-teal))"></i></div>
+         </div></div>
+       <button class="btn-o btn-sm" style="--bc:var(--c-blue)" onclick="toast('Se mostraría la nómina completa')">${I.users}Ver nómina completa</button>`,
+       `${s.presentes}/${ACTIVOS.length}`)+
+
+     sec("tab",I.archive,"--c-blue","--t-blue","Tabla tratada","Puntos de la sesión.",tabla,s.tabla.length)+
+
+     sec("act",I.down,"--c-orange","--t-orange","Acta y exportaciones","Planillas de esta sesión.",`
+       <div class="blk" style="--bc:var(--c-orange)">
+         <h5>${I.archive}Acta</h5>
+         ${s.acta?`<div class="row"><a class="btn-o btn-sm" style="--bc:var(--c-orange)" href="#">${I.down}${esc(s.acta)}</a>
+            <button class="btn-o btn-sm" style="--bc:var(--c-red)" onclick="toast('Se quitaría el acta')">${I.trash}Quitar acta</button></div>`
+          :`<div class="row"><button class="btn btn-sm" style="background:var(--c-orange)" onclick="toast('Se abriría el selector de PDF')">${I.up}Subir acta</button></div>`}
+       </div>
+       <div class="exp-row" style="margin-top:12px">
+         <div class="exp" style="--ec:var(--c-green);--et:var(--t-green)"><div class="ic">${I.users}</div>
+           <b>Asistencia</b><span>Nómina con modalidad, hora y ponderación.</span>
+           <button class="btn btn-sm" style="background:var(--c-green)" onclick="toast('Se descargaría la planilla de asistencia')">${I.down}Excel</button></div>
+         <div class="exp" style="--ec:var(--c-violet);--et:var(--t-violet)"><div class="ic">${I.vote}</div>
+           <b>Resultados</b><span>Cada moción con su ponderación y veredicto.</span>
+           <button class="btn btn-sm" style="background:var(--c-violet)" onclick="toast('Se descargaría la planilla de resultados')">${I.down}Excel</button></div>
+         <div class="exp" style="--ec:var(--c-blue);--et:var(--t-blue)"><div class="ic">${I.sheet}</div>
+           <b>Matriz nominal</b><span>Cómo votó cada integrante en cada moción.</span>
+           <button class="btn btn-sm" style="background:var(--c-blue)" onclick="toast('Se descargaría la matriz nominal')">${I.down}Excel</button></div>
+       </div>`,null,true)+
+
+     sec("dat",I.edit,"--c-ink3","--tint","Datos de la sesión","Título, lugar y fecha.",datos);
+  }
+
+  document.getElementById("view").innerHTML=`
+   <button class="back" onclick="verLista()">${I.back}Todas las sesiones</button>
+   <div class="ehead" style="--sc:var(${e.c})">
+     <span class="state" style="background:var(${e.c})">${e.pip?'<i class="pip"></i>':""}${e.label}</span>
+     <h1>${esc(s.title)}</h1>
+     <div class="m">
+       <span style="color:var(--c-violet);background:var(--t-violet)">${I.clock}${esc(s.fecha)}</span>
+       <span style="color:var(--c-blue);background:var(--t-blue)">${I.pin}${esc(s.lugar)}</span>
+       ${s.link?`<span style="color:var(--c-cyan);background:var(--t-cyan)">${I.video}Enlace configurado</span>`:""}
+     </div>
+     ${s.link?`<a class="btn-o" style="--bc:var(--c-cyan);display:inline-flex" href="${s.link}" target="_blank" rel="noopener">${I.video}Abrir enlace de la sesión</a>`:""}
+   </div>
+   ${cuerpo}`;
+  window.scrollTo({top:0});
+}
+function resolver(sid,i,e){
+  const s=SESIONES.find(x=>x.id===sid);
+  s.justif[i].estado=e;
+  const n=memOf(s.justif[i].id).n;
+  verSesion(sid);
+  toast(e==="ok"?`Aceptada — ${n} queda con Inasistencia Justificada`:`Rechazada — se notificará a ${n}`);
+}
+
+// ══ VISTA: INTEGRANTES ══
+let FILTRO="todos",BUSCA="";
+function verIntegrantes(){
+  document.getElementById("lnk-mem").classList.add("on");
+  const tabs=[["todos","Todos","--c-teal"],["consejero","Consejerías","--c-blue"],
+              ["cee","CEE","--c-green"],["cosefech","COSEFECH","--c-orange"],["inact","Inhabilitades","--ink3"]];
+  let list=MEMBERS.filter(m=>FILTRO==="inact"?!m.active:FILTRO==="todos"?m.active:(m.e===FILTRO&&m.active));
+  if(BUSCA) list=list.filter(m=>(m.n+" "+m.f).toLowerCase().includes(BUSCA.toLowerCase()));
+
+  document.getElementById("view").innerHTML=`
+   <button class="back" onclick="verLista()">${I.back}Volver a las sesiones</button>
+   <div class="vh">
+     <div><h1>Integrantes del pleno</h1>
+       <p>${ACTIVOS.length} activos · ponderación total ${TOTAL_W.toFixed(2)} · las altas y bajas no afectan sesiones ya creadas.</p></div>
+   </div>
+
+   <div class="sec open" style="--kc:var(--c-teal);--kt:var(--t-green);margin-bottom:14px">
+     <button class="sec-h" onclick="this.parentElement.classList.toggle('open')">
+       <span class="sec-ic">${I.plus}</span>
+       <span class="sec-t"><b>Agregar integrante</b><span>Se crea la cuenta con una contraseña temporal.</span></span>
+       <span class="chev">${I.chev}</span></button>
+     <div class="sec-b">
+       <div class="frow f3">
+         <div><label>Nombre completo</label><input placeholder="Nombre y apellidos"></div>
+         <div><label>Estamento</label><select>
+           <option>Consejería FECh (0,75)</option><option>CEE — Delegade (1,00)</option><option>COSEFECH (1,00)</option></select></div>
+         <div><label>Facultad o unidad</label><input placeholder="Ej: Ciencias Sociales"></div>
+       </div>
+       <button class="btn btn-sm" style="background:var(--c-teal)" onclick="toast('Se crearía la cuenta con contraseña temporal')">${I.plus}Agregar</button>
+     </div></div>
+
+   <div class="filters">
+     ${tabs.map(([k,l,c])=>`<button class="tab${FILTRO===k?" on":""}" style="--tc:var(${c})" onclick="setF('${k}')">${l}</button>`).join("")}
+     <input placeholder="Buscar…" value="${esc(BUSCA)}" oninput="setB(this.value)">
+   </div>
+   <div class="tbl-wrap"><table>
+     <thead><tr><th>Integrante</th><th>Estamento</th><th>Facultad</th><th>Pond.</th><th>Estado</th><th></th></tr></thead>
+     <tbody>${list.map(m=>{const c=EST[m.e];return `<tr>
+       <td style="font-weight:600">${esc(m.n)}</td>
+       <td><span class="est" style="color:var(${c.c});background:var(${c.t})">${c.label}</span></td>
+       <td style="color:var(--ink3)">${esc(m.f)}</td>
+       <td class="num">${m.w.toFixed(2)}</td>
+       <td><span class="dot" style="color:var(${m.active?"--c-green":"--ink3"})"><i style="background:var(${m.active?"--c-green":"--ink3"})"></i>${m.active?"Activo":"Inhabilitade"}</span></td>
+       <td><div class="acts">
+         <button class="mb" style="--mc:var(--c-blue);--mt:var(--t-blue)" title="Editar" onclick="toast('Se editaría a ${esc(m.n)}')">${I.edit}</button>
+         <button class="mb" style="--mc:var(--c-violet);--mt:var(--t-violet)" title="Asistencias" onclick="toast('Historial de asistencia de ${esc(m.n)}')">${I.cal}</button>
+         <button class="mb" style="--mc:var(--c-orange);--mt:var(--t-orange)" title="Contraseña" onclick="toast('Se generaría contraseña nueva para ${esc(m.n)}')">${I.key}</button>
+         <button class="mb" style="--mc:var(--c-red);--mt:var(--t-red)" title="${m.active?"Inhabilitar":"Habilitar"}" onclick="toast('Se ${m.active?"inhabilitaría":"habilitaría"} a ${esc(m.n)}')">${m.active?I.x:I.check}</button>
+       </div></td></tr>`;}).join("")}</tbody></table></div>
+   ${list.length===0?`<div class="empty" style="margin-top:12px"><b>Sin resultados</b><span>Nadie coincide con la búsqueda.</span></div>`:""}`;
+  window.scrollTo({top:0});
+}
+function setF(k){FILTRO=k;verIntegrantes();}
+function setB(v){BUSCA=v;verIntegrantes();const i=document.querySelector(".filters input");if(i){i.focus();i.setSelectionRange(v.length,v.length);}}
+
+verLista();
+</script>

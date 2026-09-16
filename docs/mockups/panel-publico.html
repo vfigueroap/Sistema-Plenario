@@ -1,0 +1,829 @@
+<title>Pleno FECh</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap">
+<style>
+  :root{
+    /* ground — blanco */
+    --bg:#FFFFFF; --panel:#FFFFFF; --tint:#F7F9FC; --line:#E6ECF5; --line2:#F0F4FA;
+    /* colores puros */
+    --c-blue:#0B5FFF; --c-orange:#FF7A00; --c-green:#00B368; --c-violet:#7C3AFF;
+    --c-red:#FF2D55; --c-cyan:#00B4D8; --c-lime:#3DBE00; --c-pink:#E5006D;
+    --c-amber:#FFB300; --c-teal:#00A99D;
+    /* tintes suaves (10-12% del puro) */
+    --t-blue:#EAF1FF; --t-orange:#FFF3E6; --t-green:#E5F8F0; --t-violet:#F2ECFF;
+    --t-red:#FFEBF0; --t-cyan:#E2F7FC; --t-lime:#EFFAE8; --t-pink:#FFE9F3;
+    /* texto */
+    --ink:#0A1628; --ink2:#4B5C75; --ink3:#8494AC;
+    --sh:0 1px 2px rgba(10,22,40,.05);
+    --sh-lg:0 10px 30px rgba(10,22,40,.09);
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#060A12; --panel:#0C1220; --tint:#101A2C; --line:#1A2740; --line2:#141F33;
+      --c-blue:#4D8AFF; --c-orange:#FF9D3D; --c-green:#22D68B; --c-violet:#A47BFF;
+      --c-red:#FF5C7C; --c-cyan:#38D0F0; --c-lime:#72E03A; --c-pink:#FF4D96;
+      --c-amber:#FFC53D; --c-teal:#2ECEC1;
+      --t-blue:#0A1730; --t-orange:#1F1206; --t-green:#042014; --t-violet:#150C2B;
+      --t-red:#20080F; --t-cyan:#041A22; --t-lime:#0E1C06; --t-pink:#210617;
+      --ink:#E8EFFA; --ink2:#9FB1CA; --ink3:#5F7391;
+      --sh:0 1px 2px rgba(0,0,0,.5); --sh-lg:0 10px 30px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#060A12; --panel:#0C1220; --tint:#101A2C; --line:#1A2740; --line2:#141F33;
+    --c-blue:#4D8AFF; --c-orange:#FF9D3D; --c-green:#22D68B; --c-violet:#A47BFF;
+    --c-red:#FF5C7C; --c-cyan:#38D0F0; --c-lime:#72E03A; --c-pink:#FF4D96;
+    --c-amber:#FFC53D; --c-teal:#2ECEC1;
+    --t-blue:#0A1730; --t-orange:#1F1206; --t-green:#042014; --t-violet:#150C2B;
+    --t-red:#20080F; --t-cyan:#041A22; --t-lime:#0E1C06; --t-pink:#210617;
+    --ink:#E8EFFA; --ink2:#9FB1CA; --ink3:#5F7391;
+    --sh:0 1px 2px rgba(0,0,0,.5); --sh-lg:0 10px 30px rgba(0,0,0,.6);
+  }
+
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  h1,h2,h3,h4{font-family:'Libre Baskerville',Georgia,serif;text-wrap:balance;color:var(--ink)}
+  button{font-family:inherit}
+  .wrap{max-width:980px;margin:0 auto;padding:0 20px}
+
+  .sample{background:var(--t-amber,#FFF8E6);border-bottom:1px solid var(--c-amber);color:var(--ink2);font-size:12px;font-weight:500;text-align:center;padding:6px 16px}
+  :root[data-theme="dark"] .sample,:root:not([data-theme="light"]) .sample{background:#1C1405}
+
+  /* ── Header ── */
+  .hdr{position:sticky;top:0;z-index:100;background:var(--panel);border-bottom:1px solid var(--line)}
+  .hdr-top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 20px;max-width:980px;margin:0 auto}
+  .brand{display:flex;align-items:center;gap:11px;min-width:0}
+  .crest{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    background:conic-gradient(from 140deg,var(--c-blue),var(--c-violet),var(--c-pink),var(--c-orange),var(--c-green),var(--c-blue))}
+  .crest svg{width:16px;height:16px;fill:#fff}
+  .brand-t{font-size:14.5px;font-weight:700;letter-spacing:-.015em;line-height:1.2}
+  .brand-s{font-size:11px;color:var(--ink3);line-height:1.2}
+  .btn-in{display:inline-flex;align-items:center;gap:6px;background:var(--c-blue);color:#fff;border:0;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0}
+  .btn-in:hover{filter:brightness(1.08)}
+  .btn-in svg{width:13px;height:13px}
+
+  /* ── Nav multicolor ── */
+  .nav{border-top:1px solid var(--line2);overflow-x:auto;scrollbar-width:none}
+  .nav::-webkit-scrollbar{display:none}
+  .nav-in{display:flex;gap:4px;max-width:980px;margin:0 auto;padding:8px 14px}
+  .nav-btn{background:transparent;border:1px solid transparent;border-radius:9px;padding:8px 14px;font-size:13.5px;font-weight:500;color:var(--ink2);cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:8px;transition:all .16s}
+  .nav-btn svg{width:15px;height:15px;color:var(--nc);opacity:.9}
+  .nav-btn:hover{background:var(--nt);color:var(--nc)}
+  .nav-btn.on{background:var(--nt);border-color:var(--nc);color:var(--nc);font-weight:650}
+  .nav-pip{width:7px;height:7px;border-radius:50%;background:var(--c-red);animation:pulse 1.5s infinite;flex-shrink:0}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+  @media(prefers-reduced-motion:reduce){.nav-pip{animation:none}}
+
+  .panel{display:none;padding:30px 0 64px}
+  .panel.on{display:block}
+
+  /* ── Sesión en vivo ── */
+  .live{background:var(--panel);border:1.5px solid var(--c-red);border-radius:16px;overflow:hidden;box-shadow:var(--sh-lg);margin-bottom:32px}
+  .live-strip{height:5px;background:linear-gradient(90deg,var(--c-red),var(--c-pink),var(--c-violet),var(--c-blue))}
+  .live-in{padding:24px}
+  .live-tag{display:inline-flex;align-items:center;gap:7px;background:var(--c-red);color:#fff;border-radius:100px;padding:4px 13px;font-size:11px;font-weight:700;letter-spacing:.07em;margin-bottom:14px}
+  .live-tag i{width:6px;height:6px;border-radius:50%;background:#fff;animation:pulse 1.5s infinite}
+  .live h2{font-size:clamp(21px,3.6vw,29px);line-height:1.22;margin-bottom:10px}
+  .lmeta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+  .lmeta span{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:500;border-radius:8px;padding:5px 11px}
+  .lmeta svg{width:13px;height:13px;flex-shrink:0}
+  .btn-join{display:inline-flex;align-items:center;gap:9px;background:linear-gradient(95deg,var(--c-red),var(--c-pink),var(--c-violet));color:#fff;border-radius:10px;padding:12px 22px;font-size:14px;font-weight:650;text-decoration:none;box-shadow:0 6px 18px rgba(255,45,85,.3);margin-bottom:20px}
+  .btn-join:hover{filter:brightness(1.09)}
+  .btn-join svg{width:16px;height:16px}
+
+  /* ── Bloques ── */
+  .blk{background:var(--tint);border-radius:12px;padding:16px 17px}
+  .blk+.blk{margin-top:13px}
+  .blk>h5{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;font-family:'IBM Plex Sans',sans-serif;color:var(--bc,var(--ink2))}
+  .blk>h5 svg{width:14px;height:14px}
+  .qrow{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink2);margin-bottom:8px}
+  .qrow b{color:var(--ink);font-variant-numeric:tabular-nums}
+  .bar{height:7px;background:var(--line);border-radius:4px;overflow:hidden}
+  .bar>i{display:block;height:100%;border-radius:4px}
+
+  /* ── Intro ── */
+  .intro h1{font-size:clamp(27px,4.8vw,42px);line-height:1.13;letter-spacing:-.025em;margin-bottom:7px}
+  .intro h1 .g{background:linear-gradient(95deg,var(--c-blue),var(--c-violet) 55%,var(--c-pink));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .isub{font-size:15px;color:var(--ink3);font-weight:300;margin-bottom:22px}
+  .ibody{border:1px solid var(--line);border-left:4px solid var(--c-blue);border-radius:12px;padding:20px 22px;font-size:14px;color:var(--ink2);line-height:1.75;margin-bottom:24px;background:var(--panel)}
+  .ibody p+p{margin-top:12px}
+  .ibody b{color:var(--ink)}
+
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
+  .stat{border:1px solid var(--line);border-radius:13px;padding:17px 12px;text-align:center;background:var(--panel);position:relative;overflow:hidden}
+  .stat::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:var(--sc)}
+  .stat .ic{width:34px;height:34px;border-radius:10px;background:var(--st);color:var(--sc);display:flex;align-items:center;justify-content:center;margin:2px auto 9px}
+  .stat .ic svg{width:16px;height:16px}
+  .stat b{display:block;font-family:'Libre Baskerville',serif;font-size:26px;line-height:1;font-variant-numeric:tabular-nums;margin-bottom:6px;color:var(--sc)}
+  .stat span{font-size:10.5px;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;line-height:1.3;display:block}
+
+  /* ── Próximos ── */
+  .nxt{display:grid;grid-template-columns:repeat(auto-fit,minmax(275px,1fr));gap:13px}
+  .nxt-c{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--c-violet);border-radius:13px;padding:17px 19px}
+  .nxt-c h4{font-size:15.5px;margin-bottom:10px;line-height:1.3}
+  .pill{border-radius:100px;padding:2.5px 10px;font-size:10px;font-weight:700;letter-spacing:.06em;display:inline-block}
+  .nxt-m{display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--ink2)}
+  .nxt-m span{display:flex;align-items:center;gap:7px}
+  .nxt-m svg{width:13px;height:13px;color:var(--c-violet);flex-shrink:0}
+
+  /* ── Section head ── */
+  .sh{display:flex;gap:14px;align-items:flex-start;margin-bottom:22px}
+  .sh-ic{width:38px;height:38px;border-radius:11px;background:var(--hc-t);color:var(--hc);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .sh-ic svg{width:17px;height:17px}
+  .sh h3{font-size:19px;line-height:1.28;margin-bottom:3px}
+  .sh p{font-size:12.5px;color:var(--ink3);line-height:1.45}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:24px}
+
+  /* ── Hemiciclo ── */
+  #hemi{width:100%;height:auto;display:block;max-width:820px;margin:0 auto}
+  .legend{display:flex;flex-wrap:wrap;justify-content:center;gap:9px;margin-top:14px}
+  .legend div{display:flex;align-items:center;font-size:12.5px;font-weight:600;border-radius:100px;padding:4px 13px}
+  .legend i{width:9px;height:9px;border-radius:50%;margin-right:8px;flex-shrink:0}
+  .legend em{font-style:normal;margin-left:6px;font-weight:400;opacity:.75}
+  .hint{text-align:center;font-size:11.5px;color:var(--ink3);margin-top:11px}
+  .groups{margin-top:24px;padding-top:22px;border-top:1px solid var(--line2)}
+  .grp{margin-bottom:20px}
+  .grp:last-child{margin-bottom:0}
+  .grp-h{display:flex;align-items:center;gap:9px;margin-bottom:10px;flex-wrap:wrap}
+  .grp-h i{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+  .grp-h b{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase}
+  .grp-h em{font-style:normal;font-size:11.5px;color:var(--ink3)}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{border-radius:100px;padding:3.5px 11px;font-size:12px;font-weight:500}
+
+  /* ── Asistencias ── */
+  .tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+  .tab{border-radius:100px;padding:7px 16px;font-size:12.5px;font-weight:600;cursor:pointer;border:1.5px solid var(--line);background:var(--panel);color:var(--ink2);transition:all .15s}
+  .tab:hover{border-color:var(--tc);color:var(--tc)}
+  .tab.on{background:var(--tc);border-color:var(--tc);color:#fff}
+  .att-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(218px,1fr));gap:10px}
+  .att{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--ac);border-radius:11px;padding:13px 14px}
+  .att-top{display:flex;justify-content:space-between;gap:9px;margin-bottom:10px}
+  .att-top b{font-size:12.5px;font-weight:650;line-height:1.3;display:block}
+  .att-top em{font-style:normal;font-size:11px;display:block;margin-top:2px;color:var(--ac)}
+  .att-pct{font-size:12px;font-weight:700;border-radius:100px;padding:2px 9px;height:fit-content;flex-shrink:0;font-variant-numeric:tabular-nums;color:#fff;background:var(--ac)}
+  .att small{font-size:11px;color:var(--ink3);display:block;margin:6px 0 8px}
+  .dots{display:flex;flex-wrap:wrap;gap:5px}
+  .dots span{width:17px;height:17px;border-radius:50%;font-size:9.5px;font-weight:700;display:flex;align-items:center;justify-content:center;color:#fff}
+
+  /* ── Sesiones ── */
+  .acc{display:flex;flex-direction:column;gap:11px}
+  .sess{background:var(--panel);border:1px solid var(--line);border-radius:13px;overflow:hidden;transition:border-color .16s}
+  .sess.open{border-color:var(--c-blue)}
+  .sess-hd{width:100%;background:none;border:0;padding:16px 19px;display:flex;align-items:center;justify-content:space-between;gap:14px;cursor:pointer;text-align:left}
+  .sess-hd:hover{background:var(--tint)}
+  .sess-hd h4{font-size:15.5px;line-height:1.3;margin-bottom:7px}
+  .sess-hd .m{display:flex;flex-wrap:wrap;gap:5px}
+  .sess-hd .m span{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;border-radius:6px;padding:2.5px 8px}
+  .sess-hd .m svg{width:11px;height:11px;flex-shrink:0}
+  .sess-hd .r{display:flex;align-items:center;gap:11px;flex-shrink:0}
+  .chev{width:17px;height:17px;color:var(--ink3);transition:transform .22s}
+  .sess.open .chev{transform:rotate(180deg);color:var(--c-blue)}
+  .sess-bd{display:none;padding:4px 19px 19px}
+  .sess.open .sess-bd{display:block}
+
+  .btn-acta{display:inline-flex;align-items:center;gap:8px;background:var(--c-orange);color:#fff;border-radius:9px;padding:9px 17px;font-size:13px;font-weight:600;text-decoration:none;margin-bottom:13px}
+  .btn-acta:hover{filter:brightness(1.08)}
+  .btn-acta svg{width:14px;height:14px}
+
+  .rc-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+  .rc{display:inline-flex;align-items:center;gap:7px;border-radius:100px;padding:4px 13px;font-size:11.5px;font-weight:650;color:#fff}
+  .rc svg{width:12px;height:12px}
+  .rsec{margin-bottom:12px}
+  .rsec:last-child{margin-bottom:0}
+  .rsec>b{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;gap:7px;margin-bottom:8px}
+  .rsec>b svg{width:12px;height:12px}
+  .names{display:flex;flex-wrap:wrap;gap:5px}
+  .nchip{border-radius:100px;padding:2.5px 10px;font-size:11.5px;font-weight:500}
+
+  /* ── Tabla (agenda) ── */
+  .tabla{list-style:none;counter-reset:pt;display:flex;flex-direction:column;gap:6px}
+  .tabla li{counter-increment:pt;display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:9px 13px}
+  .tabla li.now{border-color:var(--c-red);background:var(--t-red)}
+  .tabla li::before{content:counter(pt,decimal-leading-zero);font-size:11px;font-weight:700;color:var(--c-blue);font-variant-numeric:tabular-nums;flex-shrink:0;min-width:19px}
+  .tabla li.now::before{color:var(--c-red)}
+  .tabla .pt{flex:1;font-size:13px;line-height:1.45;min-width:0}
+  .tabla .mins{flex-shrink:0;font-size:11px;color:var(--ink3);font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:5px}
+  .tabla .mins svg{width:11px;height:11px}
+  .tbadge{flex-shrink:0;font-size:9.5px;font-weight:700;letter-spacing:.05em;border-radius:100px;padding:2px 8px;color:#fff}
+  .tfoot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:11.5px;color:var(--ink3);margin-top:11px;padding:0 3px}
+  .tfoot b{color:var(--ink2);font-variant-numeric:tabular-nums}
+
+  /* ── Votaciones ── */
+  .vhead{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--c-violet);margin:16px 0 12px;display:flex;align-items:center;gap:8px}
+  .vhead svg{width:14px;height:14px}
+  .topic{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:17px 18px}
+  .topic+.topic{margin-top:11px}
+  .thd{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:5px}
+  .thd b{font-size:14.5px;font-weight:650;line-height:1.35;font-family:'IBM Plex Sans',sans-serif}
+  .verdict{border-radius:100px;padding:2.5px 11px;font-size:10px;font-weight:700;letter-spacing:.05em;flex-shrink:0;color:#fff}
+  .tdet{font-size:12.5px;color:var(--ink3);margin-bottom:14px;line-height:1.55}
+  .rbar{display:flex;height:30px;border-radius:8px;overflow:hidden;margin-bottom:11px;background:var(--line);gap:2px}
+  .rbar>div{display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:#fff;min-width:0;overflow:hidden;font-variant-numeric:tabular-nums}
+  .rkey{display:flex;flex-wrap:wrap;gap:7px}
+  .rkey span{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:600;border-radius:7px;padding:4px 10px}
+  .rkey b{font-variant-numeric:tabular-nums}
+  .crow{display:flex;align-items:center;gap:11px;margin-bottom:9px}
+  .crow:last-child{margin-bottom:0}
+  .cname{font-size:12.5px;width:132px;flex-shrink:0;font-weight:600}
+  .ctrack{flex:1;height:22px;background:var(--line2);border-radius:6px;overflow:hidden}
+  .ctrack>i{display:block;height:100%;border-radius:6px}
+  .cval{font-size:12px;font-weight:700;width:56px;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums}
+
+  details.dd{margin-top:14px}
+  details.dd>summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:650;user-select:none;border-radius:8px;padding:6px 12px;transition:filter .15s}
+  details.dd>summary::-webkit-details-marker{display:none}
+  details.dd>summary:hover{filter:brightness(.96)}
+  details.dd>summary svg{width:13px;height:13px}
+  details.dd>summary svg.car{transition:transform .2s}
+  details.dd[open]>summary svg.car{transform:rotate(180deg)}
+  .blist{margin-top:11px;max-height:290px;overflow-y:auto;border:1px solid var(--line);border-radius:10px}
+  .brow{display:flex;justify-content:space-between;gap:12px;padding:8px 13px;font-size:12px;border-bottom:1px solid var(--line2)}
+  .brow:last-child{border-bottom:0}
+  .brow .n b{font-weight:550}
+  .brow .n em{font-style:normal;color:var(--ink3);margin-left:7px;font-size:11px}
+  .brow.ab .n b{color:var(--ink3);text-decoration:line-through}
+  .brow .v{flex-shrink:0;font-weight:700;font-size:11px;border-radius:100px;padding:1.5px 9px;height:fit-content;white-space:nowrap}
+
+  .foot{border-top:1px solid var(--line);padding:30px 0;text-align:center;background:var(--panel)}
+  .foot .rain{height:3px;width:110px;margin:0 auto 16px;border-radius:2px;background:linear-gradient(90deg,var(--c-blue),var(--c-violet),var(--c-pink),var(--c-orange),var(--c-green))}
+  .foot b{display:block;font-size:12.5px;color:var(--ink2);font-weight:650;margin-bottom:4px}
+  .foot span{font-size:11.5px;color:var(--ink3)}
+
+  #tip{position:fixed;pointer-events:none;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 13px;font-size:12px;box-shadow:var(--sh-lg);z-index:300;display:none;max-width:210px}
+  #tip .g{font-weight:700;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px}
+  #tip .n{font-weight:650;line-height:1.3}
+  #tip .f{font-size:11px;color:var(--ink3);margin-top:2px}
+
+  @media(max-width:660px){
+    .stats{grid-template-columns:repeat(2,1fr)}
+    .cname{width:96px}
+    .sess-hd{padding:14px 15px}
+    .sess-bd{padding:4px 15px 15px}
+    .live-in{padding:19px}
+  }
+</style>
+
+<div class="sample">Vista previa con datos de ejemplo · En tu aplicación los datos vienen de la base de datos real</div>
+
+<header class="hdr">
+  <div class="hdr-top">
+    <div class="brand">
+      <div class="crest"><svg viewBox="0 0 24 24"><path d="M12 2L4 5v6c0 5.5 3.5 10.7 8 12 4.5-1.3 8-6.5 8-12V5l-8-3z"/></svg></div>
+      <div><div class="brand-t">Pleno FECh</div><div class="brand-s">Portal de Transparencia</div></div>
+    </div>
+    <button class="btn-in">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      Ingresar
+    </button>
+  </div>
+  <nav class="nav"><div class="nav-in" id="nav"></div></nav>
+</header>
+
+<div id="tip"><div class="g" id="tg"></div><div class="n" id="tn"></div><div class="f" id="tf"></div></div>
+
+<main class="wrap">
+  <section class="panel on" id="p-inicio">
+    <div id="live-slot"></div>
+    <div class="intro">
+      <h1><span class="g">Sistema Plenario</span><br>Federación de Estudiantes</h1>
+      <p class="isub">Universidad de Chile</p>
+      <div class="ibody">
+        <p>El <b>Pleno FECh</b> es la instancia máxima de deliberación y decisión de la Federación de Estudiantes de la Universidad de Chile. Reúne a las Consejerías FECh, a las delegaciones de los Centros de Estudiantes (CEE) y al Consejo Superior (COSEFECH) bajo un sistema de votación ponderada.</p>
+        <p>Este portal publica la tabla de cada sesión, la composición del pleno, el registro de asistencias y los resultados completos de cada votación, garantizando la transparencia democrática frente a toda la comunidad estudiantil.</p>
+      </div>
+      <div class="stats" id="stats"></div>
+    </div>
+    <div id="next-slot"></div>
+  </section>
+
+  <section class="panel" id="p-composicion">
+    <div class="sh" style="--hc:var(--c-green);--hc-t:var(--t-green)">
+      <div class="sh-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+      <div><h3>Composición del Pleno FECh</h3><p>Estructura actual del órgano máximo de la Federación, organizada por estamento.</p></div>
+    </div>
+    <div class="card">
+      <svg id="hemi" viewBox="0 0 820 440"></svg>
+      <div class="legend" id="legend"></div>
+      <p class="hint">Pasa el cursor sobre un asiento para ver el integrante</p>
+      <div class="groups" id="groups"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-asistencias">
+    <div class="sh" style="--hc:var(--c-cyan);--hc-t:var(--t-cyan)">
+      <div class="sh-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+      <div><h3>Histórico de Asistencias</h3><p>Registro de presencia de cada integrante a través de las sesiones realizadas.</p></div>
+    </div>
+    <div class="tabs" id="att-tabs"></div>
+    <div class="att-grid" id="att-grid"></div>
+  </section>
+
+  <section class="panel" id="p-sesiones">
+    <div class="sh" style="--hc:var(--c-violet);--hc-t:var(--t-violet)">
+      <div class="sh-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></div>
+      <div><h3>Actas y Resultados de Sesiones</h3><p>Tabla, asistencia, votaciones y votos por integrante de cada pleno cerrado.</p></div>
+    </div>
+    <div class="acc" id="acc"></div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="rain"></div>
+    <b>Federación de Estudiantes de la Universidad de Chile</b>
+    <span>Portal de Transparencia Plenaria · Sistema de Votación Ponderada</span>
+  </div>
+</footer>
+
+<script>
+const I={
+ home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+ users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+ chart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+ archive:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>',
+ pin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+ cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+ clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+ video:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>',
+ down:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+ userx:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="18" y1="8" x2="23" y2="13"/><line x1="23" y1="8" x2="18" y2="13"/></svg>',
+ chev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>',
+ vote:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
+ scale:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18"/><path d="M5 7h14"/><path d="M5 7l-3 7h6z"/><path d="M19 7l-3 7h6z"/></svg>'
+};
+
+const MEMBERS=[
+ {n:"Valentina Morales Ríos",g:"COSEFECH",f:"Derecho"},
+ {n:"Andrés Figueroa Pinto",g:"COSEFECH",f:"Ingeniería"},
+ {n:"Camila Herrera Lagos",g:"COSEFECH",f:"Filosofía y Humanidades"},
+ {n:"Diego Sepúlveda Cruz",g:"COSEFECH",f:"Ciencias Sociales"},
+ {n:"Isidora Fuentes Vega",g:"COSEFECH",f:"Economía y Negocios"},
+ {n:"Matías Contreras Rojas",g:"COSEFECH",f:"Arquitectura y Urbanismo"},
+ {n:"Sofía Vargas Medina",g:"COSEFECH",f:"Medicina"},
+ {n:"Tomás Riquelme Bravo",g:"COSEFECH",f:"Agronomía"},
+ {n:"Alejandro Castro Muñoz",g:"Consejeros FECh",f:"Ingeniería"},
+ {n:"Antonia Beltrán Soto",g:"Consejeros FECh",f:"Ciencias Sociales"},
+ {n:"Bárbara Muñoz Peña",g:"Consejeros FECh",f:"Derecho"},
+ {n:"Benjamín Cruz Araya",g:"Consejeros FECh",f:"Ingeniería"},
+ {n:"Carlos Pérez Díaz",g:"Consejeros FECh",f:"Filosofía y Humanidades"},
+ {n:"Carolina Meza Leal",g:"Consejeros FECh",f:"Derecho"},
+ {n:"Daniela González López",g:"Consejeros FECh",f:"Economía y Negocios"},
+ {n:"David Núñez Flores",g:"Consejeros FECh",f:"Filosofía y Humanidades"},
+ {n:"Emilio Rojas Vera",g:"Consejeros FECh",f:"Medicina"},
+ {n:"Fernanda López Castro",g:"Consejeros FECh",f:"Arquitectura y Urbanismo"},
+ {n:"Gabriel Soto Ibáñez",g:"Consejeros FECh",f:"Ciencias"},
+ {n:"Hanna Wolff Steiner",g:"Consejeros FECh",f:"Filosofía y Humanidades"},
+ {n:"Ignacio Bravo Campos",g:"Consejeros FECh",f:"Gobierno (INAP)"},
+ {n:"Javiera Díaz Salinas",g:"Consejeros FECh",f:"Ciencias Sociales"},
+ {n:"Kevin Araya Morales",g:"Consejeros FECh",f:"Ingeniería"},
+ {n:"Laura Espinoza Tapia",g:"Consejeros FECh",f:"Derecho"},
+ {n:"Manuel Torres Reyes",g:"Consejeros FECh",f:"Economía y Negocios"},
+ {n:"Natalia Vidal Guzmán",g:"Consejeros FECh",f:"Medicina"},
+ {n:"Óscar Mendoza Rivas",g:"Consejeros FECh",f:"Filosofía y Humanidades"},
+ {n:"Paula Reyes Núñez",g:"Consejeros FECh",f:"Arquitectura y Urbanismo"},
+ {n:"Rocío Navarro Pino",g:"Consejeros FECh",f:"Ciencias Sociales"},
+ {n:"Sebastián Campos Meza",g:"Consejeros FECh",f:"Ingeniería"},
+ {n:"Tamara Ibáñez Saavedra",g:"Consejeros FECh",f:"Filosofía y Humanidades"},
+ {n:"Ulises Pinto Carrasco",g:"Consejeros FECh",f:"Derecho"},
+ {n:"Valentín Flores Ríos",g:"Consejeros FECh",f:"Economía y Negocios"},
+ {n:"Wendy Saavedra Ortiz",g:"Consejeros FECh",f:"Medicina"},
+ {n:"Zacarías Alvarado Meza",g:"Consejeros FECh",f:"Gobierno (INAP)"},
+ {n:"Agustín Leal Vargas",g:"CEE",f:"CEE Ingeniería"},
+ {n:"Belén Carrasco Díaz",g:"CEE",f:"CEE Derecho"},
+ {n:"Cristóbal Ríos Herrera",g:"CEE",f:"CEE Medicina"},
+ {n:"Diana Tapia Moreno",g:"CEE",f:"CEE Arquitectura"},
+ {n:"Elías Mora Fuentes",g:"CEE",f:"CEE Ciencias"},
+ {n:"Francisca Salinas Cruz",g:"CEE",f:"CEE Ciencias Sociales"},
+ {n:"Gonzalo Acevedo Bravo",g:"CEE",f:"CEE Filosofía"},
+ {n:"Helena Stange Koch",g:"CEE",f:"CEE Economía"},
+ {n:"Ian Vergara Solís",g:"CEE",f:"CEE Odontología"},
+ {n:"Julia Pizarro Lagos",g:"CEE",f:"CEE Veterinaria"}
+];
+const WEIGHT={"COSEFECH":1.0,"Consejeros FECh":0.75,"CEE":1.0};
+
+const S1=new Set([0,1,2,4,5,6,8,9,10,12,13,14,15,16,17,18,20,21,22,23,25,26,28,29,30,32,35,36,37,38,39,40,41,42,44]);
+const S2=new Set([0,1,2,3,4,5,6,7,8,10,11,12,14,15,16,17,18,19,20,21,23,24,25,26,27,28,30,31,32,33,34,35,36,38,39,40,41,42,43,44]);
+const S3=new Set([0,1,2,4,5,7,8,9,10,11,12,13,15,16,17,18,20,21,22,24,25,26,27,29,30,31,33,35,36,37,38,40,42,43,44]);
+const ONLINE=new Set([3,9,12,14,19,22,24,29,32,34,39,44]);
+const JUSTIFIED=new Set([7,19,24,31,34]);
+
+const ACTIVE={
+ title:"3.er Pleno Ordinario 2025", date:"Miércoles 4 de junio de 2025, 18:30",
+ location:"Salón de Honor, Casa Central", link:"#",
+ present:new Set([0,1,2,3,4,6,8,9,10,11,13,14,16,17,18,20,22,23,25,26,28,30,31,33,35,36,38,39,41,42,44]),
+ tabla:[
+  {t:"Verificación de quórum y lectura del acta anterior",min:15},
+  {t:"Cuenta de la Mesa Directiva",min:20},
+  {t:"Informe de la Comisión de Bienestar Estudiantil",min:25,curr:true},
+  {t:"Votación: Presupuesto de Bienestar, 2.º semestre",min:30},
+  {t:"Votación: Convenio con la Dirección de Deportes",min:20},
+  {t:"Puntos varios",min:15}
+ ]
+};
+
+const UPCOMING=[
+ {title:"4.º Pleno Ordinario 2025",date:"Miércoles 2 de julio de 2025, 18:30",location:"Salón de Honor, Casa Central",
+  tabla:[{t:"Verificación de quórum y lectura del acta anterior",min:15},{t:"Cuenta de la Mesa Directiva",min:20},
+         {t:"Votación: Reforma al Reglamento de Comisiones",min:35},{t:"Puntos varios",min:15}]},
+ {title:"2.º Pleno Extraordinario 2025",date:"Martes 22 de julio de 2025, 19:00",location:"Modalidad telemática",
+  tabla:[{t:"Verificación de quórum",min:10},{t:"Votación: Mandato para la mesa de diálogo con Rectoría",min:45}]}
+];
+
+const PAST=[
+ {title:"1.er Pleno Ordinario 2025",date:"Miércoles 12 de marzo de 2025, 18:30",location:"Salón de Honor, Casa Central",
+  present:S1,acta:"acta-pleno-1-2025.pdf",
+  tabla:[{t:"Verificación de quórum e instalación del pleno",min:15},{t:"Cuenta de la Mesa Directiva",min:20},
+   {t:"Presentación del Plan de Trabajo Anual 2025",min:30},
+   {t:"Votación: Aprobación del Plan de Trabajo Anual 2025",min:25,vote:true},
+   {t:"Votación: Modificación al Reglamento de Elecciones",min:30,vote:true},{t:"Puntos varios",min:15}],
+  topics:[
+   {title:"Aprobación del Plan de Trabajo Anual 2025",detail:"Presentado por la Mesa Directiva conforme al artículo 34 de los Estatutos.",
+    type:"mocion",approved:true,pct:{a:72.4,c:18.1,b:9.5},w:{a:24.75,c:6.20,b:3.25}},
+   {title:"Modificación al Reglamento de Elecciones",detail:"Ajuste de plazos de inscripción de candidaturas (art. 12 y 14).",
+    type:"mocion",approved:false,pct:{a:41.2,c:50.8,b:8.0},w:{a:14.10,c:17.35,b:2.75}}]},
+
+ {title:"2.º Pleno Ordinario 2025",date:"Miércoles 9 de abril de 2025, 18:30",location:"Salón de Honor, Casa Central",
+  present:S2,acta:"acta-pleno-2-2025.pdf",
+  tabla:[{t:"Verificación de quórum y lectura del acta anterior",min:15},{t:"Cuenta de la Mesa Directiva",min:20},
+   {t:"Presentación de candidaturas a Secretaría de Comunicaciones",min:20},
+   {t:"Votación: Elección de Secretaría de Comunicaciones",min:25,vote:true},
+   {t:"Votación: Declaración pública sobre financiamiento universitario",min:25,vote:true},
+   {t:"Votación: Presupuesto de Bienestar Estudiantil, 1.er semestre",min:30,vote:true},{t:"Puntos varios",min:15}],
+  topics:[
+   {title:"Elección de Secretaría de Comunicaciones",detail:"Votación por candidaturas conforme al artículo 41 de los Estatutos.",
+    type:"candidato",approved:null,candidates:[{name:"Camila Herrera",votes:18.75},{name:"Kevin Araya",votes:12.50},{name:"Abstención",votes:4.25}]},
+   {title:"Declaración pública sobre financiamiento universitario",detail:"Moción presentada por la Consejería de Ciencias Sociales.",
+    type:"mocion",approved:true,pct:{a:88.6,c:5.2,b:6.2},w:{a:31.40,c:1.85,b:2.20}},
+   {title:"Presupuesto de Bienestar Estudiantil, 1.er semestre",detail:"Asignación de $18.400.000 al fondo de emergencia.",
+    type:"mocion",approved:true,pct:{a:64.9,c:26.3,b:8.8},w:{a:23.00,c:9.30,b:3.15}}]},
+
+ {title:"1.er Pleno Extraordinario 2025",date:"Lunes 28 de abril de 2025, 19:00",location:"Modalidad telemática",
+  present:S3,acta:"acta-pleno-extra-1-2025.pdf",
+  tabla:[{t:"Verificación de quórum",min:10},{t:"Exposición de la situación por la Mesa Directiva",min:20},
+   {t:"Debate general",min:40},{t:"Votación: Convocatoria a paro reflexivo estudiantil",min:25,vote:true},
+   {t:"Votación: Mandato de negociación con Rectoría",min:30,vote:true}],
+  topics:[
+   {title:"Convocatoria a paro reflexivo estudiantil",detail:"Moción de urgencia presentada por 12 consejerías.",
+    type:"mocion",approved:true,pct:{a:56.8,c:35.4,b:7.8},w:{a:19.45,c:12.10,b:2.65}},
+   {title:"Mandato de negociación con Rectoría",detail:"Define el pliego de demandas y la comisión negociadora.",
+    type:"mocion",approved:true,pct:{a:79.1,c:12.6,b:8.3},w:{a:27.05,c:4.30,b:2.85}}]}
+];
+
+const EST={
+ cosefech :{label:"COSEFECH",         c:"--c-orange", t:"--t-orange"},
+ consejero:{label:"Consejerías FECh", c:"--c-blue",   t:"--t-blue"},
+ cee      :{label:"CEE — Delegades",  c:"--c-green",  t:"--t-green"}
+};
+const estOf=g=>g==="COSEFECH"?"cosefech":g==="Consejeros FECh"?"consejero":"cee";
+const ORD={cosefech:0,consejero:1,cee:2};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const CSS=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+function tablaHTML(tabla){
+  if(!tabla||!tabla.length) return "";
+  const total=tabla.reduce((s,p)=>s+(p.min||0),0);
+  const h=Math.floor(total/60),m=total%60;
+  const dur=h?`${h} h${m?" "+m+" min":""}`:`${m} min`;
+  const votes=tabla.filter(p=>p.vote).length;
+  return `<ol class="tabla">${tabla.map(p=>`
+    <li class="${p.curr?"now":""}">
+      <span class="pt">${esc(p.t)}</span>
+      ${p.curr?`<span class="tbadge" style="background:var(--c-red)">EN DEBATE</span>`:""}
+      ${p.vote?`<span class="tbadge" style="background:var(--c-violet)">VOTADO</span>`:""}
+      ${p.min?`<span class="mins">${I.clock}${p.min} min</span>`:""}
+    </li>`).join("")}</ol>
+  <div class="tfoot">
+    <span>${tabla.length} punto${tabla.length!==1?"s":""} de tabla${votes?` · ${votes} con votación`:""}</span>
+    <span>Duración estimada <b>${dur}</b></span>
+  </div>`;
+}
+
+// ── Nav ──
+const TABS=[
+ {id:"inicio",      label:"Inicio",                icon:I.home,    c:"--c-red",    t:"--t-red"},
+ {id:"composicion", label:"Composición del Pleno", icon:I.users,   c:"--c-green",  t:"--t-green"},
+ {id:"asistencias", label:"Asistencias",           icon:I.chart,   c:"--c-cyan",   t:"--t-cyan"},
+ {id:"sesiones",    label:"Sesiones y Votaciones", icon:I.archive, c:"--c-violet", t:"--t-violet"}
+];
+(function(){
+  const el=document.getElementById("nav");
+  TABS.forEach((t,i)=>{
+    const b=document.createElement("button");
+    b.className="nav-btn"+(i===0?" on":"");
+    b.style.setProperty("--nc",`var(${t.c})`);
+    b.style.setProperty("--nt",`var(${t.t})`);
+    b.innerHTML=t.icon+"<span>"+t.label+"</span>"+(t.id==="inicio"&&ACTIVE?'<span class="nav-pip"></span>':"");
+    b.onclick=()=>{
+      document.querySelectorAll(".nav-btn").forEach(x=>x.classList.remove("on"));
+      document.querySelectorAll(".panel").forEach(x=>x.classList.remove("on"));
+      b.classList.add("on");
+      document.getElementById("p-"+t.id).classList.add("on");
+      window.scrollTo({top:0,behavior:"smooth"});
+    };
+    el.appendChild(b);
+  });
+})();
+
+// ── Inicio ──
+(function(){
+  const totalW=MEMBERS.reduce((s,m)=>s+WEIGHT[m.g],0);
+  const presW=[...ACTIVE.present].reduce((s,i)=>s+WEIGHT[MEMBERS[i].g],0);
+  const pct=presW/totalW*100;
+
+  document.getElementById("live-slot").innerHTML=`
+   <div class="live">
+    <div class="live-strip"></div>
+    <div class="live-in">
+      <div class="live-tag"><i></i>PLENO EN CURSO</div>
+      <h2>${esc(ACTIVE.title)}</h2>
+      <div class="lmeta">
+        <span style="color:var(--c-violet);background:var(--t-violet)">${I.cal}${esc(ACTIVE.date)}</span>
+        <span style="color:var(--c-orange);background:var(--t-orange)">${I.pin}${esc(ACTIVE.location)}</span>
+        <span style="color:var(--c-green);background:var(--t-green)">${I.users}${ACTIVE.present.size} de ${MEMBERS.length} presentes</span>
+      </div>
+      <a class="btn-join" href="${ACTIVE.link}">${I.video}Unirse al pleno en vivo</a>
+      <div class="blk" style="--bc:var(--c-green)">
+        <h5>${I.scale}Quórum en tiempo real</h5>
+        <div class="qrow"><span>Ponderación presente</span><b>${presW.toFixed(2)} / ${totalW.toFixed(2)}</b></div>
+        <div class="bar"><i style="width:${pct.toFixed(1)}%;background:linear-gradient(90deg,var(--c-green),var(--c-teal))"></i></div>
+        <div class="qrow" style="margin:9px 0 0"><span>Quórum alcanzado</span><b style="color:var(--c-green)">${pct.toFixed(1)}%</b></div>
+      </div>
+      <div class="blk" style="--bc:var(--c-blue)">
+        <h5>${I.archive}Tabla de la sesión</h5>
+        ${tablaHTML(ACTIVE.tabla)}
+      </div>
+    </div>
+   </div>`;
+
+  const totalVotes=PAST.reduce((s,p)=>s+p.topics.length,0);
+  const totalPts=PAST.reduce((s,p)=>s+p.tabla.length,0);
+  document.getElementById("stats").innerHTML=[
+   {v:MEMBERS.length,l:"Integrantes",     i:I.users,  c:"--c-blue",  t:"--t-blue"},
+   {v:PAST.length,   l:"Sesiones realizadas",i:I.cal, c:"--c-green", t:"--t-green"},
+   {v:totalPts,      l:"Puntos de tabla", i:I.archive,c:"--c-orange",t:"--t-orange"},
+   {v:totalVotes,    l:"Votaciones",      i:I.vote,   c:"--c-violet",t:"--t-violet"}
+  ].map(s=>`<div class="stat" style="--sc:var(${s.c});--st:var(${s.t})">
+     <div class="ic">${s.i}</div><b>${s.v}</b><span>${s.l}</span></div>`).join("");
+
+  if(UPCOMING.length){
+    document.getElementById("next-slot").innerHTML=`
+     <div style="margin-top:36px">
+       <div class="sh" style="--hc:var(--c-violet);--hc-t:var(--t-violet)">
+         <div class="sh-ic">${I.cal}</div>
+         <div><h3>Próximos plenos</h3><p>Sesiones agendadas por la Mesa Directiva, con su tabla.</p></div>
+       </div>
+       <div class="nxt">${UPCOMING.map(u=>`
+         <div class="nxt-c">
+           <span class="pill" style="color:#fff;background:var(--c-violet)">PRÓXIMO</span>
+           <h4 style="margin-top:9px">${esc(u.title)}</h4>
+           <div class="nxt-m">
+             <span>${I.clock}${esc(u.date)}</span>
+             <span>${I.pin}${esc(u.location)}</span>
+           </div>
+           <details class="dd">
+             <summary style="color:var(--c-violet);background:var(--t-violet)">${I.archive}Ver tabla (${u.tabla.length} puntos)<svg class="car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></summary>
+             <div style="margin-top:11px">${tablaHTML(u.tabla)}</div>
+           </details>
+         </div>`).join("")}</div>
+     </div>`;
+  }
+})();
+
+// ── Composición ──
+(function(){
+  const sorted=[...MEMBERS].sort((a,b)=>(ORD[estOf(a.g)]-ORD[estOf(b.g)])||a.n.localeCompare(b.n,"es"));
+  const cos=sorted.filter(m=>estOf(m.g)==="cosefech");
+  const con=sorted.filter(m=>estOf(m.g)==="consejero");
+  const cee=sorted.filter(m=>estOf(m.g)==="cee");
+  const k=Math.ceil(con.length/3);
+  const rings=[[cos,95],[con.slice(0,k),167],[con.slice(k,2*k),239],[con.slice(2*k),311],[cee,383]];
+
+  const cx=410,cy=430,R=9.5,NS="http://www.w3.org/2000/svg";
+  const svg=document.getElementById("hemi"),tip=document.getElementById("tip");
+
+  const arc=document.createElementNS(NS,"path");
+  arc.setAttribute("d","M 24 430 A 386 386 0 0 1 796 430");
+  arc.setAttribute("fill","none");arc.setAttribute("stroke","var(--line)");arc.setAttribute("stroke-width","1.5");
+  svg.appendChild(arc);
+
+  const pod=document.createElementNS(NS,"ellipse");
+  pod.setAttribute("cx",cx);pod.setAttribute("cy",cy+4);pod.setAttribute("rx","25");pod.setAttribute("ry","7");
+  pod.setAttribute("fill","var(--line)");svg.appendChild(pod);
+  const stem=document.createElementNS(NS,"rect");
+  stem.setAttribute("x",cx-5);stem.setAttribute("y",cy-15);stem.setAttribute("width","10");
+  stem.setAttribute("height","17");stem.setAttribute("rx","3");stem.setAttribute("fill","var(--ink3)");
+  svg.appendChild(stem);
+
+  for(const [ms,r] of rings){
+    if(!ms.length) continue;
+    ms.forEach((m,i)=>{
+      const t=ms.length===1?.5:i/(ms.length-1);
+      const rad=(178-176*t)*Math.PI/180;
+      const x=cx+r*Math.cos(rad),y=cy-r*Math.sin(rad);
+      const e=estOf(m.g),cfg=EST[e];
+      const c=document.createElementNS(NS,"circle");
+      c.setAttribute("cx",x);c.setAttribute("cy",y);c.setAttribute("r",R);
+      c.setAttribute("fill",`var(${cfg.c})`);
+      c.setAttribute("stroke","var(--panel)");c.setAttribute("stroke-width","2");
+      c.style.cursor="pointer";
+      c.addEventListener("mouseenter",ev=>{
+        c.setAttribute("r",R+3.5);
+        const tg=document.getElementById("tg");
+        tg.textContent=cfg.label;tg.style.color=`var(${cfg.c})`;
+        document.getElementById("tn").textContent=m.n;
+        document.getElementById("tf").textContent=m.f;
+        tip.style.display="block";tip.style.left=(ev.clientX+15)+"px";tip.style.top=(ev.clientY-8)+"px";
+      });
+      c.addEventListener("mousemove",ev=>{tip.style.left=(ev.clientX+15)+"px";tip.style.top=(ev.clientY-8)+"px";});
+      c.addEventListener("mouseleave",()=>{c.setAttribute("r",R);tip.style.display="none";});
+      svg.appendChild(c);
+    });
+  }
+
+  document.getElementById("legend").innerHTML=Object.entries(EST).map(([k,c])=>{
+    const n=MEMBERS.filter(m=>estOf(m.g)===k).length;
+    return `<div style="color:var(${c.c});background:var(${c.t})"><i style="background:var(${c.c})"></i>${c.label}<em>${n}</em></div>`;
+  }).join("");
+
+  document.getElementById("groups").innerHTML=Object.entries(EST).map(([k,c])=>{
+    const g=MEMBERS.filter(m=>estOf(m.g)===k).sort((a,b)=>a.n.localeCompare(b.n,"es"));
+    if(!g.length) return "";
+    return `<div class="grp">
+      <div class="grp-h"><i style="background:var(${c.c})"></i><b style="color:var(${c.c})">${c.label}</b>
+        <em>${g.length} integrantes · ponderación ${WEIGHT[g[0].g].toFixed(2)} c/u</em></div>
+      <div class="chips">${g.map(m=>`<span class="chip" style="color:var(${c.c});background:var(${c.t})" title="${esc(m.f)}">${esc(m.n)}</span>`).join("")}</div>
+    </div>`;
+  }).join("");
+})();
+
+// ── Asistencias ──
+(function(){
+  const data=MEMBERS.map((m,i)=>{
+    const ss=PAST.map(p=>({title:p.title,date:p.date,present:p.present.has(i)}));
+    return {...m,ss,att:ss.filter(s=>s.present).length,tot:PAST.length,e:estOf(m.g)};
+  }).sort((a,b)=>(ORD[a.e]-ORD[b.e])||a.n.localeCompare(b.n,"es"));
+
+  const tabs=[
+   {k:"todos",l:"Todos",c:"--c-cyan"},
+   {k:"consejero",l:"Consejerías FECh",c:"--c-blue"},
+   {k:"cee",l:"CEE",c:"--c-green"},
+   {k:"cosefech",l:"COSEFECH",c:"--c-orange"}
+  ];
+  let cur="todos";
+  const tEl=document.getElementById("att-tabs"),gEl=document.getElementById("att-grid");
+
+  function draw(){
+    tEl.innerHTML=tabs.map(t=>{
+      const n=t.k==="todos"?data.length:data.filter(m=>m.e===t.k).length;
+      return `<button class="tab${t.k===cur?" on":""}" data-k="${t.k}" style="--tc:var(${t.c})">${t.l} (${n})</button>`;
+    }).join("");
+    tEl.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{cur=b.dataset.k;draw();});
+
+    const list=cur==="todos"?data:data.filter(m=>m.e===cur);
+    gEl.innerHTML=list.map(m=>{
+      const p=Math.round(m.att/m.tot*100),c=EST[m.e];
+      return `<div class="att" style="--ac:var(${c.c})">
+        <div class="att-top">
+          <div><b>${esc(m.n)}</b><em>${esc(m.f)}</em></div>
+          <span class="att-pct">${p}%</span>
+        </div>
+        <div class="bar"><i style="width:${p}%;background:var(${c.c})"></i></div>
+        <small>${m.att} de ${m.tot} sesion${m.tot!==1?"es":""}</small>
+        <div class="dots">${m.ss.map(s=>`<span title="${esc(s.title)} — ${esc(s.date)}" style="background:var(${s.present?"--c-lime":"--c-red"})">${s.present?"✓":"✗"}</span>`).join("")}</div>
+      </div>`;
+    }).join("");
+  }
+  draw();
+})();
+
+// ── Sesiones ──
+(function(){
+  const totalW=MEMBERS.reduce((s,m)=>s+WEIGHT[m.g],0);
+
+  function roster(set){
+    const pres=[],onl=[],abs=[];
+    MEMBERS.forEach((m,i)=>{
+      if(set.has(i))(ONLINE.has(i)?onl:pres).push(m);
+      else abs.push({...m,j:JUSTIFIED.has(i)});
+    });
+    return {pres,onl,abs};
+  }
+
+  function ballots(p,t){
+    return MEMBERS.map((m,i)=>{
+      if(!p.present.has(i)) return {n:m.n,g:m.f,ab:true,v:null};
+      let v;
+      if(t.type==="candidato"){
+        const names=t.candidates.map(c=>c.name);
+        v=names[(i*7+3)%names.length];
+      }else{
+        const r=(i*13+5)%100, want=t.approved?t.pct.a:t.pct.c;
+        v=r<want?(t.approved?"A favor":"En contra")
+          :r<want+(t.approved?t.pct.c:t.pct.a)?(t.approved?"En contra":"A favor")
+          :"Abstención";
+      }
+      return {n:m.n,g:m.f,ab:false,v};
+    }).sort((a,b)=>a.n.localeCompare(b.n,"es"));
+  }
+
+  const voteColor=v=>v==="A favor"?"--c-lime":v==="En contra"?"--c-red":"--c-amber";
+  const voteTint =v=>v==="A favor"?"--t-lime":v==="En contra"?"--t-red":"--t-orange";
+
+  function topicHTML(p,t){
+    let res;
+    if(t.type==="candidato"){
+      const max=Math.max(...t.candidates.map(c=>c.votes));
+      const cols=["--c-blue","--c-violet","--c-cyan","--c-pink","--c-teal"];
+      res=t.candidates.map((c,i)=>`
+        <div class="crow">
+          <span class="cname" style="color:var(${cols[i%cols.length]})">${esc(c.name)}</span>
+          <div class="ctrack"><i style="width:${(c.votes/max*100).toFixed(1)}%;background:var(${cols[i%cols.length]})"></i></div>
+          <span class="cval" style="color:var(${cols[i%cols.length]})">${c.votes.toFixed(2)}</span>
+        </div>`).join("");
+    }else{
+      res=`<div class="rbar">
+          <div style="width:${t.pct.a}%;background:var(--c-lime)">${t.pct.a>12?t.pct.a.toFixed(1)+"%":""}</div>
+          <div style="width:${t.pct.c}%;background:var(--c-red)">${t.pct.c>12?t.pct.c.toFixed(1)+"%":""}</div>
+          <div style="width:${t.pct.b}%;background:var(--c-amber)">${t.pct.b>12?t.pct.b.toFixed(1)+"%":""}</div>
+        </div>
+        <div class="rkey">
+          <span style="color:var(--c-lime);background:var(--t-lime)">A favor <b>${t.w.a.toFixed(2)}</b></span>
+          <span style="color:var(--c-red);background:var(--t-red)">En contra <b>${t.w.c.toFixed(2)}</b></span>
+          <span style="color:var(--c-amber);background:var(--t-orange)">Abstención <b>${t.w.b.toFixed(2)}</b></span>
+        </div>`;
+    }
+    const rows=ballots(p,t);
+    return `<div class="topic">
+      <div class="thd"><b>${esc(t.title)}</b>
+        ${t.approved===null?"":`<span class="verdict" style="background:var(${t.approved?"--c-lime":"--c-red"})">${t.approved?"APROBADO":"RECHAZADO"}</span>`}</div>
+      ${t.detail?`<p class="tdet">${esc(t.detail)}</p>`:""}
+      ${res}
+      <details class="dd">
+        <summary style="color:var(--c-blue);background:var(--t-blue)">${I.users}Detalle de votos por integrante (${rows.length})<svg class="car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></summary>
+        <div class="blist">${rows.map(r=>`<div class="brow${r.ab?" ab":""}">
+          <span class="n"><b>${esc(r.n)}</b><em>${esc(r.g)}</em></span>
+          <span class="v" style="${r.ab?"color:var(--ink3);background:var(--tint)":`color:var(${voteColor(r.v)});background:var(${voteTint(r.v)})`}">${r.ab?"Ausente":esc(r.v)}</span>
+        </div>`).join("")}</div>
+      </details>
+    </div>`;
+  }
+
+  document.getElementById("acc").innerHTML=PAST.map(p=>{
+    const {pres,onl,abs}=roster(p.present);
+    const presW=[...p.present].reduce((s,i)=>s+WEIGHT[MEMBERS[i].g],0);
+    const q=presW/totalW*100;
+    return `<div class="sess">
+      <button class="sess-hd">
+        <div>
+          <h4>${esc(p.title)}</h4>
+          <div class="m">
+            <span style="color:var(--c-orange);background:var(--t-orange)">${I.pin}${esc(p.location)}</span>
+            <span style="color:var(--c-violet);background:var(--t-violet)">${I.clock}${esc(p.date)}</span>
+            <span style="color:var(--c-blue);background:var(--t-blue)">${p.tabla.length} puntos de tabla</span>
+            <span style="color:var(--c-pink);background:var(--t-pink)">${p.topics.length} votación${p.topics.length!==1?"es":""}</span>
+            <span style="color:var(--c-green);background:var(--t-green)">${p.present.size}/${MEMBERS.length} presentes</span>
+          </div>
+        </div>
+        <div class="r"><span class="pill" style="color:var(--ink3);background:var(--tint)">CERRADA</span><span class="chev">${I.chev}</span></div>
+      </button>
+      <div class="sess-bd">
+        <a class="btn-acta" href="#">${I.down}Descargar acta <span style="font-weight:400;opacity:.85">(${esc(p.acta)})</span></a>
+
+        <div class="blk" style="--bc:var(--c-green)">
+          <h5>${I.scale}Quórum de la sesión</h5>
+          <div class="qrow"><span>Ponderación presente</span><b>${presW.toFixed(2)} / ${totalW.toFixed(2)} · ${q.toFixed(1)}%</b></div>
+          <div class="bar"><i style="width:${q.toFixed(1)}%;background:linear-gradient(90deg,var(--c-green),var(--c-teal))"></i></div>
+        </div>
+
+        <div class="blk" style="--bc:var(--c-blue)">
+          <h5>${I.archive}Tabla de la sesión</h5>
+          ${tablaHTML(p.tabla)}
+        </div>
+
+        <div class="blk" style="--bc:var(--c-cyan)">
+          <h5>${I.users}Asistencia</h5>
+          <div class="rc-row">
+            <span class="rc" style="background:var(--c-green)">${I.pin}Presencial: ${pres.length}</span>
+            <span class="rc" style="background:var(--c-cyan)">${I.video}Online: ${onl.length}</span>
+            <span class="rc" style="background:var(--ink3)">${I.userx}Ausentes: ${abs.length}</span>
+          </div>
+          ${pres.length?`<div class="rsec"><b style="color:var(--c-green)">${I.pin}Asistentes presenciales</b>
+            <div class="names">${pres.map(m=>`<span class="nchip" style="color:var(--c-green);background:var(--t-green)">${esc(m.n)}</span>`).join("")}</div></div>`:""}
+          ${onl.length?`<div class="rsec"><b style="color:var(--c-cyan)">${I.video}Asistentes online</b>
+            <div class="names">${onl.map(m=>`<span class="nchip" style="color:var(--c-cyan);background:var(--t-cyan)">${esc(m.n)}</span>`).join("")}</div></div>`:""}
+          ${abs.length?`<div class="rsec"><b style="color:var(--ink3)">${I.userx}Ausentes</b>
+            <div class="names">${abs.map(m=>`<span class="nchip" style="color:var(--ink3);background:var(--tint)">${esc(m.n)}${m.j?" · Justificada":""}</span>`).join("")}</div></div>`:""}
+        </div>
+
+        <div class="vhead">${I.vote}Votaciones de la sesión</div>
+        ${p.topics.map(t=>topicHTML(p,t)).join("")}
+      </div>
+    </div>`;
+  }).join("");
+
+  document.querySelectorAll(".sess-hd").forEach(b=>b.onclick=()=>b.parentElement.classList.toggle("open"));
+  const first=document.querySelector(".sess");
+  if(first) first.classList.add("open");
+})();
+</script>

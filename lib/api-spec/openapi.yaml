@@ -1,0 +1,2769 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification for FECh Plenario
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Autenticación
+  - name: members
+    description: Miembros
+  - name: sessions
+    description: Sesiones plenarias
+  - name: attendance
+    description: Asistencia
+  - name: agenda
+    description: Puntos de la tabla / orden del día
+  - name: speaking
+    description: Sistema de Palabra (cola de oradores)
+  - name: topics
+    description: Temas de votación
+  - name: votes
+    description: Votos
+  - name: admin
+    description: Administración
+  - name: unidades
+    description: Unidades académicas (catálogo)
+  - name: messages
+    description: Mensajería Plenaria
+  - name: public
+    description: Endpoints públicos (sin autenticación)
+  - name: Storage
+    description: Object storage upload and serving endpoints.
+paths:
+  /storage/uploads/request-url:
+    post:
+      tags: [Storage]
+      operationId: requestUploadUrl
+      summary: Request a presigned URL for file upload
+      description: |
+        Returns a presigned GCS URL for direct upload. The client sends JSON
+        metadata here, then uploads the file directly to the returned URL.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadUrlRequest'
+      responses:
+        '200':
+          description: Presigned upload URL generated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadUrlResponse'
+        '400':
+          description: Missing or invalid required fields.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '500':
+          description: Failed to generate upload URL.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /storage/public-objects/{filePath}:
+    get:
+      tags: [Storage]
+      operationId: getPublicObject
+      summary: Serve a public asset from PUBLIC_OBJECT_SEARCH_PATHS
+      description: |
+        Unconditionally public — no authentication or ACL checks.
+        Searches PUBLIC_OBJECT_SEARCH_PATHS for the given file path.
+      parameters:
+        - name: filePath
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Relative file path within the public search paths.
+      responses:
+        '200':
+          description: Object content streamed with correct Content-Type.
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: File not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '500':
+          description: Failed to serve public object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /storage/objects/{objectPath}:
+    get:
+      tags: [Storage]
+      operationId: getStorageObject
+      summary: Serve an object entity from PRIVATE_OBJECT_DIR
+      description: |
+        Serves object entities uploaded via presigned URLs. These can optionally
+        be protected with authentication or ACL checks based on the use case.
+      parameters:
+        - name: objectPath
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Object path within the private object dir (e.g. `uploads/some-uuid`).
+      responses:
+        '200':
+          description: Object content streamed with correct Content-Type.
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Object not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '500':
+          description: Failed to serve object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Iniciar sesión
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Sesión iniciada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "401":
+          description: Credenciales inválidas
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Cerrar sesión
+      responses:
+        "200":
+          description: Sesión cerrada
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Obtener usuario actual
+      responses:
+        "200":
+          description: Usuario actual
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "401":
+          description: No autenticado
+
+  /members:
+    get:
+      operationId: listMembers
+      tags: [members]
+      summary: Listar todos los miembros
+      responses:
+        "200":
+          description: Lista de miembros
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Member"
+    post:
+      operationId: createMember
+      tags: [members]
+      summary: Crear un nuevo miembro (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemberCreateInput"
+      responses:
+        "201":
+          description: Miembro creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+        "400":
+          description: Datos inválidos
+        "409":
+          description: El nombre de usuario ya existe
+
+  /members/{id}:
+    patch:
+      operationId: updateMember
+      tags: [members]
+      summary: Actualizar miembro (peso, nombre)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemberUpdate"
+      responses:
+        "200":
+          description: Miembro actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+        "404":
+          description: Miembro no encontrado
+    delete:
+      operationId: deleteMember
+      tags: [members]
+      summary: Eliminar miembro (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Miembro eliminado
+        "400":
+          description: No se puede eliminar (admin o solicitud inválida)
+        "404":
+          description: Miembro no encontrado
+
+  /members/{id}/password:
+    patch:
+      operationId: resetMemberPassword
+      tags: [members]
+      summary: Restablecer contraseña de miembro (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordResetInput"
+      responses:
+        "200":
+          description: Contraseña restablecida
+        "404":
+          description: Miembro no encontrado
+
+  /members/me/password:
+    patch:
+      operationId: changeMyPassword
+      tags: [members]
+      summary: Cambiar mi propia contraseña
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordInput"
+      responses:
+        "200":
+          description: Contraseña cambiada
+        "400":
+          description: Contraseña actual incorrecta
+
+  /members/me/email:
+    patch:
+      operationId: updateMyEmail
+      tags: [members]
+      summary: Actualizar mi correo electrónico
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmailUpdateInput"
+      responses:
+        "200":
+          description: Correo actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+
+  /members/me/attendance:
+    get:
+      operationId: getMyAttendance
+      tags: [members]
+      summary: Mi historial de asistencias
+      responses:
+        "200":
+          description: Historial de asistencias
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AttendanceHistoryItem"
+
+  /members/{id}/attendance:
+    get:
+      operationId: getMemberAttendance
+      tags: [members]
+      summary: Historial de asistencias de un miembro (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Historial de asistencias
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AttendanceHistoryItem"
+
+  /sessions:
+    get:
+      operationId: listSessions
+      tags: [sessions]
+      summary: Listar sesiones plenarias
+      responses:
+        "200":
+          description: Lista de sesiones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Session"
+    post:
+      operationId: createSession
+      tags: [sessions]
+      summary: Crear sesión plenaria
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionInput"
+      responses:
+        "201":
+          description: Sesión creada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+
+  /sessions/{id}:
+    get:
+      operationId: getSession
+      tags: [sessions]
+      summary: Obtener sesión plenaria
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Sesión
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionDetail"
+        "404":
+          description: Sesión no encontrada
+    patch:
+      operationId: updateSession
+      tags: [sessions]
+      summary: Actualizar sesión (abrir/cerrar/renombrar)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionUpdate"
+      responses:
+        "200":
+          description: Sesión actualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "404":
+          description: Sesión no encontrada
+    delete:
+      operationId: deleteSession
+      tags: [sessions]
+      summary: Eliminar sesión
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Sesión eliminada
+        "409":
+          description: La sesión ya fue iniciada o contiene historial
+
+  /sessions/{id}/attendance:
+    get:
+      operationId: listAttendance
+      tags: [attendance]
+      summary: Listar asistencia de una sesión
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Lista de asistencia
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AttendanceList"
+    post:
+      operationId: markAttendance
+      tags: [attendance]
+      summary: Marcar asistencia (QR o código)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AttendanceInput"
+      responses:
+        "200":
+          description: Asistencia marcada
+        "400":
+          description: Código inválido o sesión cerrada
+        "409":
+          description: Asistencia ya registrada
+
+  /sessions/{id}/attendance/rejoin:
+    post:
+      operationId: rejoinAttendance
+      tags: [attendance]
+      summary: Reingresar a la sesión tras haberse retirado
+      description: >
+        Inverso del auto check-out. Solo funciona mientras la sesión sigue
+        abierta: reingresar a una cerrada devolvería el peso de la persona a
+        resultados ya fijados.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Reingreso registrado
+        "400":
+          description: La sesión no está abierta, o no estabas retirade
+        "404":
+          description: Sesión no encontrada
+
+  /sessions/{id}/attendance/checkout:
+    post:
+      operationId: checkOutAttendance
+      tags: [attendance]
+      summary: Retirarse de la sesión (auto check-out)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Retiro registrado
+        "400":
+          description: No tienes asistencia activa en esta sesión
+
+  /sessions/{id}/attendance/{userId}:
+    patch:
+      operationId: updateMemberAttendance
+      tags: [attendance]
+      summary: Editar asistencia de un miembro (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AttendanceEditInput"
+      responses:
+        "200":
+          description: Asistencia actualizada
+
+  /sessions/{id}/attendance/{userId}/checkout:
+    post:
+      operationId: adminCheckoutMember
+      tags: [attendance]
+      summary: Retirar a un miembro de la sesión (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Miembro retirado de la sesión
+        "400":
+          description: El miembro no tiene asistencia activa
+
+  /sessions/{id}/attendance/{userId}/reactivate:
+    post:
+      operationId: adminReactivateMember
+      tags: [attendance]
+      summary: Reingresar a un miembro retirado de la sesión (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Miembro reingresado a la sesión
+        "400":
+          description: El miembro no está retirado de esta sesión
+
+  /sessions/{id}/agenda:
+    get:
+      operationId: listAgendaPoints
+      tags: [agenda]
+      summary: Listar puntos de la tabla de una sesión
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Lista de puntos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AgendaPoint"
+    post:
+      operationId: createAgendaPoint
+      tags: [agenda]
+      summary: Crear punto de la tabla
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgendaPointInput"
+      responses:
+        "201":
+          description: Punto creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgendaPoint"
+
+  /sessions/{id}/agenda/reorder:
+    post:
+      operationId: reorderAgendaPoints
+      tags: [agenda]
+      summary: Reordenar puntos de la tabla
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgendaReorderInput"
+      responses:
+        "200":
+          description: Puntos reordenados
+
+  /agenda/{pointId}:
+    patch:
+      operationId: updateAgendaPoint
+      tags: [agenda]
+      summary: Actualizar punto de la tabla
+      parameters:
+        - name: pointId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgendaPointUpdate"
+      responses:
+        "200":
+          description: Punto actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgendaPoint"
+        "404":
+          description: Punto no encontrado
+    delete:
+      operationId: deleteAgendaPoint
+      tags: [agenda]
+      summary: Eliminar punto de la tabla
+      parameters:
+        - name: pointId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Punto eliminado
+
+  /unidades-academicas:
+    get:
+      operationId: listUnidadesAcademicas
+      tags: [unidades]
+      summary: Listar unidades académicas
+      responses:
+        "200":
+          description: Lista de unidades académicas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UnidadAcademica"
+    post:
+      operationId: createUnidadAcademica
+      tags: [unidades]
+      summary: Crear unidad académica
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UnidadAcademicaInput"
+      responses:
+        "201":
+          description: Unidad creada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnidadAcademica"
+        "409":
+          description: La unidad ya existe
+
+  /unidades-academicas/{id}:
+    delete:
+      operationId: deleteUnidadAcademica
+      tags: [unidades]
+      summary: Eliminar unidad académica
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Unidad eliminada
+        "404":
+          description: Unidad no encontrada
+
+  /public/history:
+    get:
+      operationId: getPublicHistory
+      tags: [public]
+      summary: Historial público de sesiones cerradas (resúmenes agregados)
+      responses:
+        "200":
+          description: Sesiones cerradas con asistencia y resultados agregados
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminHistorySession"
+
+  /public/members:
+    get:
+      operationId: getPublicMembers
+      tags: [public]
+      summary: Composición del pleno (integrantes activos)
+      description: >
+        Nombre, estamento y facultad de cada integrante activo. No expone
+        credenciales, ponderaciones ni ningún otro dato personal.
+      responses:
+        "200":
+          description: Integrantes activos ordenados alfabéticamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PublicMember"
+
+  /sessions/{id}/speaking-turns:
+    get:
+      operationId: listSpeakingTurns
+      tags: [speaking]
+      summary: Listar la cola de palabras de una sesión
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Cola de palabras
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SpeakingTurn"
+    post:
+      operationId: requestSpeakingTurn
+      tags: [speaking]
+      summary: Pedir/agregar una palabra individual a la cola
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SpeakingTurnInput"
+      responses:
+        "201":
+          description: Palabra agregada a la cola
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpeakingTurn"
+        "400":
+          description: Datos inválidos
+        "409":
+          description: Ya tienes una palabra en cola para este punto
+
+  /sessions/{id}/speaking-turns/collective:
+    post:
+      operationId: createCollectiveSpeakingTurn
+      tags: [speaking]
+      summary: Armar una palabra colectiva por Unidad Académica (consejeros)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SpeakingTurnCollectiveInput"
+      responses:
+        "201":
+          description: Palabra colectiva creada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpeakingTurn"
+        "400":
+          description: No hay consejeros presentes de esa unidad
+
+  /sessions/{id}/speaking-round:
+    post:
+      operationId: toggleSpeakingRound
+      tags: [speaking]
+      summary: Abrir o cerrar la ronda de palabras de una sesión (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SpeakingRoundInput"
+      responses:
+        "200":
+          description: Estado de la ronda de palabras actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "400":
+          description: Datos inválidos
+        "404":
+          description: Sesión no encontrada
+
+  /sessions/{id}/speaking-turns/reorder:
+    post:
+      operationId: reorderSpeakingTurns
+      tags: [speaking]
+      summary: Reordenar la cola de palabras
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SpeakingReorderInput"
+      responses:
+        "200":
+          description: Cola reordenada
+
+  /speaking-turns/{turnId}:
+    patch:
+      operationId: updateSpeakingTurn
+      tags: [speaking]
+      summary: Ajustar duración o punto de una palabra (admin)
+      parameters:
+        - name: turnId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SpeakingTurnUpdate"
+      responses:
+        "200":
+          description: Palabra actualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpeakingTurn"
+        "404":
+          description: Palabra no encontrada
+    delete:
+      operationId: deleteSpeakingTurn
+      tags: [speaking]
+      summary: Quitar una palabra de la cola (admin)
+      parameters:
+        - name: turnId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Palabra eliminada
+
+  /speaking-turns/{turnId}/control:
+    post:
+      operationId: controlSpeakingTurn
+      tags: [speaking]
+      summary: Controlar el turno (otorgar/iniciar/pausar/finalizar)
+      parameters:
+        - name: turnId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SpeakingTurnControlInput"
+      responses:
+        "200":
+          description: Turno actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpeakingTurn"
+        "404":
+          description: Palabra no encontrada
+
+  /sessions/{id}/topics:
+    get:
+      operationId: listTopics
+      tags: [topics]
+      summary: Listar temas de votación de una sesión
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Lista de temas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Topic"
+    post:
+      operationId: createTopic
+      tags: [topics]
+      summary: Crear tema de votación
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TopicInput"
+      responses:
+        "201":
+          description: Tema creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Topic"
+
+  /topics/{topicId}:
+    patch:
+      operationId: updateTopic
+      tags: [topics]
+      summary: Actualizar tema (abrir/cerrar/renombrar/reabrir)
+      parameters:
+        - name: topicId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TopicUpdate"
+      responses:
+        "200":
+          description: Tema actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Topic"
+        "404":
+          description: Tema no encontrado
+    delete:
+      operationId: deleteTopic
+      tags: [topics]
+      summary: Eliminar tema
+      parameters:
+        - name: topicId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Tema eliminado
+        "409":
+          description: La votación fue cerrada o contiene historial
+
+  /topics/{topicId}/vote:
+    post:
+      operationId: castVote
+      tags: [votes]
+      summary: Emitir voto ponderado
+      parameters:
+        - name: topicId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VoteInput"
+      responses:
+        "200":
+          description: Voto emitido
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VoteResult"
+        "400":
+          description: Error al votar (tema cerrado, sin asistencia, etc.)
+        "409":
+          description: Ya votaste en este tema
+
+  /topics/{topicId}/results:
+    get:
+      operationId: getTopicResults
+      tags: [votes]
+      summary: Obtener resultados de votación ponderada
+      parameters:
+        - name: topicId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Resultados de votación
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TopicResults"
+
+  /topics/{topicId}/ballots:
+    get:
+      operationId: getTopicBallots
+      tags: [votes]
+      summary: Detalle nominal por miembro de una votación (cualquier usuarie autenticade; username solo para admin)
+      parameters:
+        - name: topicId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Detalle nominal por miembro
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TopicBallots"
+        "404":
+          description: Tema no encontrado
+
+  /topics/{topicId}/ballots/{userId}:
+    put:
+      operationId: setMemberVote
+      tags: [votes]
+      summary: Editar el voto de un miembro en una moción (admin)
+      parameters:
+        - name: topicId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminBallotInput"
+      responses:
+        "200":
+          description: Voto actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminBallotResult"
+        "400":
+          description: Opción inválida, tipo no soportado o miembro no habilitado
+        "404":
+          description: Tema o miembro no encontrado
+
+  /members/me/votes:
+    get:
+      operationId: getMyVotes
+      tags: [votes]
+      summary: Historial de votos del miembro actual
+      responses:
+        "200":
+          description: Historial de votos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MyVote"
+
+  /history/me:
+    get:
+      operationId: getMyHistory
+      tags: [members]
+      summary: Histórico personal (asistencias, votos y resultados por sesión)
+      responses:
+        "200":
+          description: Histórico personal del miembro
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MemberHistorySession"
+
+  /history/sessions:
+    get:
+      operationId: getSessionsHistory
+      tags: [admin]
+      summary: Histórico de todas las sesiones con sus votaciones y resultados
+      responses:
+        "200":
+          description: Histórico de sesiones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminHistorySession"
+
+  /admin/clear-all:
+    post:
+      operationId: clearAll
+      tags: [admin]
+      summary: Limpiar todo (sesiones, votos, asistencia — mantiene miembros)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [confirmation]
+              properties:
+                confirmation:
+                  type: string
+                  enum: [ELIMINAR TODO]
+      responses:
+        "200":
+          description: Todo eliminado
+
+  /admin/stats:
+    get:
+      operationId: getStats
+      tags: [admin]
+      summary: Estadísticas globales del sistema
+      responses:
+        "200":
+          description: Estadísticas
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+
+  /sessions/{id}/export/attendance:
+    get:
+      operationId: exportAttendance
+      tags: [admin]
+      summary: Exportar datos de asistencia (JSON para Excel)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Datos de asistencia exportables
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExportData"
+
+  /sessions/{id}/export/results:
+    get:
+      operationId: exportResults
+      tags: [admin]
+      summary: Exportar resultados de votaciones (JSON para Excel)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Datos de resultados exportables
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExportData"
+
+  /sessions/{id}/export/matrix:
+    get:
+      operationId: exportMatrix
+      tags: [admin]
+      summary: Exportar matriz de votos (JSON para Excel)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Matriz de votos exportable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExportData"
+
+  /messages:
+    get:
+      operationId: listMyMessages
+      tags: [messages]
+      summary: Mi mensajería
+      responses:
+        "200":
+          description: Mensajes recibidos, del más reciente al más antiguo
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InboxMessage"
+
+  /messages/{id}/read:
+    post:
+      operationId: markMessageRead
+      tags: [messages]
+      summary: Marcar un mensaje como leído
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Marcado como leído
+
+  /messages/{id}/reply:
+    post:
+      operationId: replyMessage
+      tags: [messages]
+      summary: Confirmar asistencia o justificar inasistencia
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageReplyInput"
+      responses:
+        "200":
+          description: Respuesta registrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageRecipient"
+        "400":
+          description: Respuesta inválida o justificación sin motivo
+        "409":
+          description: El plazo para responder ya venció
+
+  /admin/messages:
+    get:
+      operationId: listAdminMessages
+      tags: [messages]
+      summary: Mensajes enviados, con el detalle de respuestas
+      responses:
+        "200":
+          description: Mensajes con sus destinatarios y resúmenes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminMessage"
+    post:
+      operationId: sendMessage
+      tags: [messages]
+      summary: Enviar un mensaje al pleno o a parte de él
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageInput"
+      responses:
+        "201":
+          description: Mensaje enviado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminMessage"
+        "400":
+          description: Faltan asunto, cuerpo o destinatarios
+
+  /admin/messages/{id}/recipients/{userId}:
+    patch:
+      operationId: reviewMessageReply
+      tags: [messages]
+      summary: Aceptar o rechazar una justificación
+      description: >
+        Aceptar deja la etiqueta «Inasistencia Justificada» en el acta de la
+        sesión asociada. No modifica la asistencia: la persona sigue contando
+        como ausente para el quórum y no queda habilitada para votar.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReplyReviewInput"
+      responses:
+        "200":
+          description: Justificación resuelta
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageRecipient"
+
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+
+    LoginInput:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    AuthUser:
+      type: object
+      required: [id, username, displayName, rol, votingWeight, active]
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        displayName:
+          type: string
+        group:
+          type: ["string", "null"]
+        faculty:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        rol:
+          type: string
+          enum: [admin, miembro]
+        votingWeight:
+          type: number
+        active:
+          type: boolean
+
+    Member:
+      type: object
+      required: [id, username, displayName, group, faculty, votingWeight, votingWeightAlt, active, rol]
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        displayName:
+          type: string
+        group:
+          type: ["string", "null"]
+        faculty:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        password:
+          type: ["string", "null"]
+        votingWeight:
+          type: number
+        votingWeightAlt:
+          type: number
+        active:
+          type: boolean
+        rol:
+          type: string
+
+    MemberUpdate:
+      type: object
+      properties:
+        displayName:
+          type: string
+        username:
+          type: string
+        group:
+          type: ["string", "null"]
+        faculty:
+          type: ["string", "null"]
+        votingWeight:
+          type: number
+        votingWeightAlt:
+          type: number
+        active:
+          type: boolean
+
+    MemberCreateInput:
+      type: object
+      required: [username, displayName, password]
+      properties:
+        username:
+          type: string
+        displayName:
+          type: string
+        password:
+          type: string
+        group:
+          type: ["string", "null"]
+        faculty:
+          type: ["string", "null"]
+        votingWeight:
+          type: number
+        votingWeightAlt:
+          type: number
+        rol:
+          type: string
+          enum: [admin, miembro]
+
+    PasswordResetInput:
+      type: object
+      required: [newPassword]
+      properties:
+        newPassword:
+          type: string
+
+    ChangePasswordInput:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword:
+          type: string
+        newPassword:
+          type: string
+
+    Session:
+      type: object
+      required: [id, title, status, sessionCode, speakingRoundOpen, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        location:
+          type: ["string", "null"]
+        scheduledAt:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [abierta, cerrada]
+        sessionCode:
+          type: string
+        meetingLink:
+          type: ["string", "null"]
+        actaObjectPath:
+          type: ["string", "null"]
+        actaFileName:
+          type: ["string", "null"]
+        speakingRoundOpen:
+          type: boolean
+        speakingRoundAgendaPointId:
+          type: ["integer", "null"]
+        officialStartAt:
+          type: ["string", "null"]
+          description: Momento de la apertura oficial. Nulo si nunca se abrió oficialmente.
+        officialEndAt:
+          type: ["string", "null"]
+          description: Momento del cierre. Nulo si sigue en curso o si nunca se abrió oficialmente.
+        createdAt:
+          type: string
+
+    SessionDetail:
+      type: object
+      required: [id, title, status, sessionCode, speakingRoundOpen, createdAt, attendanceCount, topicsCount]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        location:
+          type: ["string", "null"]
+        scheduledAt:
+          type: ["string", "null"]
+        status:
+          type: string
+        sessionCode:
+          type: string
+        meetingLink:
+          type: ["string", "null"]
+        actaObjectPath:
+          type: ["string", "null"]
+        actaFileName:
+          type: ["string", "null"]
+        speakingRoundOpen:
+          type: boolean
+        speakingRoundAgendaPointId:
+          type: ["integer", "null"]
+        officialStartAt:
+          type: ["string", "null"]
+          description: Momento de la apertura oficial. Nulo si nunca se abrió oficialmente.
+        officialEndAt:
+          type: ["string", "null"]
+          description: Momento del cierre. Nulo si sigue en curso o si nunca se abrió oficialmente.
+        createdAt:
+          type: string
+        attendanceCount:
+          type: integer
+        topicsCount:
+          type: integer
+
+    SessionInput:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+        location:
+          type: string
+        scheduledAt:
+          type: string
+        meetingLink:
+          type: string
+
+    SessionUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        location:
+          type: string
+        scheduledAt:
+          type: string
+        status:
+          type: string
+          enum: [abierta, cerrada]
+        official:
+          type: boolean
+          description: >
+            Solo al abrir una sesión. Si es true, registra la apertura oficial
+            y la sesión pasa a contar horas. Una apertura de prueba o de
+            preparación va sin esta bandera y no suma al registro del pleno.
+        meetingLink:
+          type: ["string", "null"]
+        actaObjectPath:
+          type: ["string", "null"]
+        actaFileName:
+          type: ["string", "null"]
+
+    UploadUrlRequest:
+      type: object
+      required: [name, size, contentType]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Original file name.
+        size:
+          type: integer
+          minimum: 1
+          description: File size in bytes.
+        contentType:
+          type: string
+          minLength: 1
+          description: MIME type of the file (e.g. `image/jpeg`).
+    UploadUrlResponse:
+      type: object
+      required: [uploadURL, objectPath]
+      properties:
+        uploadURL:
+          type: string
+          format: uri
+          description: Presigned GCS URL for PUT upload.
+        objectPath:
+          type: string
+          description: Normalized object path (e.g. `/objects/uploads/uuid`). Store this in your database.
+        metadata:
+          $ref: '#/components/schemas/UploadUrlRequest'
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+    AttendanceRecord:
+      type: object
+      required: [userId, displayName, group, faculty, votingWeight, timestamp, modality]
+      properties:
+        userId:
+          type: integer
+        displayName:
+          type: string
+        group:
+          type: ["string", "null"]
+        faculty:
+          type: ["string", "null"]
+        votingWeight:
+          type: number
+        timestamp:
+          type: string
+        modality:
+          type: string
+          enum: [online, presencial]
+        checkedOutAt:
+          type: ["string", "null"]
+
+    AttendanceList:
+      type: object
+      required: [present, absent, checkedOut, totalWeight, presentWeight]
+      properties:
+        present:
+          type: array
+          items:
+            $ref: "#/components/schemas/AttendanceRecord"
+        absent:
+          type: array
+          items:
+            $ref: "#/components/schemas/Member"
+        checkedOut:
+          type: array
+          items:
+            $ref: "#/components/schemas/AttendanceRecord"
+        totalWeight:
+          type: number
+        presentWeight:
+          type: number
+        justifiedIds:
+          type: array
+          description: User ids among `absent` whose absence is marked "Inasistencia Justificada".
+          items:
+            type: integer
+
+    AttendanceInput:
+      type: object
+      required: [sessionCode]
+      properties:
+        sessionCode:
+          type: string
+        modality:
+          type: string
+          enum: [online, presencial]
+
+    AttendanceEditInput:
+      type: object
+      required: [present]
+      properties:
+        present:
+          type: boolean
+        modality:
+          type: string
+          enum: [online, presencial]
+        justified:
+          type: boolean
+          description: Only meaningful with present=false — marks the absence as "Inasistencia Justificada" (label only; still a normal absence for quorum/voting).
+
+    UnidadAcademica:
+      type: object
+      required: [id, name, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        createdAt:
+          type: string
+
+    UnidadAcademicaInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+
+    AgendaPoint:
+      type: object
+      required: [id, sessionId, title, position, createdAt]
+      properties:
+        id:
+          type: integer
+        sessionId:
+          type: integer
+        title:
+          type: string
+        position:
+          type: integer
+        estimatedMinutes:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+
+    AgendaPointInput:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+        estimatedMinutes:
+          type: ["integer", "null"]
+
+    AgendaPointUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        estimatedMinutes:
+          type: ["integer", "null"]
+        position:
+          type: integer
+
+    AgendaReorderInput:
+      type: object
+      required: [orderedIds]
+      properties:
+        orderedIds:
+          type: array
+          items:
+            type: integer
+
+    SpeakingTurnParticipant:
+      type: object
+      required: [userId, displayName]
+      properties:
+        userId:
+          type: integer
+        displayName:
+          type: string
+        faculty:
+          type: ["string", "null"]
+
+    SpeakingTurn:
+      type: object
+      required: [id, sessionId, category, kind, status, position, durationSeconds, elapsedSeconds, label, participants, createdAt]
+      properties:
+        id:
+          type: integer
+        sessionId:
+          type: integer
+        agendaPointId:
+          type: ["integer", "null"]
+        category:
+          type: string
+          enum: [pleno, base]
+        kind:
+          type: string
+          enum: [individual, colectiva]
+        status:
+          type: string
+          enum: [en_cola, hablando, finalizada]
+        position:
+          type: integer
+        durationSeconds:
+          type: integer
+        elapsedSeconds:
+          type: integer
+        startedAt:
+          type: ["string", "null"]
+        faculty:
+          type: ["string", "null"]
+        userId:
+          type: ["integer", "null"]
+        label:
+          type: string
+        participants:
+          type: array
+          items:
+            $ref: "#/components/schemas/SpeakingTurnParticipant"
+        createdAt:
+          type: string
+
+    SpeakingTurnInput:
+      type: object
+      required: [category]
+      properties:
+        category:
+          type: string
+          enum: [pleno, base]
+        agendaPointId:
+          type: ["integer", "null"]
+        userId:
+          type: ["integer", "null"]
+        speakerName:
+          type: ["string", "null"]
+        durationSeconds:
+          type: ["integer", "null"]
+
+    SpeakingTurnCollectiveInput:
+      type: object
+      required: [faculty]
+      properties:
+        faculty:
+          type: string
+        agendaPointId:
+          type: ["integer", "null"]
+        userIds:
+          type: array
+          items:
+            type: integer
+        secondsPerSpeaker:
+          type: ["integer", "null"]
+        durationSeconds:
+          type: ["integer", "null"]
+
+    SpeakingTurnUpdate:
+      type: object
+      properties:
+        durationSeconds:
+          type: integer
+        agendaPointId:
+          type: ["integer", "null"]
+
+    SpeakingTurnControlInput:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [grant, start, pause, finish]
+
+    SpeakingReorderInput:
+      type: object
+      required: [orderedIds]
+      properties:
+        orderedIds:
+          type: array
+          items:
+            type: integer
+
+    SpeakingRoundInput:
+      type: object
+      required: [open]
+      properties:
+        open:
+          type: boolean
+        agendaPointId:
+          type: ["integer", "null"]
+          description: Punto de tabla al que se limita la ronda (obligatorio al abrir)
+
+    TopicCandidate:
+      type: object
+      required: [id, name, position]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        position:
+          type: integer
+
+    Topic:
+      type: object
+      required: [id, sessionId, title, status, type, weighted, votesPerVoter, createdAt]
+      properties:
+        id:
+          type: integer
+        sessionId:
+          type: integer
+        agendaPointId:
+          type: ["integer", "null"]
+        title:
+          type: string
+        detail:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [abierto, cerrado]
+        type:
+          type: string
+          enum: [mocion, candidato]
+        candidateMode:
+          type: ["string", "null"]
+          enum: [single, multiple, null]
+        weighted:
+          type: boolean
+        weightSource:
+          type: string
+          enum: [normal, alt]
+        votesPerVoter:
+          type: integer
+        candidates:
+          type: array
+          items:
+            $ref: "#/components/schemas/TopicCandidate"
+        estamentos:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+
+    TopicInput:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+        detail:
+          type: ["string", "null"]
+        agendaPointId:
+          type: ["integer", "null"]
+        type:
+          type: string
+          enum: [mocion, candidato]
+        candidateMode:
+          type: ["string", "null"]
+          enum: [single, multiple, null]
+        weighted:
+          type: boolean
+        weightSource:
+          type: string
+          enum: [normal, alt]
+        votesPerVoter:
+          type: integer
+        candidates:
+          type: array
+          items:
+            type: string
+        estamentos:
+          type: array
+          items:
+            type: string
+
+    TopicUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        detail:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [abierto, cerrado]
+        agendaPointId:
+          type: ["integer", "null"]
+        type:
+          type: string
+          enum: [mocion, candidato]
+        candidateMode:
+          type: ["string", "null"]
+          enum: [single, multiple, null]
+        weighted:
+          type: boolean
+        weightSource:
+          type: string
+          enum: [normal, alt]
+        votesPerVoter:
+          type: integer
+        candidates:
+          type: array
+          items:
+            type: string
+        estamentos:
+          type: array
+          items:
+            type: string
+
+    VoteAllocation:
+      type: object
+      required: [candidateId, count]
+      properties:
+        candidateId:
+          type: ["integer", "null"]
+        count:
+          type: integer
+
+    VoteInput:
+      type: object
+      properties:
+        option:
+          type: string
+          enum: [favor, contra, abstención]
+        allocations:
+          type: array
+          items:
+            $ref: "#/components/schemas/VoteAllocation"
+
+    VoteResult:
+      type: object
+      required: [topicId]
+      properties:
+        topicId:
+          type: integer
+        option:
+          type: ["string", "null"]
+        weightAtVote:
+          type: ["number", "null"]
+
+    AdminBallotInput:
+      type: object
+      properties:
+        option:
+          type: ["string", "null"]
+          enum: [favor, contra, abstención, null]
+        allocations:
+          type: ["array", "null"]
+          items:
+            $ref: "#/components/schemas/VoteAllocation"
+
+    AdminBallotResult:
+      type: object
+      required: [topicId, userId, option]
+      properties:
+        topicId:
+          type: integer
+        userId:
+          type: integer
+        option:
+          type: ["string", "null"]
+        allocations:
+          type: array
+          items:
+            $ref: "#/components/schemas/VoteAllocation"
+        weightAtVote:
+          type: ["number", "null"]
+
+    VoteBreakdown:
+      type: object
+      required: [favor, contra, abstención, sinVoto, ausente, total]
+      properties:
+        favor:
+          type: number
+        contra:
+          type: number
+        abstención:
+          type: number
+        sinVoto:
+          type: number
+        ausente:
+          type: number
+        total:
+          type: number
+
+    CandidateResult:
+      type: object
+      required: [candidateId, name, weight, count, percentage]
+      properties:
+        candidateId:
+          type: integer
+        name:
+          type: string
+        weight:
+          type: number
+        count:
+          type: integer
+        percentage:
+          type: number
+
+    TopicResults:
+      type: object
+      required: [topicId, sessionId, title, status, type, weighted, approved, voteCount]
+      properties:
+        topicId:
+          type: integer
+        sessionId:
+          type: integer
+        title:
+          type: string
+        detail:
+          type: ["string", "null"]
+        status:
+          type: string
+        type:
+          type: string
+          enum: [mocion, candidato]
+        candidateMode:
+          type: ["string", "null"]
+        weighted:
+          type: boolean
+        weightSource:
+          type: string
+          enum: [normal, alt]
+        votesPerVoter:
+          type: integer
+        weights:
+          $ref: "#/components/schemas/VoteBreakdown"
+        percentages:
+          $ref: "#/components/schemas/VoteBreakdown"
+        candidates:
+          type: array
+          items:
+            $ref: "#/components/schemas/CandidateResult"
+        abstenciónWeight:
+          type: number
+        abstenciónCount:
+          type: integer
+        sinVotoWeight:
+          type: number
+        ausenteWeight:
+          type: number
+        eligibleCount:
+          type: integer
+        votedCount:
+          type: integer
+        approved:
+          type: ["boolean", "null"]
+        voteCount:
+          type: integer
+        eligible:
+          type: boolean
+        myVote:
+          type: ["string", "null"]
+        myAllocations:
+          type: array
+          items:
+            $ref: "#/components/schemas/VoteAllocation"
+
+    BallotMember:
+      type: object
+      required: [userId, displayName, username, group, faculty, weight, status, voted, voteLabel]
+      properties:
+        userId:
+          type: integer
+        displayName:
+          type: string
+        username:
+          type: ["string", "null"]
+        group:
+          type: ["string", "null"]
+        faculty:
+          type: ["string", "null"]
+        weight:
+          type: number
+        status:
+          type: string
+          enum: [present, checkedOut, absent]
+        voted:
+          type: boolean
+        voteLabel:
+          type: ["string", "null"]
+        allocations:
+          type: array
+          items:
+            $ref: "#/components/schemas/VoteAllocation"
+
+    TopicBallots:
+      type: object
+      required: [topicId, type, weighted, weightSource, members]
+      properties:
+        topicId:
+          type: integer
+        type:
+          type: string
+          enum: [mocion, candidato]
+        candidateMode:
+          type: ["string", "null"]
+        weighted:
+          type: boolean
+        weightSource:
+          type: string
+          enum: [normal, alt]
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/BallotMember"
+
+    MyVote:
+      type: object
+      required: [topicId, topicTitle, sessionTitle, option, weightAtVote, timestamp]
+      properties:
+        topicId:
+          type: integer
+        topicTitle:
+          type: string
+        sessionTitle:
+          type: string
+        option:
+          type: string
+        weightAtVote:
+          type: number
+        timestamp:
+          type: string
+
+    MemberHistoryTopic:
+      type: object
+      required: [topicId, title, status, type, myVote, approved, voteCount]
+      properties:
+        topicId:
+          type: integer
+        title:
+          type: string
+        detail:
+          type: ["string", "null"]
+        status:
+          type: string
+        type:
+          type: string
+          enum: [mocion, candidato]
+        candidateMode:
+          type: ["string", "null"]
+        weighted:
+          type: boolean
+        myVote:
+          type: ["string", "null"]
+        weights:
+          $ref: "#/components/schemas/VoteBreakdown"
+        percentages:
+          $ref: "#/components/schemas/VoteBreakdown"
+        candidates:
+          type: array
+          items:
+            $ref: "#/components/schemas/CandidateResult"
+        approved:
+          type: ["boolean", "null"]
+        voteCount:
+          type: integer
+
+    MemberHistorySession:
+      type: object
+      required: [sessionId, title, location, scheduledAt, status, createdAt, attended, topics]
+      properties:
+        sessionId:
+          type: integer
+        title:
+          type: string
+        location:
+          type: ["string", "null"]
+        scheduledAt:
+          type: ["string", "null"]
+        status:
+          type: string
+        createdAt:
+          type: string
+        meetingLink:
+          type: ["string", "null"]
+        actaObjectPath:
+          type: ["string", "null"]
+        actaFileName:
+          type: ["string", "null"]
+        attended:
+          type: boolean
+        justified:
+          type: boolean
+          description: When not attended, whether the absence is an "Inasistencia Justificada".
+        topics:
+          type: array
+          items:
+            $ref: "#/components/schemas/MemberHistoryTopic"
+        speakers:
+          type: array
+          description: Quiénes tomaron la palabra en la sesión y cuánto hablaron.
+          items:
+            $ref: "#/components/schemas/PublicSpeaker"
+        mySeconds:
+          type: integer
+          description: Tiempo propio en uso de la palabra en esta sesión, en segundos.
+        myTurns:
+          type: integer
+          description: Intervenciones propias en esta sesión.
+        officialMinutes:
+          type: ["integer", "null"]
+          description: Duración real de la sesión, si se abrió oficialmente y ya cerró.
+
+    AdminHistoryTopic:
+      type: object
+      required: [topicId, title, status, type, approved, voteCount]
+      properties:
+        topicId:
+          type: integer
+        title:
+          type: string
+        detail:
+          type: ["string", "null"]
+        status:
+          type: string
+        type:
+          type: string
+          enum: [mocion, candidato]
+        candidateMode:
+          type: ["string", "null"]
+        weighted:
+          type: boolean
+        weights:
+          $ref: "#/components/schemas/VoteBreakdown"
+        percentages:
+          $ref: "#/components/schemas/VoteBreakdown"
+        candidates:
+          type: array
+          items:
+            $ref: "#/components/schemas/CandidateResult"
+        approved:
+          type: ["boolean", "null"]
+        voteCount:
+          type: integer
+        ballots:
+          type: array
+          items:
+            $ref: "#/components/schemas/PublicBallot"
+
+    PublicBallot:
+      type: object
+      required: [name, group, status, voteLabel]
+      properties:
+        name:
+          type: string
+        group:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [present, absent]
+        voteLabel:
+          type: ["string", "null"]
+
+    AdminHistorySession:
+      type: object
+      required: [sessionId, title, location, scheduledAt, status, createdAt, presentCount, totalMembers, presentWeight, totalWeight, topics]
+      properties:
+        sessionId:
+          type: integer
+        title:
+          type: string
+        location:
+          type: ["string", "null"]
+        scheduledAt:
+          type: ["string", "null"]
+        status:
+          type: string
+        phase:
+          type: string
+          enum: [pasado, activo, futuro]
+        createdAt:
+          type: string
+        meetingLink:
+          type: ["string", "null"]
+        actaObjectPath:
+          type: ["string", "null"]
+        actaFileName:
+          type: ["string", "null"]
+        hasActa:
+          type: boolean
+        presentCount:
+          type: integer
+        totalMembers:
+          type: integer
+        presentWeight:
+          type: number
+        totalWeight:
+          type: number
+        attendees:
+          type: array
+          items:
+            $ref: "#/components/schemas/PublicAttendee"
+        absentees:
+          type: array
+          items:
+            $ref: "#/components/schemas/PublicMemberRef"
+        agenda:
+          type: array
+          description: Puntos de tabla de la sesión, en orden.
+          items:
+            $ref: "#/components/schemas/PublicAgendaPoint"
+        speakers:
+          type: array
+          description: Quiénes tomaron la palabra en la sesión y cuánto hablaron.
+          items:
+            $ref: "#/components/schemas/PublicSpeaker"
+        officialMinutes:
+          type: ["integer", "null"]
+          description: >
+            Duración real en minutos, entre la apertura oficial y el cierre.
+            Nulo si la sesión no se abrió oficialmente o si sigue en curso.
+        topics:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminHistoryTopic"
+
+    PublicAgendaPoint:
+      type: object
+      required: [title, position]
+      description: Punto de tabla expuesto públicamente (sin identificadores internos).
+      properties:
+        title:
+          type: string
+        position:
+          type: integer
+        estimatedMinutes:
+          type: ["integer", "null"]
+
+    PublicSpeaker:
+      type: object
+      required: [name, group, seconds, turns]
+      description: >
+        Registro de uso de la palabra de una persona en una sesión. Agrupa
+        todas sus intervenciones finalizadas.
+      properties:
+        name:
+          type: string
+        group:
+          type: ["string", "null"]
+        seconds:
+          type: integer
+          description: Tiempo total efectivamente usado, en segundos.
+        turns:
+          type: integer
+          description: Número de intervenciones.
+        collective:
+          type: boolean
+          description: Si alguna de sus intervenciones fue palabra colectiva.
+
+    InboxMessage:
+      type: object
+      required: [id, subject, body, kind, createdAt]
+      properties:
+        id: { type: integer }
+        recipientId: { type: integer }
+        subject: { type: string }
+        body: { type: string }
+        kind:
+          type: string
+          enum: [citacion, informativo]
+        replyDeadline: { type: ["string", "null"] }
+        createdAt: { type: string }
+        sessionId: { type: ["integer", "null"] }
+        sessionTitle: { type: ["string", "null"] }
+        sessionScheduledAt: { type: ["string", "null"] }
+        readAt: { type: ["string", "null"] }
+        reply:
+          type: ["string", "null"]
+          enum: [presencial, online, justificada, null]
+        replyReason: { type: ["string", "null"] }
+        repliedAt: { type: ["string", "null"] }
+        review:
+          type: ["string", "null"]
+          enum: [pendiente, aceptada, rechazada, null]
+        reviewNote: { type: ["string", "null"] }
+
+    MessageRecipient:
+      type: object
+      required: [id, messageId, userId]
+      properties:
+        id: { type: integer }
+        messageId: { type: integer }
+        userId: { type: integer }
+        readAt: { type: ["string", "null"] }
+        reply:
+          type: ["string", "null"]
+          enum: [presencial, online, justificada, null]
+        replyReason: { type: ["string", "null"] }
+        repliedAt: { type: ["string", "null"] }
+        review:
+          type: ["string", "null"]
+          enum: [pendiente, aceptada, rechazada, null]
+        reviewNote: { type: ["string", "null"] }
+
+    AdminMessageRecipient:
+      type: object
+      required: [userId, name]
+      properties:
+        messageId: { type: integer }
+        userId: { type: integer }
+        name: { type: string }
+        group: { type: ["string", "null"] }
+        faculty: { type: ["string", "null"] }
+        weight: { type: string }
+        readAt: { type: ["string", "null"] }
+        reply:
+          type: ["string", "null"]
+          enum: [presencial, online, justificada, null]
+        replyReason: { type: ["string", "null"] }
+        repliedAt: { type: ["string", "null"] }
+        review:
+          type: ["string", "null"]
+          enum: [pendiente, aceptada, rechazada, null]
+        reviewNote: { type: ["string", "null"] }
+
+    AdminMessage:
+      type: object
+      required: [id, subject, body, kind, createdAt]
+      properties:
+        id: { type: integer }
+        subject: { type: string }
+        body: { type: string }
+        kind:
+          type: string
+          enum: [citacion, informativo]
+        replyDeadline: { type: ["string", "null"] }
+        createdAt: { type: string }
+        sessionId: { type: ["integer", "null"] }
+        sessionTitle: { type: ["string", "null"] }
+        recipients:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminMessageRecipient"
+        total: { type: integer }
+        leidos: { type: integer }
+        confirmadas:
+          type: integer
+          description: Presenciales más online.
+        presenciales: { type: integer }
+        online: { type: integer }
+        justificadas: { type: integer }
+        sinResponder: { type: integer }
+        pendientesRevision: { type: integer }
+        pesoConfirmado:
+          type: number
+          description: >
+            Ponderación comprometida por quienes confirmaron. Es una proyección
+            para estimar el quórum antes de la sesión, nunca asistencia real.
+
+    MessageInput:
+      type: object
+      required: [subject, body]
+      properties:
+        subject: { type: string, minLength: 1 }
+        body: { type: string, minLength: 1 }
+        kind:
+          type: string
+          enum: [citacion, informativo]
+        sessionId:
+          type: ["integer", "null"]
+          description: Pleno al que se refiere. Nulo para un mensaje extra-pleno.
+        replyDeadline: { type: ["string", "null"] }
+        userIds:
+          type: array
+          description: Destinatarios explícitos. Tiene prioridad sobre groups.
+          items: { type: integer }
+        groups:
+          type: array
+          description: Estamentos completos. Si se omiten ambos, va a todo el pleno activo.
+          items: { type: string }
+
+    MessageReplyInput:
+      type: object
+      required: [reply]
+      properties:
+        reply:
+          type: string
+          enum: [presencial, online, justificada]
+        reason:
+          type: string
+          description: Obligatorio al justificar; se ignora al confirmar.
+
+    ReplyReviewInput:
+      type: object
+      required: [review]
+      properties:
+        review:
+          type: string
+          enum: [aceptada, rechazada]
+        note: { type: string }
+
+    PublicMember:
+      type: object
+      required: [name, group, faculty]
+      description: Integrante activo del pleno, tal como se publica en el portal.
+      properties:
+        name:
+          type: string
+        group:
+          type: ["string", "null"]
+        faculty:
+          type: ["string", "null"]
+
+    PublicMemberRef:
+      type: object
+      required: [name, group]
+      properties:
+        name:
+          type: string
+        group:
+          type: ["string", "null"]
+        justified:
+          type: boolean
+          description: Absence marked as "Inasistencia Justificada" (display label only).
+
+    PublicAttendee:
+      type: object
+      required: [name, group, modality]
+      properties:
+        name:
+          type: string
+        group:
+          type: ["string", "null"]
+        modality:
+          type: string
+          enum: [online, presencial]
+
+    AdminStats:
+      type: object
+      required: [totalMembers, totalSessions, openSessions, totalTopics]
+      properties:
+        totalMembers:
+          type: integer
+        totalSessions:
+          type: integer
+        openSessions:
+          type: integer
+        totalTopics:
+          type: integer
+
+    ExportData:
+      type: object
+      required: [rows, headers]
+      properties:
+        headers:
+          type: array
+          items:
+            type: string
+        rows:
+          type: array
+          items:
+            type: array
+            items:
+              type: string
+
+    EmailUpdateInput:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+
+    AttendanceHistoryItem:
+      type: object
+      required: [sessionId, sessionTitle, timestamp]
+      properties:
+        sessionId:
+          type: integer
+        sessionTitle:
+          type: string
+        location:
+          type: ["string", "null"]
+        scheduledAt:
+          type: ["string", "null"]
+        status:
+          type: string
+        timestamp:
+          type: string

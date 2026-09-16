@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "pnpm --filter @workspace/fech-plenario run build",
+  "outputDirectory": "artifacts/fech-plenario/dist/public",
+  "functions": {
+    "api/index.ts": { "maxDuration": 30 }
+  },
+  "routes": [
+    { "src": "/api(?:/.*)?", "dest": "/api/index", "headers": { "Cache-Control": "private, no-store" } },
+    { "handle": "filesystem" },
+    { "src": "/.*", "dest": "/index.html" }
+  ]
+}

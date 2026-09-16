@@ -1,0 +1,933 @@
+<title>Panel del Integrante</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap">
+<style>
+  :root{
+    --bg:#FFFFFF;--panel:#FFFFFF;--tint:#F7F9FC;--line:#E6ECF5;--line2:#F0F4FA;
+    --c-blue:#0B5FFF;--c-orange:#FF7A00;--c-green:#00B368;--c-violet:#7C3AFF;
+    --c-red:#FF2D55;--c-cyan:#00B4D8;--c-lime:#3DBE00;--c-pink:#E5006D;
+    --c-amber:#FFB300;--c-teal:#00A99D;
+    --t-blue:#EAF1FF;--t-orange:#FFF3E6;--t-green:#E5F8F0;--t-violet:#F2ECFF;
+    --t-red:#FFEBF0;--t-cyan:#E2F7FC;--t-lime:#EFFAE8;--t-pink:#FFE9F3;--t-amber:#FFF6E0;
+    --ink:#0A1628;--ink2:#4B5C75;--ink3:#8494AC;
+    --sh:0 1px 2px rgba(10,22,40,.05);--sh-lg:0 10px 30px rgba(10,22,40,.09);
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --bg:#060A12;--panel:#0C1220;--tint:#101A2C;--line:#1A2740;--line2:#141F33;
+    --c-blue:#4D8AFF;--c-orange:#FF9D3D;--c-green:#22D68B;--c-violet:#A47BFF;
+    --c-red:#FF5C7C;--c-cyan:#38D0F0;--c-lime:#72E03A;--c-pink:#FF4D96;
+    --c-amber:#FFC53D;--c-teal:#2ECEC1;
+    --t-blue:#0A1730;--t-orange:#1F1206;--t-green:#042014;--t-violet:#150C2B;
+    --t-red:#20080F;--t-cyan:#041A22;--t-lime:#0E1C06;--t-pink:#210617;--t-amber:#1C1405;
+    --ink:#E8EFFA;--ink2:#9FB1CA;--ink3:#5F7391;
+    --sh:0 1px 2px rgba(0,0,0,.5);--sh-lg:0 10px 30px rgba(0,0,0,.6);
+  }}
+  :root[data-theme="dark"]{
+    --bg:#060A12;--panel:#0C1220;--tint:#101A2C;--line:#1A2740;--line2:#141F33;
+    --c-blue:#4D8AFF;--c-orange:#FF9D3D;--c-green:#22D68B;--c-violet:#A47BFF;
+    --c-red:#FF5C7C;--c-cyan:#38D0F0;--c-lime:#72E03A;--c-pink:#FF4D96;
+    --c-amber:#FFC53D;--c-teal:#2ECEC1;
+    --t-blue:#0A1730;--t-orange:#1F1206;--t-green:#042014;--t-violet:#150C2B;
+    --t-red:#20080F;--t-cyan:#041A22;--t-lime:#0E1C06;--t-pink:#210617;--t-amber:#1C1405;
+    --ink:#E8EFFA;--ink2:#9FB1CA;--ink3:#5F7391;
+    --sh:0 1px 2px rgba(0,0,0,.5);--sh-lg:0 10px 30px rgba(0,0,0,.6);
+  }
+
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  h1,h2,h3,h4{font-family:'Libre Baskerville',Georgia,serif;text-wrap:balance;color:var(--ink)}
+  button{font-family:inherit}
+  .wrap{max-width:980px;margin:0 auto;padding:0 20px}
+  .sample{background:var(--t-amber);border-bottom:1px solid var(--c-amber);color:var(--ink2);font-size:12px;font-weight:500;text-align:center;padding:6px 16px}
+
+  .hdr{position:sticky;top:0;z-index:100;background:var(--panel);border-bottom:1px solid var(--line)}
+  .hdr-top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 20px;max-width:980px;margin:0 auto}
+  .brand{display:flex;align-items:center;gap:11px;min-width:0}
+  .crest{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+   background:conic-gradient(from 140deg,var(--c-blue),var(--c-violet),var(--c-pink),var(--c-orange),var(--c-green),var(--c-blue))}
+  .crest svg{width:16px;height:16px;fill:#fff}
+  .brand-t{font-size:14.5px;font-weight:700;letter-spacing:-.015em;line-height:1.2}
+  .brand-s{font-size:11px;color:var(--ink3);line-height:1.2}
+  .me{display:flex;align-items:center;gap:10px;flex-shrink:0}
+  .me-t{text-align:right;line-height:1.25}
+  .me-t b{display:block;font-size:12.5px;font-weight:650}
+  .me-t span{font-size:10.5px;color:var(--c-blue);font-weight:600}
+  .avatar{width:34px;height:34px;border-radius:50%;background:var(--t-blue);color:var(--c-blue);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+  .btn-out{background:none;border:1px solid var(--line);color:var(--ink3);border-radius:8px;padding:7px 10px;cursor:pointer;display:flex}
+  .btn-out svg{width:14px;height:14px}
+  .btn-out:hover{border-color:var(--c-red);color:var(--c-red)}
+
+  .nav{border-top:1px solid var(--line2);overflow-x:auto;scrollbar-width:none}
+  .nav::-webkit-scrollbar{display:none}
+  .nav-in{display:flex;gap:4px;max-width:980px;margin:0 auto;padding:8px 14px}
+  .nav-btn{background:transparent;border:1px solid transparent;border-radius:9px;padding:8px 14px;font-size:13.5px;font-weight:500;color:var(--ink2);cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:8px;transition:all .16s}
+  .nav-btn svg{width:15px;height:15px;color:var(--nc)}
+  .nav-btn:hover{background:var(--nt);color:var(--nc)}
+  .nav-btn.on{background:var(--nt);border-color:var(--nc);color:var(--nc);font-weight:650}
+  .badge-n{background:var(--c-red);color:#fff;border-radius:100px;font-size:10px;font-weight:700;padding:1px 6px;min-width:17px;text-align:center}
+  .pip{width:7px;height:7px;border-radius:50%;background:var(--c-red);animation:pulse 1.5s infinite;flex-shrink:0}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+  @media(prefers-reduced-motion:reduce){.pip{animation:none}}
+
+  .panel-v{display:none;padding:28px 0 64px}
+  .panel-v.on{display:block}
+
+  .sh{display:flex;gap:14px;align-items:flex-start;margin-bottom:20px}
+  .sh-ic{width:38px;height:38px;border-radius:11px;background:var(--hc-t);color:var(--hc);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .sh-ic svg{width:17px;height:17px}
+  .sh h3{font-size:19px;line-height:1.28;margin-bottom:3px}
+  .sh p{font-size:12.5px;color:var(--ink3);line-height:1.45}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:19px 20px}
+  .card+.card{margin-top:14px}
+  .card>h4{font-size:15.5px;margin-bottom:3px}
+  .card>.cd{font-size:12.5px;color:var(--ink3);margin-bottom:15px;line-height:1.5}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .grid2>.card+.card{margin-top:0}
+
+  .blk{background:var(--tint);border-radius:12px;padding:15px 16px}
+  .blk+.blk{margin-top:12px}
+  .blk>h5{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-bottom:11px;display:flex;align-items:center;gap:8px;color:var(--bc,var(--ink2))}
+  .blk>h5 svg{width:14px;height:14px}
+
+  /* saludo */
+  .hello{border-radius:15px;padding:22px 24px;color:#fff;margin-bottom:20px;
+   background:linear-gradient(105deg,var(--c-blue),var(--c-violet) 48%,var(--c-pink))}
+  .hello h2{font-size:24px;color:#fff;margin-bottom:5px;line-height:1.2}
+  .hello p{font-size:13.5px;opacity:.94}
+  .hello .w{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.2);border-radius:8px;padding:4px 11px;font-size:12.5px;font-weight:650;margin-top:11px}
+  .hello .w svg{width:13px;height:13px}
+
+  .lmeta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+  .lmeta span{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:500;border-radius:8px;padding:5px 11px}
+  .lmeta svg{width:13px;height:13px;flex-shrink:0}
+
+  /* asistencia */
+  .mod-btns{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
+  .mod{border:1.5px solid var(--line);background:var(--panel);border-radius:10px;padding:10px;font-size:13px;font-weight:600;color:var(--ink2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px}
+  .mod svg{width:14px;height:14px}
+  .mod.on{border-color:var(--mc);background:var(--mt);color:var(--mc)}
+  .code-in{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:12px;font-family:inherit;font-size:19px;font-weight:700;letter-spacing:.28em;text-align:center;text-transform:uppercase;background:var(--panel);color:var(--ink);margin-bottom:11px}
+  .code-in:focus{outline:none;border-color:var(--c-blue)}
+  .btn{border:0;border-radius:10px;padding:11px 18px;font-size:13.5px;font-weight:650;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;color:#fff;width:100%}
+  .btn svg{width:15px;height:15px}
+  .btn:hover{filter:brightness(1.08)}
+  .btn-o{background:none;border:1.5px solid var(--line);color:var(--ink2);width:100%;border-radius:10px;padding:11px 18px;font-size:13.5px;font-weight:650;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+  .btn-o:hover{border-color:var(--bc,var(--ink3));color:var(--bc,var(--ink))}
+  .btn-o svg{width:15px;height:15px}
+  .or{display:flex;align-items:center;gap:11px;margin:13px 0;color:var(--ink3);font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+  .or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+  .state{display:flex;align-items:flex-start;gap:13px;border-radius:12px;padding:15px}
+  .state .sic{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff}
+  .state .sic svg{width:19px;height:19px}
+  .state b{display:block;font-size:14px;font-weight:700;line-height:1.3}
+  .state p{font-size:12.5px;color:var(--ink3);margin-top:3px;line-height:1.5}
+  .chg{background:none;border:0;color:var(--c-blue);font-size:12px;font-weight:650;cursor:pointer;padding:0;margin-top:7px;text-decoration:underline}
+
+  /* mociones abiertas */
+  .moc{border:1px solid var(--line);border-left:3px solid var(--c-lime);background:var(--t-lime);border-radius:11px;padding:14px 15px}
+  .moc+.moc{margin-top:10px}
+  .moc b{display:block;font-size:14.5px;font-weight:650;line-height:1.35;margin-bottom:4px}
+  .moc .d{font-size:12.5px;color:var(--ink2);line-height:1.55;margin-bottom:11px}
+  .btn-vote{background:var(--c-lime);color:#fff;border:0;border-radius:9px;padding:9px 15px;font-size:13px;font-weight:650;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%}
+  .btn-vote svg{width:15px;height:15px}
+  .btn-vote:hover{filter:brightness(1.08)}
+
+  /* tabla */
+  .tabla{list-style:none;counter-reset:pt;display:flex;flex-direction:column;gap:6px}
+  .tabla li{counter-increment:pt;display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:9px 13px}
+  .tabla li.now{border-color:var(--c-red);background:var(--t-red)}
+  .tabla li::before{content:counter(pt,decimal-leading-zero);font-size:11px;font-weight:700;color:var(--c-blue);font-variant-numeric:tabular-nums;flex-shrink:0;min-width:19px}
+  .tabla li.now::before{color:var(--c-red)}
+  .tabla .pt{flex:1;font-size:13px;line-height:1.45;min-width:0}
+  .tabla .mins{flex-shrink:0;font-size:11px;color:var(--ink3);font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:5px}
+  .tabla .mins svg{width:11px;height:11px}
+  .tbadge{flex-shrink:0;font-size:9.5px;font-weight:700;letter-spacing:.05em;border-radius:100px;padding:2px 8px;color:#fff}
+  .tfoot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:11.5px;color:var(--ink3);margin-top:11px;padding:0 3px}
+  .tfoot b{color:var(--ink2);font-variant-numeric:tabular-nums}
+
+  /* palabra */
+  .speak-now{border:1.5px solid var(--c-orange);background:var(--t-orange);border-radius:12px;padding:15px 16px;margin-bottom:14px;display:flex;align-items:center;gap:14px}
+  .speak-av{width:44px;height:44px;border-radius:12px;background:var(--c-orange);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0}
+  .speak-b{flex:1;min-width:0}
+  .speak-b .l{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--c-orange);margin-bottom:2px}
+  .speak-b b{font-size:15px;font-weight:650;display:block;line-height:1.25}
+  .speak-b span{font-size:11.5px;color:var(--ink3)}
+  .timer{font-family:'Libre Baskerville',serif;font-size:24px;font-weight:700;color:var(--c-orange);font-variant-numeric:tabular-nums;flex-shrink:0}
+  .queue{display:flex;flex-direction:column;gap:7px}
+  .qrow{display:flex;align-items:center;gap:11px;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:9px 13px}
+  .qrow.mine{border-color:var(--c-violet);background:var(--t-violet)}
+  .qn{width:22px;height:22px;border-radius:7px;background:var(--tint);color:var(--ink3);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .qrow.mine .qn{background:var(--c-violet);color:#fff}
+  .qrow .qb{flex:1;min-width:0;font-size:13px;font-weight:550}
+  .qrow .qb em{font-style:normal;font-size:11px;color:var(--ink3);display:block}
+  .qtag{font-size:9.5px;font-weight:700;letter-spacing:.04em;border-radius:100px;padding:2px 8px;flex-shrink:0;color:#fff}
+
+  /* nómina */
+  .roster-c{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:13px}
+  .rc{display:inline-flex;align-items:center;gap:7px;border-radius:100px;padding:4px 13px;font-size:11.5px;font-weight:650;color:#fff}
+  .rc svg{width:12px;height:12px}
+  .names{display:flex;flex-wrap:wrap;gap:5px}
+  .nchip{border-radius:100px;padding:2.5px 10px;font-size:11.5px;font-weight:500}
+
+  /* próximo pleno */
+  .next{background:var(--panel);border:1.5px solid var(--c-violet);border-radius:16px;overflow:hidden;box-shadow:var(--sh-lg)}
+  .next-strip{height:5px;background:linear-gradient(90deg,var(--c-violet),var(--c-blue),var(--c-cyan))}
+  .next-in{padding:23px}
+  .tag{display:inline-flex;align-items:center;gap:7px;border-radius:100px;padding:4px 13px;font-size:11px;font-weight:700;letter-spacing:.07em;color:#fff}
+  .next h2{font-size:clamp(20px,3.4vw,27px);line-height:1.22;margin:13px 0 10px}
+  .count{display:flex;gap:9px;margin-bottom:18px;flex-wrap:wrap}
+  .cbox{background:var(--t-violet);border-radius:11px;padding:11px 15px;text-align:center;min-width:64px}
+  .cbox b{display:block;font-family:'Libre Baskerville',serif;font-size:24px;line-height:1;color:var(--c-violet);font-variant-numeric:tabular-nums}
+  .cbox span{font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;margin-top:4px;display:block}
+  .btn-link{display:inline-flex;align-items:center;gap:9px;background:linear-gradient(95deg,var(--c-cyan),var(--c-blue));color:#fff;border-radius:10px;padding:12px 22px;font-size:14px;font-weight:650;text-decoration:none;box-shadow:0 6px 18px rgba(11,95,255,.26)}
+  .btn-link:hover{filter:brightness(1.08)}
+  .btn-link svg{width:16px;height:16px}
+
+  .deadline{display:flex;align-items:center;gap:9px;flex-wrap:wrap;background:var(--t-blue);color:var(--c-blue);border-radius:9px;padding:8px 13px;font-size:12.5px;margin-bottom:15px}
+  .deadline svg{width:14px;height:14px;flex-shrink:0}
+  .deadline em{font-style:normal;font-weight:700;margin-left:auto;background:var(--c-blue);color:#fff;border-radius:100px;padding:2px 10px;font-size:11px}
+  .deadline.urg{background:var(--t-red);color:var(--c-red)}
+  .deadline.urg em{background:var(--c-red)}
+  .sim{display:block;margin:16px auto 0;background:none;border:1px dashed var(--line);color:var(--ink3);border-radius:8px;padding:6px 13px;font-size:11.5px;cursor:pointer}
+  .sim:hover{border-color:var(--c-amber);color:var(--c-amber)}
+  .rsvp{border:2px dashed var(--line);border-radius:14px;padding:18px;margin-top:18px}
+  .rsvp.done{border-style:solid}
+  .rsvp-q{font-size:14.5px;font-weight:650;margin-bottom:5px}
+  .rsvp-h{font-size:12.5px;color:var(--ink3);margin-bottom:15px;line-height:1.5}
+  .rsvp-btns{display:flex;flex-wrap:wrap;gap:10px}
+  .rb{flex:1;min-width:190px;border:2px solid;border-radius:12px;padding:14px 15px;cursor:pointer;text-align:left;background:var(--panel);transition:all .18s;display:flex;align-items:center;gap:12px}
+  .rb:hover{transform:translateY(-2px);box-shadow:var(--sh-lg)}
+  .rb .ric{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff}
+  .rb .ric svg{width:18px;height:18px}
+  .rb b{display:block;font-size:13.5px;font-weight:700;line-height:1.3}
+  .rb small{display:block;font-size:11.5px;color:var(--ink3);margin-top:2px;line-height:1.35}
+  .rb-yes{border-color:var(--c-green)}.rb-yes b{color:var(--c-green)}.rb-yes .ric{background:var(--c-green)}
+  .rb-no{border-color:var(--c-orange)}.rb-no b{color:var(--c-orange)}.rb-no .ric{background:var(--c-orange)}
+  .jf{margin-top:16px;display:none}.jf.on{display:block}
+  .jf label{display:block;font-size:12px;font-weight:650;margin-bottom:7px;color:var(--ink2)}
+  .jf select,.jf textarea{width:100%;border:1.5px solid var(--line);border-radius:9px;padding:10px 12px;font-family:inherit;font-size:13.5px;background:var(--panel);color:var(--ink);margin-bottom:12px}
+  .jf textarea{min-height:86px;resize:vertical;line-height:1.55}
+  .jf select:focus,.jf textarea:focus{outline:none;border-color:var(--c-orange)}
+  .jf-a{display:flex;gap:9px;flex-wrap:wrap}
+  .btn-send{background:var(--c-orange);color:#fff;border:0;border-radius:9px;padding:10px 18px;font-size:13px;font-weight:650;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+  .btn-send svg{width:14px;height:14px}
+  .btn-ghost{background:none;border:1.5px solid var(--line);color:var(--ink2);border-radius:9px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer}
+
+  /* exportar */
+  .export{display:flex;align-items:center;gap:15px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--c-red);border-radius:13px;padding:16px 18px;margin-bottom:14px;flex-wrap:wrap}
+  .ex-ic{width:40px;height:40px;border-radius:11px;background:var(--t-red);color:var(--c-red);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .ex-ic svg{width:18px;height:18px}
+  .ex-b{flex:1;min-width:200px}
+  .ex-b b{display:block;font-size:14px;font-weight:650;line-height:1.3;margin-bottom:3px}
+  .ex-b span{font-size:12px;color:var(--ink3);line-height:1.5;display:block}
+  .ex-btns{display:flex;gap:8px;flex-shrink:0}
+  .ex-btn{border:0;border-radius:9px;padding:9px 16px;font-size:13px;font-weight:650;cursor:pointer;color:#fff;display:inline-flex;align-items:center;gap:7px}
+  .ex-btn svg{width:14px;height:14px}
+  .ex-btn:hover{filter:brightness(1.08)}
+
+  /* historial */
+  .hero-stats{display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px;margin-bottom:14px}
+  .ring-lbl{font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;margin-top:6px;text-align:center}
+  .mini{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:10px}
+  .m-card{border:1px solid var(--line);border-left:3px solid var(--mc);border-radius:11px;padding:12px 13px}
+  .m-card b{display:block;font-family:'Libre Baskerville',serif;font-size:21px;line-height:1;color:var(--mc);font-variant-numeric:tabular-nums;margin-bottom:5px}
+  .m-card span{font-size:10.5px;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em;line-height:1.3;display:block}
+
+  .sess{background:var(--panel);border:1px solid var(--line);border-radius:13px;overflow:hidden}
+  .sess+.sess{margin-top:11px}
+  .sess.open{border-color:var(--c-blue)}
+  .sess-hd{width:100%;background:none;border:0;padding:15px 18px;display:flex;align-items:center;justify-content:space-between;gap:14px;cursor:pointer;text-align:left}
+  .sess-hd:hover{background:var(--tint)}
+  .sess-hd h4{font-size:15px;line-height:1.3;margin-bottom:6px}
+  .sess-hd .m{display:flex;flex-wrap:wrap;gap:5px}
+  .sess-hd .m span{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;border-radius:6px;padding:2.5px 8px}
+  .sess-hd .m svg{width:11px;height:11px;flex-shrink:0}
+  .sess-hd .r{display:flex;align-items:center;gap:10px;flex-shrink:0}
+  .chev{width:17px;height:17px;color:var(--ink3);transition:transform .22s}
+  .sess.open .chev{transform:rotate(180deg);color:var(--c-blue)}
+  .sess-bd{display:none;padding:2px 18px 18px}
+  .sess.open .sess-bd{display:block}
+  .pill{border-radius:100px;padding:3px 11px;font-size:10.5px;font-weight:700;letter-spacing:.04em;color:#fff;white-space:nowrap}
+
+  .mtop{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:15px 16px}
+  .mtop+.mtop{margin-top:10px}
+  .mtop-h{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:5px}
+  .mtop-h b{font-size:14px;font-weight:650;line-height:1.35;font-family:'IBM Plex Sans',sans-serif}
+  .mdet{font-size:12.5px;color:var(--ink2);line-height:1.6;background:var(--tint);border-left:3px solid var(--c-blue);border-radius:0 8px 8px 0;padding:10px 13px;margin:9px 0 13px}
+  .mdet .dl{font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--c-blue);display:block;margin-bottom:4px}
+  .myvote{display:flex;align-items:center;gap:9px;margin-bottom:12px;flex-wrap:wrap}
+  .myvote .lb{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)}
+  .vchip{border-radius:100px;padding:3px 12px;font-size:12px;font-weight:700}
+  .rbar{display:flex;height:28px;border-radius:8px;overflow:hidden;margin-bottom:10px;background:var(--line);gap:2px}
+  .rbar>div{display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:#fff;min-width:0;overflow:hidden;font-variant-numeric:tabular-nums}
+  .rkey{display:flex;flex-wrap:wrap;gap:7px}
+  .rkey span{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:600;border-radius:7px;padding:4px 10px}
+  .rkey b{font-variant-numeric:tabular-nums}
+  .crow{display:flex;align-items:center;gap:11px;margin-bottom:8px}
+  .cname{font-size:12.5px;width:130px;flex-shrink:0;font-weight:600}
+  .ctrack{flex:1;height:21px;background:var(--line2);border-radius:6px;overflow:hidden}
+  .ctrack>i{display:block;height:100%;border-radius:6px}
+  .cval{font-size:12px;font-weight:700;width:54px;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums}
+
+  /* intervenciones */
+  .sp{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--spc);border-radius:12px;padding:14px 16px;display:flex;gap:14px;align-items:flex-start}
+  .sp+.sp{margin-top:10px}
+  .sp-n{width:34px;height:34px;border-radius:10px;background:var(--spc);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .sp-n svg{width:16px;height:16px}
+  .sp-b{flex:1;min-width:0}
+  .sp-sess{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--spc);margin-bottom:3px}
+  .sp-b b{display:block;font-size:13.5px;font-weight:650;line-height:1.35;margin-bottom:6px}
+  .sp-meta{display:flex;flex-wrap:wrap;gap:6px}
+  .sp-meta span{font-size:10.5px;font-weight:650;border-radius:6px;padding:2.5px 9px}
+  .sp-time{flex-shrink:0;text-align:right}
+  .sp-time b{display:block;font-family:'Libre Baskerville',serif;font-size:19px;color:var(--spc);line-height:1;font-variant-numeric:tabular-nums}
+  .sp-time span{font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em}
+
+  /* mensajes */
+  .msg{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:15px 17px;display:flex;gap:13px}
+  .msg+.msg{margin-top:10px}
+  .msg.unread{border-left:3px solid var(--c-blue);background:var(--t-blue)}
+  .msg-av{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff}
+  .msg-av svg{width:17px;height:17px}
+  .msg-b{flex:1;min-width:0}
+  .msg-hd{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap;margin-bottom:3px}
+  .msg-hd b{font-size:13.5px;font-weight:650}
+  .msg-hd time{font-size:11px;color:var(--ink3);flex-shrink:0}
+  .msg-from{font-size:11.5px;color:var(--ink3);margin-bottom:7px}
+  .msg-body{font-size:13px;color:var(--ink2);line-height:1.6}
+  .msg-st{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;letter-spacing:.04em;border-radius:100px;padding:2.5px 10px;margin-top:9px;color:#fff}
+
+  .empty{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:42px 20px;text-align:center;color:var(--ink3)}
+  .empty b{display:block;color:var(--ink2);font-weight:650;margin-bottom:4px;font-size:14.5px}
+  .empty span{font-size:12.5px}
+
+  .foot{border-top:1px solid var(--line);padding:28px 0;text-align:center;background:var(--panel)}
+  .foot .rain{height:3px;width:110px;margin:0 auto 15px;border-radius:2px;background:linear-gradient(90deg,var(--c-blue),var(--c-violet),var(--c-pink),var(--c-orange),var(--c-green))}
+  .foot b{display:block;font-size:12.5px;color:var(--ink2);font-weight:650;margin-bottom:4px}
+  .foot span{font-size:11.5px;color:var(--ink3)}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(90px);background:var(--ink);color:var(--bg);border-radius:11px;padding:13px 20px;font-size:13.5px;font-weight:600;box-shadow:var(--sh-lg);z-index:400;transition:transform .3s;display:flex;align-items:center;gap:10px}
+  .toast.on{transform:translateX(-50%) translateY(0)}
+  .toast svg{width:16px;height:16px;color:var(--c-lime)}
+
+  @media(max-width:700px){
+    .grid2{grid-template-columns:1fr}
+    .hero-stats{grid-template-columns:1fr;justify-items:center}
+    .cname{width:94px}
+    .sp{flex-wrap:wrap}
+  }
+</style>
+
+<div class="sample">Vista previa con datos de ejemplo · Así vería su panel un integrante tras ingresar</div>
+
+<header class="hdr">
+  <div class="hdr-top">
+    <div class="brand">
+      <div class="crest"><svg viewBox="0 0 24 24"><path d="M12 2L4 5v6c0 5.5 3.5 10.7 8 12 4.5-1.3 8-6.5 8-12V5l-8-3z"/></svg></div>
+      <div><div class="brand-t">Pleno FECh</div><div class="brand-s">Panel del Integrante</div></div>
+    </div>
+    <div class="me">
+      <div class="me-t"><b>Javiera Díaz Salinas</b><span>Consejería FECh · 0,75</span></div>
+      <div class="avatar">JD</div>
+      <button class="btn-out" title="Cerrar sesión">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </div>
+  <nav class="nav"><div class="nav-in" id="nav"></div></nav>
+</header>
+
+<main class="wrap">
+  <section class="panel-v on" id="p-activa"><div id="act-slot"></div></section>
+  <section class="panel-v" id="p-proximo"><div id="next-slot"></div></section>
+  <section class="panel-v" id="p-historial">
+    <div class="sh" style="--hc:var(--c-cyan);--hc-t:var(--t-cyan)">
+      <div class="sh-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+      <div><h3>Mi historial</h3><p>Tu asistencia, el detalle de cada moción y cómo votaste en ella.</p></div>
+    </div>
+    <div id="hist-slot"></div>
+  </section>
+  <section class="panel-v" id="p-palabra">
+    <div class="sh" style="--hc:var(--c-orange);--hc-t:var(--t-orange)">
+      <div class="sh-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+      <div><h3>Mis intervenciones</h3><p>Recuento de tus palabras en el pleno: en qué punto, cuánto hablaste y de qué tipo.</p></div>
+    </div>
+    <div id="sp-slot"></div>
+  </section>
+  <section class="panel-v" id="p-mensajes">
+    <div class="sh" style="--hc:var(--c-blue);--hc-t:var(--t-blue)">
+      <div class="sh-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+      <div><h3>Correo interno</h3><p>Comunicaciones de la Mesa Directiva y estado de tus justificaciones.</p></div>
+    </div>
+    <div id="msg-slot"></div>
+  </section>
+</main>
+
+<footer class="foot"><div class="wrap"><div class="rain"></div>
+  <b>Federación de Estudiantes de la Universidad de Chile</b>
+  <span>Panel del Integrante · Sistema de Votación Ponderada</span>
+</div></footer>
+
+<div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span id="toast-t"></span></div>
+
+<script>
+const I={
+ radio:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>',
+ cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+ chart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+ mic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>',
+ mail:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
+ pin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+ clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+ wifi:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>',
+ video:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>',
+ archive:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>',
+ check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg>',
+ qr:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="17.5" y1="17.5" x2="17.5" y2="17.5"/></svg>',
+ send:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>',
+ users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+ flag:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>',
+ hand:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>',
+ arrow:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>',
+ out:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+ chev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>',
+ scale:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18"/><path d="M5 7h14"/><path d="M5 7l-3 7h6z"/><path d="M19 7l-3 7h6z"/></svg>',
+ down:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+ vote:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>'
+};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(m){const t=document.getElementById("toast");document.getElementById("toast-t").textContent=m;t.classList.add("on");setTimeout(()=>t.classList.remove("on"),3400);}
+
+const ME={name:"Javiera Díaz Salinas",first:"Javiera",group:"Consejería FECh",faculty:"Ciencias Sociales",weight:0.75};
+
+// ── Sesión abierta (dashboard original) ──
+const OPEN={
+ title:"3.er Pleno Ordinario 2025",date:"Miércoles 4 de junio de 2025, 18:30",
+ location:"Salón de Honor, Casa Central",link:"https://meet.google.com/abc-defg-hij",
+ present:31,total:45,presentW:33.50,totalW:39.00,
+ tabla:[
+  {t:"Verificación de quórum y lectura del acta anterior",min:15},
+  {t:"Cuenta de la Mesa Directiva",min:20},
+  {t:"Informe de la Comisión de Bienestar Estudiantil",min:25,curr:true},
+  {t:"Votación: Presupuesto de Bienestar, 2.º semestre",min:30,vote:true},
+  {t:"Votación: Convenio con la Dirección de Deportes",min:20,vote:true},
+  {t:"Puntos varios",min:15}],
+ mociones:[
+  {title:"Presupuesto de Bienestar Estudiantil, 2.º semestre",
+   detail:"Asignación de $22.600.000 al fondo de emergencia y ayudas socioeconómicas, distribuidos según el informe de la Comisión de Bienestar. Se vota en general y en particular."},
+ ],
+ speaking:{
+  current:{name:"Gonzalo Acevedo Bravo",faculty:"CEE Filosofía",left:"1:24"},
+  queue:[
+   {name:"Bárbara Muñoz Peña",fac:"Consejería Derecho",kind:"Individual",mine:false},
+   {name:"Javiera Díaz Salinas",fac:"Consejería Ciencias Sociales",kind:"Individual",mine:true},
+   {name:"CEE Medicina",fac:"Intervención colectiva",kind:"Colectiva",mine:false}]},
+ presentes:["Alejandro Castro","Andrés Figueroa","Antonia Beltrán","Bárbara Muñoz","Benjamín Cruz","Camila Herrera","Carolina Meza","Diego Sepúlveda","Emilio Rojas","Fernanda López","Gabriel Soto","Gonzalo Acevedo","Ignacio Bravo","Isidora Fuentes","Javiera Díaz","Kevin Araya","Manuel Torres","Natalia Vidal","Paula Reyes","Rocío Navarro","Sebastián Campos","Valentina Morales"],
+ online:["Belén Carrasco","Cristóbal Ríos","Diana Tapia","Elías Mora","Helena Stange","Ian Vergara","Julia Pizarro","Tamara Ibáñez","Ulises Pinto"]
+};
+
+const NEXT={
+ title:"4.º Pleno Ordinario 2025",date:"Miércoles 2 de julio de 2025, 18:30",dateISO:"2025-07-02T18:30:00",
+ location:"Salón de Honor, Casa Central",link:"https://meet.google.com/xxx-yyyy-zzz",
+ deadline:"Lunes 30 de junio, 23:59",deadlineISO:"2025-06-30T23:59:00",
+ tabla:[
+  {t:"Verificación de quórum y lectura del acta anterior",min:15},
+  {t:"Cuenta de la Mesa Directiva",min:20},
+  {t:"Informe de la Comisión de Bienestar Estudiantil",min:25},
+  {t:"Votación: Reforma al Reglamento de Comisiones",min:35,vote:true},
+  {t:"Votación: Convenio con la Dirección de Deportes",min:25,vote:true},
+  {t:"Puntos varios",min:15}]
+};
+
+// ── Historial: sesiones con mociones (CON detalle) ──
+const HIST=[
+ {title:"1.er Pleno Ordinario 2025",date:"12 de marzo de 2025",location:"Salón de Honor",
+  attended:true,modality:"Presencial",myWeight:0.75,acta:"acta-pleno-1-2025.pdf",
+  topics:[
+   {title:"Aprobación del Plan de Trabajo Anual 2025",
+    detail:"Presentado por la Mesa Directiva conforme al artículo 34 de los Estatutos. Contempla cuatro ejes: bienestar estudiantil, incidencia en política universitaria, fortalecimiento de los CEE y comunicación interna. Incluye la creación de la Comisión de Salud Mental.",
+    type:"mocion",approved:true,mine:"A favor",pct:{a:72.4,c:18.1,b:9.5},w:{a:24.75,c:6.20,b:3.25}},
+   {title:"Modificación al Reglamento de Elecciones",
+    detail:"Ajuste de los plazos de inscripción de candidaturas (art. 12 y 14): amplía de 5 a 10 días hábiles el período de inscripción y adelanta el cierre del padrón electoral a 30 días antes de la elección.",
+    type:"mocion",approved:false,mine:"En contra",pct:{a:41.2,c:50.8,b:8.0},w:{a:14.10,c:17.35,b:2.75}}]},
+
+ {title:"2.º Pleno Ordinario 2025",date:"9 de abril de 2025",location:"Salón de Honor",
+  attended:true,modality:"Online",myWeight:0.75,acta:"acta-pleno-2-2025.pdf",
+  topics:[
+   {title:"Elección de Secretaría de Comunicaciones",
+    detail:"Votación por candidaturas conforme al artículo 41 de los Estatutos. Se presentaron dos candidaturas con sus respectivos programas, expuestos en el punto anterior de la tabla.",
+    type:"candidato",approved:null,mine:"Camila Herrera",
+    candidates:[{name:"Camila Herrera",votes:18.75},{name:"Kevin Araya",votes:12.50},{name:"Abstención",votes:4.25}]},
+   {title:"Declaración pública sobre financiamiento universitario",
+    detail:"Moción presentada por la Consejería de Ciencias Sociales. Rechaza el recorte al presupuesto de educación superior anunciado y mandata a la Mesa Directiva a coordinar acciones con la CONFECH.",
+    type:"mocion",approved:true,mine:"A favor",pct:{a:88.6,c:5.2,b:6.2},w:{a:31.40,c:1.85,b:2.20}},
+   {title:"Presupuesto de Bienestar Estudiantil, 1.er semestre",
+    detail:"Asignación de $18.400.000 al fondo de emergencia, distribuidos en ayudas de alimentación (40%), transporte (30%) y materiales de estudio (30%).",
+    type:"mocion",approved:true,mine:"Abstención",pct:{a:64.9,c:26.3,b:8.8},w:{a:23.00,c:9.30,b:3.15}}]},
+
+ {title:"1.er Pleno Extraordinario 2025",date:"28 de abril de 2025",location:"Modalidad telemática",
+  attended:true,modality:"Online",myWeight:0.75,acta:"acta-pleno-extra-1-2025.pdf",
+  topics:[
+   {title:"Convocatoria a paro reflexivo estudiantil",
+    detail:"Moción de urgencia presentada por 12 consejerías. Convoca a un paro reflexivo de 24 horas para el 6 de mayo, con jornadas de discusión por facultad sobre el financiamiento de la educación superior.",
+    type:"mocion",approved:true,mine:"A favor",pct:{a:56.8,c:35.4,b:7.8},w:{a:19.45,c:12.10,b:2.65}},
+   {title:"Mandato de negociación con Rectoría",
+    detail:"Define el pliego de demandas y la composición de la comisión negociadora: dos integrantes de la Mesa Directiva, dos consejerías electas por sorteo y un representante de COSEFECH.",
+    type:"mocion",approved:true,mine:"En contra",pct:{a:79.1,c:12.6,b:8.3},w:{a:27.05,c:4.30,b:2.85}}]},
+
+ {title:"3.er Pleno Ordinario 2025",date:"4 de junio de 2025",location:"Salón de Honor",
+  attended:false,justified:true,myWeight:0.75,topics:[]}
+];
+
+// ── Mis intervenciones (speaking_turns) ──
+const PALABRAS=[
+ {sess:"1.er Pleno Ordinario 2025",point:"Presentación del Plan de Trabajo Anual 2025",
+  kind:"Individual",cat:"Pleno",assigned:120,used:113,date:"12 mar 2025"},
+ {sess:"1.er Pleno Ordinario 2025",point:"Votación: Modificación al Reglamento de Elecciones",
+  kind:"Individual",cat:"Pleno",assigned:90,used:90,date:"12 mar 2025"},
+ {sess:"2.º Pleno Ordinario 2025",point:"Declaración sobre financiamiento universitario",
+  kind:"Colectiva",cat:"Pleno",assigned:180,used:164,date:"9 abr 2025"},
+ {sess:"1.er Pleno Extraordinario 2025",point:"Debate general",
+  kind:"Individual",cat:"Pleno",assigned:120,used:118,date:"28 abr 2025"},
+ {sess:"1.er Pleno Extraordinario 2025",point:"Votación: Mandato de negociación con Rectoría",
+  kind:"Individual",cat:"Pleno",assigned:90,used:76,date:"28 abr 2025"}
+];
+
+let MENSAJES=[
+ {from:"Mesa Directiva FECh",subject:"Citación al 4.º Pleno Ordinario 2025",
+  body:"Se cita a todas las consejerías y delegaciones al 4.º Pleno Ordinario, a realizarse el miércoles 2 de julio a las 18:30 en el Salón de Honor. La tabla está disponible en tu panel. Se solicita confirmar asistencia antes del lunes 30 de junio.",
+  date:"24 de junio, 10:12",unread:true,type:"citacion"},
+ {from:"Mesa Directiva FECh",subject:"Respuesta a tu justificación — 3.er Pleno Ordinario",
+  body:"Tu justificación por motivos académicos fue recibida y aceptada por la Mesa Directiva. Queda registrada como Inasistencia Justificada en el acta de la sesión.",
+  date:"5 de junio, 16:40",unread:false,type:"aceptada"},
+ {from:"Secretaría de Comunicaciones",subject:"Acta del 2.º Pleno Ordinario disponible",
+  body:"El acta del 2.º Pleno Ordinario 2025 ya se encuentra publicada en el portal de transparencia y disponible para descarga.",
+  date:"14 de abril, 09:05",unread:false,type:"info"}
+];
+
+let RSVP=null,JUST_MOTIVO="",MODALIDAD="presencial",ASISTIO=false,RETIRADO=false,VENCIDO=false;
+
+// "Hoy" simulado para la vista previa
+const HOY=new Date("2025-06-26T12:00:00");
+function plazo(){
+  const ms=new Date(NEXT.deadlineISO)-HOY;
+  const d=Math.floor(ms/864e5), h=Math.floor(ms%864e5/36e5);
+  if(ms<=0) return {texto:"Plazo vencido",urgente:true};
+  if(d===0) return {texto:`Quedan ${h} h`,urgente:true};
+  return {texto:`Quedan ${d} día${d!==1?"s":""}`,urgente:d<=2};
+}
+
+function tablaHTML(t){
+  const tot=t.reduce((s,p)=>s+(p.min||0),0),h=Math.floor(tot/60),m=tot%60;
+  const dur=h?`${h} h${m?" "+m+" min":""}`:`${m} min`;
+  const v=t.filter(p=>p.vote).length;
+  return `<ol class="tabla">${t.map(p=>`<li class="${p.curr?"now":""}">
+    <span class="pt">${esc(p.t)}</span>
+    ${p.curr?`<span class="tbadge" style="background:var(--c-red)">EN DEBATE</span>`:""}
+    ${p.vote?`<span class="tbadge" style="background:var(--c-violet)">SE VOTA</span>`:""}
+    ${p.min?`<span class="mins">${I.clock}${p.min} min</span>`:""}</li>`).join("")}</ol>
+   <div class="tfoot"><span>${t.length} puntos de tabla${v?` · ${v} con votación`:""}</span>
+   <span>Duración estimada <b>${dur}</b></span></div>`;
+}
+const mmss=s=>Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
+
+// ── Nav ──
+const TABS=[
+ {id:"activa",   label:"Sesión activa",  icon:I.radio,  c:"--c-red",   t:"--t-red"},
+ {id:"proximo",  label:"Próximo pleno",  icon:I.cal,    c:"--c-violet",t:"--t-violet"},
+ {id:"historial",label:"Mi historial",   icon:I.chart,  c:"--c-cyan",  t:"--t-cyan"},
+ {id:"palabra",  label:"Mis intervenciones",icon:I.mic, c:"--c-orange",t:"--t-orange"},
+ {id:"mensajes", label:"Correo interno", icon:I.mail,   c:"--c-blue",  t:"--t-blue"}
+];
+function drawNav(){
+  const el=document.getElementById("nav");
+  const active=document.querySelector(".nav-btn.on")?.dataset.id||"activa";
+  const unread=MENSAJES.filter(m=>m.unread).length;
+  el.innerHTML="";
+  TABS.forEach(t=>{
+    const b=document.createElement("button");
+    b.className="nav-btn"+(t.id===active?" on":"");b.dataset.id=t.id;
+    b.style.setProperty("--nc",`var(${t.c})`);b.style.setProperty("--nt",`var(${t.t})`);
+    b.innerHTML=t.icon+"<span>"+t.label+"</span>"+
+      (t.id==="activa"?`<span class="pip"></span>`:"")+
+      (t.id==="mensajes"&&unread?`<span class="badge-n">${unread}</span>`:"")+
+      (t.id==="proximo"&&!RSVP?`<span class="badge-n">!</span>`:"");
+    b.onclick=()=>{
+      document.querySelectorAll(".nav-btn").forEach(x=>x.classList.remove("on"));
+      document.querySelectorAll(".panel-v").forEach(x=>x.classList.remove("on"));
+      b.classList.add("on");document.getElementById("p-"+t.id).classList.add("on");
+      window.scrollTo({top:0,behavior:"smooth"});
+    };
+    el.appendChild(b);
+  });
+}
+
+// ── Panel: Sesión activa ──
+function drawActiva(){
+  const q=(OPEN.presentW/OPEN.totalW*100);
+  let asist;
+  if(RETIRADO){
+    asist=`<div class="state" style="background:var(--tint)">
+      <div class="sic" style="background:var(--ink3)">${I.out}</div>
+      <div><b>Te retiraste de la sesión</b>
+      <p>Ya no cuentas para el quórum y no puedes votar en las mociones restantes.</p></div></div>`;
+  } else if(ASISTIO){
+    asist=`<div class="state" style="background:var(--t-green)">
+      <div class="sic" style="background:var(--c-green)">${I.check}</div>
+      <div><b style="color:var(--c-green)">Asistencia registrada</b>
+      <p>Participación ${MODALIDAD==="online"?"online":"presencial"}. Ya puedes votar y pedir la palabra.</p>
+      <button class="chg" onclick="retirarse()">Retirarme de la sesión</button></div></div>`;
+  } else {
+    asist=`
+      <div style="font-size:12px;font-weight:650;margin-bottom:9px;color:var(--ink2)">Modalidad de participación</div>
+      <div class="mod-btns">
+        <button class="mod ${MODALIDAD==="presencial"?"on":""}" style="--mc:var(--c-green);--mt:var(--t-green)" onclick="setMod('presencial')">${I.pin}Presencial</button>
+        <button class="mod ${MODALIDAD==="online"?"on":""}" style="--mc:var(--c-cyan);--mt:var(--t-cyan)" onclick="setMod('online')">${I.wifi}Online</button>
+      </div>
+      <input class="code-in" id="code" placeholder="ABC12" maxlength="5">
+      <button class="btn" style="background:var(--c-blue)" onclick="marcar()">${I.check}Registrar asistencia</button>
+      <div class="or">o</div>
+      <button class="btn-o" style="--bc:var(--c-violet)" onclick="toast('Se abriría la cámara para escanear el QR')">${I.qr}Escanear código QR</button>`;
+  }
+
+  const sp=OPEN.speaking;
+  document.getElementById("act-slot").innerHTML=`
+   <div class="hello">
+     <h2>Hola, ${esc(ME.first)}</h2>
+     <p>${esc(ME.group)} · ${esc(ME.faculty)}</p>
+     <span class="w">${I.scale}Ponderación de voto: ${ME.weight.toFixed(2)}</span>
+   </div>
+
+   <div class="card" style="border-color:var(--c-red)">
+     <span class="tag" style="background:var(--c-red)"><span class="pip" style="background:#fff"></span>PLENO EN CURSO</span>
+     <h4 style="margin-top:12px;font-size:19px">${esc(OPEN.title)}</h4>
+     <div class="lmeta" style="margin-top:9px">
+       <span style="color:var(--c-violet);background:var(--t-violet)">${I.cal}${esc(OPEN.date)}</span>
+       <span style="color:var(--c-orange);background:var(--t-orange)">${I.pin}${esc(OPEN.location)}</span>
+     </div>
+     <a class="btn-link" href="${OPEN.link}" target="_blank" rel="noopener">${I.video}Abrir enlace del pleno</a>
+   </div>
+
+   <div class="grid2" style="margin-top:14px">
+     <div class="card">
+       <h4>Marcar asistencia</h4>
+       <p class="cd">${ASISTIO?"Ya registraste tu asistencia en esta sesión.":RETIRADO?"Te retiraste de esta sesión.":"Ingresa el código mostrado en la pantalla principal para poder votar."}</p>
+       ${asist}
+     </div>
+
+     <div class="card">
+       <h4>Mociones abiertas</h4>
+       <p class="cd">Votaciones en curso ahora mismo.</p>
+       ${ASISTIO&&!RETIRADO?OPEN.mociones.map(m=>`
+         <div class="moc"><b>${esc(m.title)}</b><p class="d">${esc(m.detail)}</p>
+         <button class="btn-vote" onclick="toast('Se abriría la pantalla de votación')">Votar ahora ${I.arrow}</button></div>`).join("")
+        :`<div class="state" style="background:var(--tint)">
+            <div class="sic" style="background:var(--ink3)">${I.vote}</div>
+            <div><b>Registra tu asistencia</b><p>Debes marcar asistencia antes de poder votar las mociones abiertas.</p></div>
+          </div>`}
+     </div>
+   </div>
+
+   <div class="card">
+     <h4>Tabla de la sesión</h4>
+     <p class="cd">Puntos a tratar y su avance.</p>
+     ${tablaHTML(OPEN.tabla)}
+   </div>
+
+   <div class="card">
+     <h4>Sistema de palabra</h4>
+     <p class="cd">${ASISTIO&&!RETIRADO?"Pide la palabra y sigue la cola de oradores en tiempo real.":"Marca tu asistencia para poder pedir la palabra."}</p>
+     <div class="speak-now">
+       <div class="speak-av">${sp.current.name.split(" ").map(w=>w[0]).slice(0,2).join("")}</div>
+       <div class="speak-b"><div class="l">Con la palabra</div><b>${esc(sp.current.name)}</b><span>${esc(sp.current.faculty)}</span></div>
+       <div class="timer">${sp.current.left}</div>
+     </div>
+     <div class="blk" style="--bc:var(--c-violet)">
+       <h5>${I.hand}Cola de oradores (${sp.queue.length})</h5>
+       <div class="queue">${sp.queue.map((s,i)=>`
+         <div class="qrow ${s.mine?"mine":""}">
+           <span class="qn">${i+1}</span>
+           <span class="qb">${esc(s.name)}${s.mine?" (tú)":""}<em>${esc(s.fac)}</em></span>
+           <span class="qtag" style="background:var(${s.kind==="Colectiva"?"--c-teal":"--c-blue"})">${s.kind}</span>
+         </div>`).join("")}</div>
+       ${ASISTIO&&!RETIRADO?`<button class="btn" style="background:var(--c-orange);margin-top:12px" onclick="toast('Tu solicitud de palabra fue enviada a la Mesa')">${I.hand}Pedir la palabra</button>`:""}
+     </div>
+   </div>
+
+   <div class="card">
+     <h4>Nómina en vivo</h4>
+     <p class="cd">${OPEN.present} presentes · ponderación ${OPEN.presentW.toFixed(2)} / ${OPEN.totalW.toFixed(2)} (${q.toFixed(1)}%)</p>
+     <div class="roster-c">
+       <span class="rc" style="background:var(--c-green)">${I.pin}Presencial: ${OPEN.presentes.length}</span>
+       <span class="rc" style="background:var(--c-cyan)">${I.wifi}Online: ${OPEN.online.length}</span>
+       <span class="rc" style="background:var(--ink3)">${I.users}Ausentes: ${OPEN.total-OPEN.present}</span>
+     </div>
+     <div class="names">
+       ${OPEN.presentes.map(n=>`<span class="nchip" style="color:var(--c-green);background:var(--t-green)">${esc(n)}</span>`).join("")}
+       ${OPEN.online.map(n=>`<span class="nchip" style="color:var(--c-cyan);background:var(--t-cyan)">${esc(n)}</span>`).join("")}
+     </div>
+   </div>`;
+  drawNav();
+}
+function setMod(m){MODALIDAD=m;drawActiva();}
+function marcar(){
+  const v=document.getElementById("code").value.trim();
+  if(!v){document.getElementById("code").focus();toast("Ingresa el código de la sesión");return;}
+  ASISTIO=true;drawActiva();toast("Asistencia registrada correctamente");
+}
+function retirarse(){RETIRADO=true;ASISTIO=false;drawActiva();toast("Te has retirado de la sesión");}
+
+// ── Panel: Próximo pleno ──
+function drawNext(){
+  const now=new Date("2025-06-26T12:00:00"),diff=new Date(NEXT.dateISO)-now;
+  const d=Math.max(0,Math.floor(diff/864e5)),hh=Math.max(0,Math.floor(diff%864e5/36e5));
+  let r;
+  if(RSVP==="confirmada"){
+    r=`<div class="rsvp done" style="border-color:var(--c-green);background:var(--t-green)">
+      <div class="state" style="padding:0"><div class="sic" style="background:var(--c-green)">${I.check}</div>
+      <div><b style="color:var(--c-green)">Asistencia confirmada</b>
+      <p>La Mesa Directiva ya recibió tu confirmación. Recuerda que <b>igual deberás registrar tu asistencia real</b> al inicio de la sesión con el código del pleno.</p>
+      <button class="chg" onclick="resetR()">Cambiar mi respuesta</button></div></div></div>`;
+  } else if(RSVP==="justificada"){
+    r=`<div class="rsvp done" style="border-color:var(--c-orange);background:var(--t-orange)">
+      <div class="state" style="padding:0"><div class="sic" style="background:var(--c-orange)">${I.flag}</div>
+      <div><b style="color:var(--c-orange)">Justificación enviada</b>
+      <p>Motivo: <b>${esc(JUST_MOTIVO)}</b>. Está <b>pendiente de revisión</b> por la Mesa Directiva. Solo cuenta como Inasistencia Justificada una vez que la acepten.</p>
+      <button class="chg" onclick="resetR()">Cambiar mi respuesta</button></div></div></div>`;
+  } else if(VENCIDO){
+    r=`<div class="rsvp done" style="border-color:var(--ink3);background:var(--tint)">
+      <div class="state" style="padding:0"><div class="sic" style="background:var(--ink3)">${I.clock}</div>
+      <div><b>Plazo de confirmación vencido</b>
+      <p>El plazo cerró el <b>${esc(NEXT.deadline)}</b> y ya no puedes confirmar ni justificar por este medio.
+         Si tu situación cambió, escríbele a la Mesa Directiva por el correo interno.</p></div></div></div>`;
+  } else {
+    const dl=plazo();
+    r=`<div class="rsvp">
+      <div class="rsvp-q">¿Asistirás a este pleno?</div>
+      <p class="rsvp-h">Tu respuesta llega a la Mesa Directiva y le permite estimar el quórum con anticipación. No reemplaza el registro de asistencia del día de la sesión.</p>
+      <div class="deadline ${dl.urgente?"urg":""}">
+        ${I.clock}<span>Plazo para responder: <b>${esc(NEXT.deadline)}</b></span>
+        <em>${dl.texto}</em>
+      </div>
+      <div class="rsvp-btns">
+        <button class="rb rb-yes" onclick="confirmar()"><span class="ric">${I.check}</span>
+          <span><b>Confirmar asistencia</b><small>Estaré presente en el pleno</small></span></button>
+        <button class="rb rb-no" onclick="document.getElementById('jf').classList.add('on')"><span class="ric">${I.flag}</span>
+          <span><b>Justificar inasistencia</b><small>No podré asistir — enviar motivo</small></span></button>
+      </div>
+      <div class="jf" id="jf">
+        <label for="motivo">Motivo de la inasistencia</label>
+        <select id="motivo">
+          <option>Motivos académicos (evaluación o clase)</option>
+          <option>Motivos de salud</option><option>Motivos laborales</option>
+          <option>Problema de conectividad o transporte</option><option>Otro motivo</option>
+        </select>
+        <label for="detalle">Detalle para la Mesa Directiva</label>
+        <textarea id="detalle" placeholder="Explica brevemente tu situación. Este texto llegará al correo interno de la Mesa Directiva."></textarea>
+        <div class="jf-a">
+          <button class="btn-send" onclick="enviarJust()">${I.send}Enviar justificación</button>
+          <button class="btn-ghost" onclick="document.getElementById('jf').classList.remove('on')">Cancelar</button>
+        </div>
+      </div></div>`;
+  }
+  document.getElementById("next-slot").innerHTML=`
+   <div class="next"><div class="next-strip"></div><div class="next-in">
+     <span class="tag" style="background:var(--c-violet)">PRÓXIMO PLENO</span>
+     <h2>${esc(NEXT.title)}</h2>
+     <div class="lmeta">
+       <span style="color:var(--c-violet);background:var(--t-violet)">${I.cal}${esc(NEXT.date)}</span>
+       <span style="color:var(--c-orange);background:var(--t-orange)">${I.pin}${esc(NEXT.location)}</span>
+     </div>
+     <div class="count">
+       <div class="cbox"><b>${d}</b><span>días</span></div>
+       <div class="cbox"><b>${hh}</b><span>horas</span></div>
+       <div class="cbox" style="background:var(--t-blue)"><b style="color:var(--c-blue)">${NEXT.tabla.length}</b><span>puntos</span></div>
+       <div class="cbox" style="background:var(--t-pink)"><b style="color:var(--c-pink)">${NEXT.tabla.filter(p=>p.vote).length}</b><span>votaciones</span></div>
+     </div>
+     <a class="btn-link" href="${NEXT.link}" target="_blank" rel="noopener">${I.video}Abrir enlace del pleno</a>
+     <p style="font-size:11.5px;color:var(--ink3);margin-top:7px">${esc(NEXT.link)}</p>
+     ${r}
+     <div class="blk" style="--bc:var(--c-blue);margin-top:18px">
+       <h5>${I.archive}Tabla de la sesión</h5>${tablaHTML(NEXT.tabla)}
+     </div>
+     <button class="sim" onclick="togglePlazo()">Vista previa: ver cómo se ve con el plazo ${VENCIDO?"abierto":"vencido"}</button>
+   </div></div>`;
+  drawNav();
+}
+function confirmar(){RSVP="confirmada";drawNext();toast("Asistencia confirmada — la Mesa Directiva fue notificada");}
+function enviarJust(){
+  JUST_MOTIVO=document.getElementById("motivo").value;
+  const d=document.getElementById("detalle").value.trim();
+  if(!d){document.getElementById("detalle").focus();toast("Escribe un detalle para la Mesa Directiva");return;}
+  RSVP="justificada";
+  MENSAJES.unshift({from:"Tú → Mesa Directiva FECh",subject:"Justificación de inasistencia — "+NEXT.title,
+   body:JUST_MOTIVO+". "+d,date:"Hoy, recién enviado",unread:false,type:"enviada"});
+  drawNext();drawMsgs();toast("Justificación enviada al correo interno de la Mesa");
+}
+function resetR(){RSVP=null;drawNext();}
+function togglePlazo(){VENCIDO=!VENCIDO;RSVP=null;drawNext();
+  toast(VENCIDO?"Simulando: plazo vencido":"Simulando: plazo abierto");}
+function exportar(f){
+  const n=HIST.length,t=HIST.flatMap(s=>s.topics).length;
+  toast(`Se generaría tu historial en ${f}: ${n} sesiones, ${t} mociones y ${PALABRAS.length} intervenciones`);
+}
+
+// ── Panel: Historial (con detalle de mociones) ──
+(function(){
+  const tot=HIST.length,att=HIST.filter(s=>s.attended).length,pct=Math.round(att/tot*100);
+  const allTopics=HIST.flatMap(s=>s.topics);
+  const voted=allTopics.filter(t=>t.mine).length;
+  const absten=allTopics.filter(t=>t.mine==="Abstención").length;
+  let streak=0;for(const s of HIST){if(s.attended)streak++;else break;}
+  const prom=78,R=52,C=2*Math.PI*R,off=C*(1-pct/100);
+
+  const col=v=>v==="A favor"?"--c-lime":v==="En contra"?"--c-red":v==="Abstención"?"--c-amber":"--c-blue";
+  const tin=v=>v==="A favor"?"--t-lime":v==="En contra"?"--t-red":v==="Abstención"?"--t-amber":"--t-blue";
+
+  function topicHTML(t){
+    let res;
+    if(t.type==="candidato"){
+      const max=Math.max(...t.candidates.map(c=>c.votes));
+      const cs=["--c-blue","--c-violet","--c-cyan","--c-pink"];
+      res=t.candidates.map((c,i)=>`<div class="crow">
+        <span class="cname" style="color:var(${cs[i%cs.length]})">${esc(c.name)}</span>
+        <div class="ctrack"><i style="width:${(c.votes/max*100).toFixed(1)}%;background:var(${cs[i%cs.length]})"></i></div>
+        <span class="cval" style="color:var(${cs[i%cs.length]})">${c.votes.toFixed(2)}</span></div>`).join("");
+    }else{
+      res=`<div class="rbar">
+        <div style="width:${t.pct.a}%;background:var(--c-lime)">${t.pct.a>12?t.pct.a.toFixed(1)+"%":""}</div>
+        <div style="width:${t.pct.c}%;background:var(--c-red)">${t.pct.c>12?t.pct.c.toFixed(1)+"%":""}</div>
+        <div style="width:${t.pct.b}%;background:var(--c-amber)">${t.pct.b>12?t.pct.b.toFixed(1)+"%":""}</div></div>
+       <div class="rkey">
+        <span style="color:var(--c-lime);background:var(--t-lime)">A favor <b>${t.w.a.toFixed(2)}</b></span>
+        <span style="color:var(--c-red);background:var(--t-red)">En contra <b>${t.w.c.toFixed(2)}</b></span>
+        <span style="color:var(--c-amber);background:var(--t-amber)">Abstención <b>${t.w.b.toFixed(2)}</b></span></div>`;
+    }
+    return `<div class="mtop">
+      <div class="mtop-h"><b>${esc(t.title)}</b>
+        ${t.approved===null?"":`<span class="pill" style="background:var(${t.approved?"--c-lime":"--c-red"})">${t.approved?"APROBADO":"RECHAZADO"}</span>`}</div>
+      <div class="mdet"><span class="dl">Detalle de la moción</span>${esc(t.detail)}</div>
+      <div class="myvote"><span class="lb">Mi voto</span>
+        <span class="vchip" style="color:var(${col(t.mine)});background:var(${tin(t.mine)})">${esc(t.mine)}</span></div>
+      ${res}</div>`;
+  }
+
+  document.getElementById("hist-slot").innerHTML=`
+   <div class="export">
+     <div class="ex-ic">${I.down}</div>
+     <div class="ex-b">
+       <b>Descargar mi historial</b>
+       <span>Genera un PDF con tus asistencias, el detalle de cada moción con tu voto, y tus intervenciones. Sirve para rendir cuentas ante tu asamblea o centro de estudiantes.</span>
+     </div>
+     <div class="ex-btns">
+       <button class="ex-btn" style="background:var(--c-red)" onclick="exportar('PDF')">${I.down}PDF</button>
+       <button class="ex-btn" style="background:var(--c-green)" onclick="exportar('Excel')">${I.down}Excel</button>
+     </div>
+   </div>
+
+   <div class="hero-stats">
+     <div>
+       <svg width="140" height="140" viewBox="0 0 140 140">
+         <circle cx="70" cy="70" r="${R}" fill="none" stroke="var(--line)" stroke-width="13"/>
+         <circle cx="70" cy="70" r="${R}" fill="none" stroke="var(--c-cyan)" stroke-width="13"
+           stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" stroke-linecap="round" transform="rotate(-90 70 70)"/>
+         <text x="70" y="66" text-anchor="middle" font-family="Libre Baskerville,serif" font-size="30" font-weight="700" fill="var(--c-cyan)">${pct}%</text>
+         <text x="70" y="86" text-anchor="middle" font-family="IBM Plex Sans,sans-serif" font-size="11" fill="var(--ink3)">${att} de ${tot}</text>
+       </svg>
+       <div class="ring-lbl">Mi asistencia</div>
+     </div>
+     <div class="mini">
+       <div class="m-card" style="--mc:var(--c-green)"><b>${att}</b><span>Plenos asistidos</span></div>
+       <div class="m-card" style="--mc:var(--c-orange)"><b>${tot-att}</b><span>Inasistencias</span></div>
+       <div class="m-card" style="--mc:var(--c-pink)"><b>${streak}</b><span>Racha consecutiva</span></div>
+       <div class="m-card" style="--mc:var(--c-violet)"><b>${pct>=prom?"+":""}${pct-prom}</b><span>vs. promedio (${prom}%)</span></div>
+       <div class="m-card" style="--mc:var(--c-blue)"><b>${voted}/${allTopics.length}</b><span>Mociones votadas</span></div>
+       <div class="m-card" style="--mc:var(--c-amber)"><b>${absten}</b><span>Abstenciones</span></div>
+       <div class="m-card" style="--mc:var(--c-teal)"><b>${PALABRAS.length}</b><span>Intervenciones</span></div>
+       <div class="m-card" style="--mc:var(--c-cyan)"><b>${ME.weight.toFixed(2)}</b><span>Mi ponderación</span></div>
+     </div>
+   </div>
+
+   ${HIST.map(s=>{
+     const c=s.attended?"--c-green":s.justified?"--c-amber":"--c-red";
+     const lbl=s.attended?"ASISTISTE":(s.justified?"JUSTIFICADA":"AUSENTE");
+     return `<div class="sess">
+       <button class="sess-hd">
+         <div><h4>${esc(s.title)}</h4>
+           <div class="m">
+             <span style="color:var(--c-orange);background:var(--t-orange)">${I.pin}${esc(s.location||"—")}</span>
+             <span style="color:var(--c-violet);background:var(--t-violet)">${I.clock}${esc(s.date)}</span>
+             <span style="color:var(--c-blue);background:var(--t-blue)">${s.topics.length} moción${s.topics.length!==1?"es":""}</span>
+             ${s.attended?`<span style="color:var(--c-cyan);background:var(--t-cyan)">${s.modality}</span>`:""}
+             <span style="color:var(--c-teal);background:var(--t-green)">Mi ponderación ${s.myWeight.toFixed(2)}</span>
+           </div>
+         </div>
+         <div class="r"><span class="pill" style="background:var(${c})">${lbl}</span><span class="chev">${I.chev}</span></div>
+       </button>
+       <div class="sess-bd">
+         ${s.acta?`<a class="btn-o" style="--bc:var(--c-orange);width:auto;margin-bottom:13px;display:inline-flex" href="#">${I.down}Descargar acta (${esc(s.acta)})</a>`:""}
+         ${s.topics.length===0
+           ? `<div class="empty" style="padding:26px"><b>Sin mociones registradas</b><span>${s.justified?"Tu inasistencia a esta sesión fue justificada y aceptada.":"Esta sesión no tuvo votaciones."}</span></div>`
+           : s.topics.map(topicHTML).join("")}
+       </div></div>`;}).join("")}`;
+
+  document.querySelectorAll("#hist-slot .sess-hd").forEach(b=>b.onclick=()=>b.parentElement.classList.toggle("open"));
+  document.querySelector("#hist-slot .sess")?.classList.add("open");
+})();
+
+// ── Panel: Mis intervenciones ──
+(function(){
+  const n=PALABRAS.length;
+  const totalUsed=PALABRAS.reduce((s,p)=>s+p.used,0);
+  const totalAss=PALABRAS.reduce((s,p)=>s+p.assigned,0);
+  const avg=Math.round(totalUsed/n);
+  const colect=PALABRAS.filter(p=>p.kind==="Colectiva").length;
+  const sesiones=new Set(PALABRAS.map(p=>p.sess)).size;
+
+  document.getElementById("sp-slot").innerHTML=`
+   <div class="hero-stats" style="grid-template-columns:1fr">
+     <div class="mini">
+       <div class="m-card" style="--mc:var(--c-orange)"><b>${n}</b><span>Intervenciones totales</span></div>
+       <div class="m-card" style="--mc:var(--c-violet)"><b>${mmss(totalUsed)}</b><span>Tiempo total en uso de la palabra</span></div>
+       <div class="m-card" style="--mc:var(--c-cyan)"><b>${mmss(avg)}</b><span>Duración promedio</span></div>
+       <div class="m-card" style="--mc:var(--c-teal)"><b>${colect}</b><span>Intervenciones colectivas</span></div>
+       <div class="m-card" style="--mc:var(--c-blue)"><b>${sesiones}</b><span>Sesiones en que hablaste</span></div>
+       <div class="m-card" style="--mc:var(--c-green)"><b>${Math.round(totalUsed/totalAss*100)}%</b><span>Del tiempo asignado usado</span></div>
+     </div>
+   </div>
+   ${PALABRAS.map(p=>{
+     const c=p.kind==="Colectiva"?"--c-teal":"--c-orange";
+     return `<div class="sp" style="--spc:var(${c})">
+       <div class="sp-n">${I.mic}</div>
+       <div class="sp-b">
+         <div class="sp-sess">${esc(p.sess)} · ${esc(p.date)}</div>
+         <b>${esc(p.point)}</b>
+         <div class="sp-meta">
+           <span style="color:var(${c});background:var(${p.kind==="Colectiva"?"--t-green":"--t-orange"})">${p.kind}</span>
+           <span style="color:var(--c-blue);background:var(--t-blue)">Categoría: ${p.cat}</span>
+           <span style="color:var(--ink3);background:var(--tint)">Asignado ${mmss(p.assigned)}</span>
+         </div>
+       </div>
+       <div class="sp-time"><b>${mmss(p.used)}</b><span>usado</span></div>
+     </div>`;}).join("")}`;
+})();
+
+// ── Panel: Correo interno ──
+function drawMsgs(){
+  const tone={citacion:["--c-violet",I.cal],aceptada:["--c-green",I.check],info:["--c-blue",I.mail],enviada:["--c-orange",I.send]};
+  document.getElementById("msg-slot").innerHTML=MENSAJES.map(m=>{
+    const [c,ic]=tone[m.type]||["--c-blue",I.mail];
+    const st=m.type==="aceptada"?["Aceptada por la Mesa","--c-green"]:m.type==="enviada"?["Pendiente de revisión","--c-orange"]:null;
+    return `<div class="msg${m.unread?" unread":""}">
+      <div class="msg-av" style="background:var(${c})">${ic}</div>
+      <div class="msg-b">
+        <div class="msg-hd"><b>${esc(m.subject)}</b><time>${esc(m.date)}</time></div>
+        <div class="msg-from">${esc(m.from)}</div>
+        <div class="msg-body">${esc(m.body)}</div>
+        ${st?`<span class="msg-st" style="background:var(${st[1]})">${st[0]}</span>`:""}
+      </div></div>`;}).join("");
+  drawNav();
+}
+
+drawActiva();drawNext();drawMsgs();
+</script>
