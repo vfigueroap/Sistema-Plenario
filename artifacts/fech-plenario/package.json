@@ -42,16 +42,16 @@
     "@tailwindcss/typography": "^0.5.15",
     "@tailwindcss/vite": "catalog:",
     "@tanstack/react-query": "catalog:",
-    "@uppy/aws-s3": "^5.0.0",
-    "@uppy/core": "^5.0.0",
-    "@uppy/dashboard": "^5.0.0",
-    "@uppy/react": "^5.0.0",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "@uppy/aws-s3": "^5.0.0",
+    "@uppy/core": "^5.0.0",
+    "@uppy/dashboard": "^5.0.0",
+    "@uppy/react": "^5.0.0",
     "@vitejs/plugin-react": "catalog:",
     "@workspace/api-client-react": "workspace:*",
     "@workspace/object-storage-web": "workspace:*",
@@ -85,6 +85,7 @@
     "zod": "catalog:"
   },
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
     "qrcode.react": "^4.2.0"
   }
 }
