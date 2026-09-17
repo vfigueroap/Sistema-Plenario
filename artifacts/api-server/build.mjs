@@ -17,9 +17,9 @@ async function buildAll() {
   await esbuild({
     entryPoints: {
       index: path.resolve(artifactDir, "src/index.ts"),
-      // Also compile the Vercel export for local smoke verification, without
-      // invoking it or connecting a DB during the build.
-      serverless: path.resolve(artifactDir, "../../api/index.ts"),
+      // Bundle the Express export for Vercel without starting the standalone
+      // listener or connecting to the DB during the build.
+      serverless: path.resolve(artifactDir, "src/app.ts"),
     },
     platform: "node",
     bundle: true,
