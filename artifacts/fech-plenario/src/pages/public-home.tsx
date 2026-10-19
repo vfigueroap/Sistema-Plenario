@@ -21,6 +21,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ResultsBar, CandidateResultsBar } from "@/components/results-bar";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { campusDe, ordenCampus, SIN_CAMPUS } from "@/lib/campus";
 import {
   ExternalLink, FileDown, LogIn, MapPin, Clock, Radio, CalendarDays, Archive,
   Video, Users, UserX, ShieldCheck, BarChart2, Info, Home, ListOrdered, Scale,
@@ -71,51 +73,6 @@ function estamentoOf(group: string | null | undefined): EstamentoKey {
 
 const ORDEN: Record<EstamentoKey, number> = { mesa: 0, cosefech: 1, consejero: 2, cee: 3, otro: 4 };
 const ESTAMENTOS_VISIBLES: EstamentoKey[] = ["mesa", "cosefech", "consejero", "cee"];
-
-// ─── Campus ──────────────────────────────────────────────────────────────────
-//
-// A qué campus pertenece cada unidad. La aplicación no guarda el campus en la
-// base de datos, así que se resuelve por esta tabla.
-//
-// REVISAR Y CORREGIR: este mapa es una aproximación. Toda unidad que no
-// aparezca aquí se agrupa bajo «Otras unidades», sin inventarle un campus.
-
-const CAMPUS: Record<string, string> = {
-  // Juan Gómez Millas
-  FACSO: "Juan Gómez Millas",
-  FYHH: "Juan Gómez Millas",
-  FACIEN: "Juan Gómez Millas",
-  FCEI: "Juan Gómez Millas",
-  "F. Artes": "Juan Gómez Millas",
-  // Andrés Bello
-  FEN: "Andrés Bello",
-  FAU: "Andrés Bello",
-  FAGOB: "Andrés Bello",
-  // Beauchef
-  FCFM: "Beauchef",
-  // Campus Norte
-  FACMED: "Norte",
-  FaO: "Norte",
-  FaCQyF: "Norte",
-  // Campus Sur
-  FAGRO: "Sur",
-  FAVET: "Sur",
-  FCFCN: "Sur",
-  // Centro
-  Derecho: "Centro",
-  "Artes Centro": "Centro",
-};
-
-const SIN_CAMPUS = "Otras unidades";
-const campusDe = (faculty: string | null | undefined) =>
-  (faculty && CAMPUS[faculty]) || SIN_CAMPUS;
-
-// Orden de presentación de los campus. Los no listados van al final.
-const ORDEN_CAMPUS = ["Juan Gómez Millas", "Andrés Bello", "Beauchef", "Norte", "Sur", "Centro"];
-const ordenCampus = (c: string) => {
-  const i = ORDEN_CAMPUS.indexOf(c);
-  return i === -1 ? ORDEN_CAMPUS.length : i;
-};
 
 // Nombre completo de cada Centro de Estudiantes. Los códigos que no estén aquí
 // se muestran tal cual, sin inventarles un nombre.
@@ -428,7 +385,7 @@ function PorCampus({ personas, color, nombreUnidad }: {
 }) {
   const porCampus = new Map<string, Map<string, PublicMember[]>>();
   for (const m of personas) {
-    const campus = campusDe(m.faculty);
+    const campus = campusDe(m);
     const unidad = m.faculty ?? "Sin unidad";
     if (!porCampus.has(campus)) porCampus.set(campus, new Map());
     const u = porCampus.get(campus)!;
@@ -913,6 +870,200 @@ function PastSession({ s }: { s: AdminHistorySession }) {
   );
 }
 
+// ─── Pleno Fácil: tabla simple y detalle de cada moción ─────────────────────
+
+// La tabla de la sesión, sin tiempos ni adornos: un punto por línea.
+function TablaSimple({ points }: { points: PublicAgendaPoint[] }) {
+  const ordered = [...points].sort((a, b) => a.position - b.position);
+  return (
+    <ol className="divide-y divide-gray-200 border border-gray-300 bg-white text-sm">
+      {ordered.map((p, i) => (
+        <li key={`${p.position}-${i}`} className="flex gap-3 px-3 py-1.5">
+          <span className="w-5 shrink-0 text-right text-xs font-bold tabular-nums text-teal-700">{i + 1}.</span>
+          <span className="leading-snug">{p.title}</span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+const SEGMENTOS_VOTO = [
+  { k: "favor", label: "A favor", color: "#65a30d" },
+  { k: "contra", label: "En contra", color: "#dc2626" },
+  { k: "abstención", label: "Abstención", color: "#eab308" },
+  { k: "sinVoto", label: "Sin voto", color: "#9ca3af" },
+  { k: "ausente", label: "Ausente", color: "#d1d5db" },
+] as const;
+
+type Desglose = Record<(typeof SEGMENTOS_VOTO)[number]["k"], number>;
+
+// Gráfico chico de cómo se votó: anillo con la leyenda al lado.
+function GraficoVotos({ percentages, weights }: { percentages: Desglose; weights: Desglose }) {
+  const r = 40;
+  const c = 2 * Math.PI * r;
+  let acumulado = 0;
+  const resumen = SEGMENTOS_VOTO.map((x) => `${x.label} ${percentages[x.k].toFixed(1)}%`).join(", ");
+  return (
+    <div className="flex flex-wrap items-center gap-5">
+      <svg viewBox="0 0 100 100" className="h-32 w-32 shrink-0 -rotate-90" role="img" aria-label={`Cómo se votó: ${resumen}`}>
+        <circle cx="50" cy="50" r={r} fill="none" stroke="#f3f4f6" strokeWidth="18" />
+        {SEGMENTOS_VOTO.map((x) => {
+          const largo = (c * Math.max(percentages[x.k], 0)) / 100;
+          const el = largo > 0 ? (
+            <circle key={x.k} cx="50" cy="50" r={r} fill="none" stroke={x.color} strokeWidth="18"
+              strokeDasharray={`${largo} ${c - largo}`} strokeDashoffset={-acumulado} />
+          ) : null;
+          acumulado += largo;
+          return el;
+        })}
+      </svg>
+      <ul className="min-w-[11rem] flex-1 space-y-1 text-xs">
+        {SEGMENTOS_VOTO.map((x) => (
+          <li key={x.k} className="flex items-center justify-between gap-3">
+            <span className="flex items-center gap-2">
+              <span className="inline-block h-2.5 w-2.5" style={{ backgroundColor: x.color }} />
+              {x.label}
+            </span>
+            <span className="tabular-nums text-muted-foreground">
+              {weights[x.k].toFixed(2)} · <b className="text-foreground">{percentages[x.k].toFixed(1)}%</b>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+// Cada moción es una fila que abre una ventana con su detalle y el gráfico.
+function MocionFila({ topic: t, pleno, fecha }: { topic: AdminHistoryTopic; pleno: string; fecha: string }) {
+  const ok = t.approved;
+  const Icon = ok === null ? MinusCircle : ok ? CheckCircle2 : XCircle;
+  const color = ok === null ? "text-violet-700" : ok ? "text-emerald-700" : "text-red-700";
+  const label = ok === null ? "RESUELTA" : ok ? "APROBADA" : "RECHAZADA";
+  const bg = ok === null ? "bg-violet-700" : ok ? "bg-emerald-700" : "bg-red-700";
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <button type="button"
+          className="flex w-full items-center justify-between gap-4 px-4 py-3 text-left hover:bg-gray-50 focus-visible:bg-gray-50">
+          <span className="flex min-w-0 items-center gap-3">
+            <Icon className={`h-5 w-5 shrink-0 ${color}`} />
+            <span className="text-sm font-medium leading-snug">{t.title}</span>
+          </span>
+          <span className="flex shrink-0 items-center gap-2">
+            <span className={`px-2 py-0.5 text-[10px] font-bold tracking-wider text-white ${bg}`}>{label}</span>
+            <span className="hidden text-[11px] font-semibold text-teal-700 sm:inline">Ver detalle</span>
+          </span>
+        </button>
+      </DialogTrigger>
+      <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto rounded-none">
+        <DialogHeader>
+          <DialogTitle className="pr-6 text-base leading-snug">{t.title}</DialogTitle>
+          <DialogDescription>{pleno} · {fecha}</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <span className={`inline-block px-2 py-0.5 text-[10px] font-bold tracking-wider text-white ${bg}`}>{label}</span>
+          {t.detail && (
+            <div className="border-l-[3px] border-blue-700 bg-gray-50 px-3 py-2">
+              <div className="mb-1 text-[10px] font-bold uppercase tracking-wider text-blue-700">Detalle de la moción</div>
+              <p className="whitespace-pre-line text-sm leading-relaxed text-gray-700">{t.detail}</p>
+            </div>
+          )}
+          <div>
+            <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-teal-800">Cómo se votó</div>
+            {t.type === "candidato"
+              ? <CandidateResultsBar candidates={t.candidates ?? []} />
+              : t.percentages && t.weights
+                ? <GraficoVotos percentages={t.percentages as unknown as Desglose} weights={t.weights as unknown as Desglose} />
+                : <p className="text-sm text-muted-foreground">Esta votación no tiene resultados registrados.</p>}
+          </div>
+          <p className="text-[11px] text-muted-foreground">{t.voteCount} votos emitidos.</p>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Un pleno en simple: fecha, tabla y votaciones.
+function PlenoFacil({ s }: { s: AdminHistorySession }) {
+  const fecha = formatShortDate(s.scheduledAt);
+  return (
+    <div>
+      <div className="flex flex-wrap items-baseline justify-between gap-2 border-b-2 border-gray-800 pb-1">
+        <span className="text-sm font-bold">{s.title}</span>
+        <span className="text-xs text-muted-foreground">{fecha}</span>
+      </div>
+      <div className="space-y-3 border border-t-0 border-gray-300 bg-white p-3">
+        {(s.agenda?.length ?? 0) > 0 && (
+          <div>
+            <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-teal-800">
+              <ListOrdered className="h-3.5 w-3.5" /> Tabla
+            </div>
+            <TablaSimple points={s.agenda!} />
+          </div>
+        )}
+        <div>
+          <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-teal-800">
+            <BarChart2 className="h-3.5 w-3.5" /> Votaciones
+          </div>
+          {s.topics.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Esta sesión no tuvo votaciones.</p>
+          ) : (
+            <ul className="divide-y divide-gray-200 border border-gray-300">
+              {s.topics.map((t) => (
+                <li key={t.topicId}><MocionFila topic={t} pleno={s.title} fecha={fecha} /></li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Resumen por campus (Composición) ────────────────────────────────────────
+
+function ResumenCampus({ consejeros, centros }: { consejeros: PublicMember[]; centros: PublicMember[] }) {
+  const filas = new Map<string, { consejerias: number; centros: number }>();
+  const fila = (campus: string) => {
+    if (!filas.has(campus)) filas.set(campus, { consejerias: 0, centros: 0 });
+    return filas.get(campus)!;
+  };
+  consejeros.forEach((m) => { fila(campusDe(m)).consejerias += 1; });
+  centros.forEach((m) => { fila(campusDe(m)).centros += 1; });
+  const ordenadas = [...filas.entries()].sort(([a], [b]) =>
+    (ordenCampus(a) - ordenCampus(b)) || a.localeCompare(b, "es"));
+  return (
+    <div className="border border-gray-200">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-gray-200 bg-gray-50 text-[11px] uppercase tracking-wider text-muted-foreground">
+            <th className="px-3 py-1.5 text-left font-bold">Campus</th>
+            <th className="px-3 py-1.5 text-right font-bold">Consejerías</th>
+            <th className="px-3 py-1.5 text-right font-bold">Centros</th>
+            <th className="px-3 py-1.5 text-right font-bold">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {ordenadas.map(([campus, n]) => (
+            <tr key={campus} className="border-b border-gray-100 last:border-b-0">
+              <td className="px-3 py-1.5">{campus === SIN_CAMPUS ? campus : `Campus ${campus}`}</td>
+              <td className="px-3 py-1.5 text-right tabular-nums">{n.consejerias}</td>
+              <td className="px-3 py-1.5 text-right tabular-nums">{n.centros}</td>
+              <td className="px-3 py-1.5 text-right font-semibold tabular-nums">{n.consejerias + n.centros}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {filas.has(SIN_CAMPUS) && (
+        <p className="border-t border-gray-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-800">
+          Algunas personas no tienen campus registrado. Se completa desde Integrantes, con la opción «Campus relacionado».
+        </p>
+      )}
+    </div>
+  );
+}
+
 // ─── Página ──────────────────────────────────────────────────────────────────
 
 export default function PublicHome() {
@@ -1039,7 +1190,7 @@ export default function PublicHome() {
         {tab === "facil" && (
           <section>
             <SectionHeading icon={<Sparkles className="h-5 w-5" />} title="Pleno Fácil"
-              subtitle="Qué se votó y qué se decidió, en una sola mirada. Sin detalles ni votos nominales."
+              subtitle="Cada pleno en simple: su acta, su tabla y lo que se votó. Toca una moción para ver su detalle y cómo se votó."
               color="#0F766E" />
 
             {historyLoading ? (
@@ -1050,44 +1201,7 @@ export default function PublicHome() {
               </div>
             ) : (
               <div className="space-y-8">
-                {/* Resultados de las votaciones */}
-                <div>
-                  <h4 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-teal-800">
-                    <BarChart2 className="h-4 w-4" /> Resultados de las votaciones
-                  </h4>
-                  <div className="space-y-5">
-                    {past.map((s) => s.topics.length === 0 ? null : (
-                      <div key={s.sessionId}>
-                        <div className="flex flex-wrap items-baseline justify-between gap-2 border-b-2 border-gray-800 pb-1">
-                          <span className="text-sm font-bold">{s.title}</span>
-                          <span className="text-xs text-muted-foreground">{formatShortDate(s.scheduledAt)}</span>
-                        </div>
-                        <ul className="divide-y divide-gray-200 border border-t-0 border-gray-300 bg-white">
-                          {s.topics.map((t) => {
-                            const ok = t.approved;
-                            const Icon = ok === null ? MinusCircle : ok ? CheckCircle2 : XCircle;
-                            const color = ok === null ? "text-violet-700" : ok ? "text-emerald-700" : "text-red-700";
-                            const label = ok === null ? "RESUELTA" : ok ? "APROBADA" : "RECHAZADA";
-                            const bg = ok === null ? "bg-violet-700" : ok ? "bg-emerald-700" : "bg-red-700";
-                            return (
-                              <li key={t.topicId} className="flex items-center justify-between gap-4 px-4 py-3">
-                                <span className="flex min-w-0 items-center gap-3">
-                                  <Icon className={`h-5 w-5 shrink-0 ${color}`} />
-                                  <span className="text-sm font-medium leading-snug">{t.title}</span>
-                                </span>
-                                <span className={`shrink-0 px-2 py-0.5 text-[10px] font-bold tracking-wider text-white ${bg}`}>
-                                  {label}
-                                </span>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Actas */}
+                {/* Actas: primero, para tenerlas siempre a mano */}
                 <div>
                   <h4 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-orange-800">
                     <FileText className="h-4 w-4" /> Actas de las sesiones
@@ -1115,8 +1229,18 @@ export default function PublicHome() {
                   )}
                 </div>
 
+                {/* Cada pleno: su tabla y sus votaciones */}
+                <div>
+                  <h4 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-teal-800">
+                    <BarChart2 className="h-4 w-4" /> Cada pleno: tabla y votaciones
+                  </h4>
+                  <div className="space-y-5">
+                    {past.map((s) => <PlenoFacil key={s.sessionId} s={s} />)}
+                  </div>
+                </div>
+
                 <p className="border-l-[3px] border-teal-700 bg-teal-50 px-3 py-2 text-xs leading-relaxed text-gray-700">
-                  ¿Necesitas el detalle de una moción, los votos de cada integrante o la asistencia?
+                  ¿Necesitas los votos de cada integrante o la asistencia?
                   Está todo en la pestaña <b>Sesiones</b>.
                 </p>
               </div>
@@ -1157,16 +1281,20 @@ export default function PublicHome() {
                     </div>
 
                     <div className="space-y-2">
+                    <Desplegable titulo={<span>Resumen por campus</span>} cuenta={new Set([...consejeros, ...centros].map(campusDe)).size}
+                      color="#047857">
+                      <ResumenCampus consejeros={consejeros} centros={centros} />
+                    </Desplegable>
                     {mesa.length > 0 && (
                       <Desplegable titulo={<Titulo k="mesa" />} cuenta={mesa.length}
-                        color={ESTAMENTO.mesa.hex} defecto>
+                        color={ESTAMENTO.mesa.hex}>
                         <Nomina personas={mesa} />
                       </Desplegable>
                     )}
 
                     {cosefech.length > 0 && (
                       <Desplegable titulo={<Titulo k="cosefech" />} cuenta={cosefech.length}
-                        color={ESTAMENTO.cosefech.hex} defecto>
+                        color={ESTAMENTO.cosefech.hex}>
                         <Nomina personas={cosefech} />
                       </Desplegable>
                     )}

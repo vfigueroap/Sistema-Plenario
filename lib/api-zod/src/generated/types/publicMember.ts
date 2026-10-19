@@ -14,5 +14,7 @@ export interface PublicMember {
   /** @nullable */
   group: string | null;
   /** @nullable */
+  campus?: string | null;
+  /** @nullable */
   faculty: string | null;
 }

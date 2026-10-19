@@ -117,6 +117,7 @@ export const ListMembersResponseItem = zod.object({
   "displayName": zod.string(),
   "group": zod.string().nullable(),
   "faculty": zod.string().nullable(),
+  "campus": zod.string().nullish(),
   "email": zod.string().nullish(),
   "password": zod.string().nullish(),
   "votingWeight": zod.number(),
@@ -136,6 +137,7 @@ export const CreateMemberBody = zod.object({
   "password": zod.string(),
   "group": zod.string().nullish(),
   "faculty": zod.string().nullish(),
+  "campus": zod.string().nullish(),
   "votingWeight": zod.number().optional(),
   "votingWeightAlt": zod.number().optional(),
   "rol": zod.enum(['admin', 'miembro']).optional()
@@ -154,6 +156,7 @@ export const UpdateMemberBody = zod.object({
   "username": zod.string().optional(),
   "group": zod.string().nullish(),
   "faculty": zod.string().nullish(),
+  "campus": zod.string().nullish(),
   "votingWeight": zod.number().optional(),
   "votingWeightAlt": zod.number().optional(),
   "active": zod.boolean().optional()
@@ -165,6 +168,7 @@ export const UpdateMemberResponse = zod.object({
   "displayName": zod.string(),
   "group": zod.string().nullable(),
   "faculty": zod.string().nullable(),
+  "campus": zod.string().nullish(),
   "email": zod.string().nullish(),
   "password": zod.string().nullish(),
   "votingWeight": zod.number(),
@@ -665,7 +669,8 @@ export const GetPublicHistoryResponse = zod.array(GetPublicHistoryResponseItem)
 export const GetPublicMembersResponseItem = zod.object({
   "name": zod.string(),
   "group": zod.string().nullable(),
-  "faculty": zod.string().nullable()
+  "faculty": zod.string().nullable(),
+  "campus": zod.string().nullish()
 }).describe('Integrante activo del pleno, tal como se publica en el portal.')
 export const GetPublicMembersResponse = zod.array(GetPublicMembersResponseItem)
 

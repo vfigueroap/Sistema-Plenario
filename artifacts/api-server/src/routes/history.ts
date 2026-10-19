@@ -665,6 +665,7 @@ router.get("/public/members", async (_req, res): Promise<void> => {
       name: usersTable.displayName,
       group: usersTable.group,
       faculty: usersTable.faculty,
+      campus: usersTable.campus,
     })
     .from(usersTable)
     .where(and(eq(usersTable.rol, "miembro"), eq(usersTable.active, true)))

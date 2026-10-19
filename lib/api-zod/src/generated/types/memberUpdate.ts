@@ -12,6 +12,8 @@ export interface MemberUpdate {
   /** @nullable */
   group?: string | null;
   /** @nullable */
+  campus?: string | null;
+  /** @nullable */
   faculty?: string | null;
   votingWeight?: number;
   votingWeightAlt?: number;

@@ -12,6 +12,9 @@ export const usersTable = pgTable("users", {
   displayName: text("display_name").notNull(),
   group: text("group"),
   faculty: text("faculty"),
+  // Campus al que pertenece la unidad del integrante (consejería, centro de
+  // estudiantes, etc.). Es opcional: si falta, el portal lo deduce de `faculty`.
+  campus: text("campus"),
   email: text("email"),
   password: text("password").notNull(),
   votingWeight: numeric("voting_weight", { precision: 10, scale: 4 }).notNull().default("0"),
