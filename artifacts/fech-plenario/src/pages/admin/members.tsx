@@ -13,6 +13,32 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Spinner } from "@/components/ui/spinner";
 import { GROUP_ORDER } from "@/lib/groups";
+import { CAMPUS_OPCIONES } from "@/lib/campus";
+
+// Valor del selector cuando no se registra campus (el portal lo deduce de la unidad).
+const SIN_CAMPUS_VALOR = "__sin_campus__";
+
+function CampusSelect({ id, value, onChange }: { id: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={id}>Campus relacionado</Label>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger id={id}>
+          <SelectValue placeholder="Seleccionar" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={SIN_CAMPUS_VALOR}>Sin campus (se deduce de la unidad)</SelectItem>
+          {CAMPUS_OPCIONES.map((c) => (
+            <SelectItem key={c} value={c}>{c}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <p className="text-xs text-muted-foreground">
+        Relaciona a las consejerías y a los centros de estudiantes de un mismo campus.
+      </p>
+    </div>
+  );
+}
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { RefreshCw, UserPlus, Trash2, Pencil, Ban, CheckCircle2, ArrowUpDown, Search } from "lucide-react";
 
@@ -23,6 +49,7 @@ function AddMemberDialog() {
   const [password, setPassword] = useState("");
   const [group, setGroup] = useState<string>("");
   const [faculty, setFaculty] = useState("");
+  const [campus, setCampus] = useState<string>(SIN_CAMPUS_VALOR);
   const [votingWeight, setVotingWeight] = useState("0");
   const [votingWeightAlt, setVotingWeightAlt] = useState("0");
   const createMember = useCreateMember();
@@ -35,6 +62,7 @@ function AddMemberDialog() {
     setPassword("");
     setGroup("");
     setFaculty("");
+    setCampus(SIN_CAMPUS_VALOR);
     setVotingWeight("0");
     setVotingWeightAlt("0");
   };
@@ -51,6 +79,7 @@ function AddMemberDialog() {
           password,
           group: group || null,
           faculty: faculty.trim() || null,
+          campus: campus === SIN_CAMPUS_VALOR ? null : campus,
           votingWeight: isNaN(parsedWeight) ? 0 : parsedWeight,
           votingWeightAlt: isNaN(parsedAlt) ? 0 : parsedAlt,
           rol: "miembro",
@@ -119,6 +148,7 @@ function AddMemberDialog() {
               <Input id="nm-faculty" value={faculty} onChange={(e) => setFaculty(e.target.value)} placeholder="ej: FAU" />
             </div>
           </div>
+          <CampusSelect id="nm-campus" value={campus} onChange={setCampus} />
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="nm-weight">Ponderación</Label>
@@ -144,6 +174,7 @@ function EditMemberDialog({ member }: { member: Member }) {
   const [username, setUsername] = useState(member.username);
   const [group, setGroup] = useState<string>(member.group ?? "");
   const [faculty, setFaculty] = useState(member.faculty ?? "");
+  const [campus, setCampus] = useState<string>(member.campus ?? SIN_CAMPUS_VALOR);
   const updateMember = useUpdateMember();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -153,6 +184,7 @@ function EditMemberDialog({ member }: { member: Member }) {
     setUsername(member.username);
     setGroup(member.group ?? "");
     setFaculty(member.faculty ?? "");
+    setCampus(member.campus ?? SIN_CAMPUS_VALOR);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -165,6 +197,7 @@ function EditMemberDialog({ member }: { member: Member }) {
           username: username.trim(),
           group: group || null,
           faculty: faculty.trim() || null,
+          campus: campus === SIN_CAMPUS_VALOR ? null : campus,
         },
       },
       {
@@ -223,6 +256,7 @@ function EditMemberDialog({ member }: { member: Member }) {
               <Input id="em-faculty" value={faculty} onChange={(e) => setFaculty(e.target.value)} placeholder="ej: FAU" />
             </div>
           </div>
+          <CampusSelect id="em-campus" value={campus} onChange={setCampus} />
           <Button type="submit" disabled={updateMember.isPending} className="w-full">
             {updateMember.isPending ? "Guardando..." : "Guardar cambios"}
           </Button>
@@ -591,7 +625,8 @@ export default function AdminMembers() {
       m.displayName.toLowerCase().includes(q) ||
       m.username.toLowerCase().includes(q) ||
       (m.group ?? "").toLowerCase().includes(q) ||
-      (m.faculty ?? "").toLowerCase().includes(q));
+      (m.faculty ?? "").toLowerCase().includes(q) ||
+      (m.campus ?? "").toLowerCase().includes(q));
     arr.sort((a, b) => {
       const av = (sortKey === "group" ? a.group : a[sortKey]) ?? "";
       const bv = (sortKey === "group" ? b.group : b[sortKey]) ?? "";
@@ -659,7 +694,7 @@ export default function AdminMembers() {
                 <TableRow>
                   <TableHead>Nombre</TableHead>
                   <TableHead>Usuario</TableHead>
-                  <TableHead>Facultad/Grupo</TableHead>
+                  <TableHead>Facultad/Grupo/Campus</TableHead>
                   <TableHead>Rol</TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead className="text-right">Ponderación</TableHead>
@@ -674,7 +709,8 @@ export default function AdminMembers() {
                     <TableCell>{member.username}</TableCell>
                     <TableCell>
                       {member.faculty && <Badge variant="outline" className="mr-1">{member.faculty}</Badge>}
-                      {member.group && <Badge variant="secondary">{member.group}</Badge>}
+                      {member.group && <Badge variant="secondary" className="mr-1">{member.group}</Badge>}
+                      {member.campus && <Badge variant="outline" className="border-emerald-300 bg-emerald-50 text-emerald-700">Campus {member.campus}</Badge>}
                     </TableCell>
                     <TableCell>
                       <Badge variant={member.rol === "admin" ? "default" : "secondary"}>

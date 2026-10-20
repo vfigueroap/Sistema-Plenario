@@ -17,6 +17,7 @@ router.get("/members", requireAuth, async (req, res): Promise<void> => {
       displayName: m.displayName,
       group: m.group,
       faculty: m.faculty,
+      campus: m.campus,
       email: isAdmin ? m.email : null,
       password: null,
       votingWeight: parseFloat(m.votingWeight),
@@ -28,7 +29,7 @@ router.get("/members", requireAuth, async (req, res): Promise<void> => {
 });
 
 router.post("/members", requireAdmin, async (req, res): Promise<void> => {
-  const { username, displayName, password, group, faculty, votingWeight, votingWeightAlt, rol } =
+  const { username, displayName, password, group, faculty, campus, votingWeight, votingWeightAlt, rol } =
     req.body ?? {};
 
   if (typeof username !== "string" || username.trim() === "") {
@@ -89,6 +90,7 @@ router.post("/members", requireAdmin, async (req, res): Promise<void> => {
         password: hashed,
         group: typeof group === "string" && group.trim() !== "" ? group.trim() : null,
         faculty: typeof faculty === "string" && faculty.trim() !== "" ? faculty.trim() : null,
+        campus: typeof campus === "string" && campus.trim() !== "" ? campus.trim() : null,
         votingWeight: weight,
         votingWeightAlt: weightAlt,
         rol: rol === "admin" ? "admin" : "miembro",
@@ -108,6 +110,7 @@ router.post("/members", requireAdmin, async (req, res): Promise<void> => {
     displayName: created.displayName,
     group: created.group,
     faculty: created.faculty,
+    campus: created.campus,
     email: created.email,
     password: null,
     votingWeight: parseFloat(created.votingWeight),
@@ -204,7 +207,7 @@ router.patch("/members/:id", requireAdmin, async (req, res): Promise<void> => {
     return;
   }
 
-  const { displayName, username, group, faculty, votingWeight, votingWeightAlt, active } = req.body;
+  const { displayName, username, group, faculty, campus, votingWeight, votingWeightAlt, active } = req.body;
   const updates: Record<string, unknown> = {};
 
   if (displayName !== undefined) {
@@ -237,6 +240,9 @@ router.patch("/members/:id", requireAdmin, async (req, res): Promise<void> => {
   }
   if (faculty !== undefined) {
     updates.faculty = typeof faculty === "string" && faculty.trim() !== "" ? faculty.trim() : null;
+  }
+  if (campus !== undefined) {
+    updates.campus = typeof campus === "string" && campus.trim() !== "" ? campus.trim() : null;
   }
 
   if (votingWeight !== undefined) {
@@ -326,6 +332,7 @@ router.patch("/members/:id", requireAdmin, async (req, res): Promise<void> => {
     displayName: updated.displayName,
     group: updated.group,
     faculty: updated.faculty,
+    campus: updated.campus,
     email: updated.email,
     password: null,
     votingWeight: parseFloat(updated.votingWeight),

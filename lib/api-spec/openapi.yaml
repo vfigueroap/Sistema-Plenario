@@ -1507,6 +1507,9 @@ components:
           type: ["string", "null"]
         faculty:
           type: ["string", "null"]
+        campus:
+          type: ["string", "null"]
+          description: Campus de la unidad del integrante (opcional).
         email:
           type: ["string", "null"]
         password:
@@ -1531,6 +1534,8 @@ components:
           type: ["string", "null"]
         faculty:
           type: ["string", "null"]
+        campus:
+          type: ["string", "null"]
         votingWeight:
           type: number
         votingWeightAlt:
@@ -1551,6 +1556,8 @@ components:
         group:
           type: ["string", "null"]
         faculty:
+          type: ["string", "null"]
+        campus:
           type: ["string", "null"]
         votingWeight:
           type: number
@@ -2691,6 +2698,9 @@ components:
           type: ["string", "null"]
         faculty:
           type: ["string", "null"]
+        campus:
+          type: ["string", "null"]
+          description: Campus de la unidad del integrante, si se registró.
 
     PublicMemberRef:
       type: object

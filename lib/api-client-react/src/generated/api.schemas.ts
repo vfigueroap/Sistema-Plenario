@@ -46,6 +46,8 @@ export interface Member {
   /** @nullable */
   faculty: string | null;
   /** @nullable */
+  campus?: string | null;
+  /** @nullable */
   email?: string | null;
   /** @nullable */
   password?: string | null;
@@ -62,6 +64,8 @@ export interface MemberUpdate {
   group?: string | null;
   /** @nullable */
   faculty?: string | null;
+  /** @nullable */
+  campus?: string | null;
   votingWeight?: number;
   votingWeightAlt?: number;
   active?: boolean;
@@ -83,6 +87,8 @@ export interface MemberCreateInput {
   group?: string | null;
   /** @nullable */
   faculty?: string | null;
+  /** @nullable */
+  campus?: string | null;
   votingWeight?: number;
   votingWeightAlt?: number;
   rol?: MemberCreateInputRol;
@@ -1230,6 +1236,8 @@ export interface PublicMember {
   group: string | null;
   /** @nullable */
   faculty: string | null;
+  /** @nullable */
+  campus?: string | null;
 }
 
 export interface AdminStats {

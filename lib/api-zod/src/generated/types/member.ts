@@ -13,6 +13,8 @@ export interface Member {
   /** @nullable */
   group: string | null;
   /** @nullable */
+  campus?: string | null;
+  /** @nullable */
   faculty: string | null;
   /** @nullable */
   email?: string | null;
