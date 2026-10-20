@@ -1600,14 +1600,35 @@ export default function PublicHome() {
         )}
       </main>
 
-      <footer className="mt-16 border-t-2 border-gray-800 bg-white py-6">
-        <div className="mx-auto max-w-5xl px-4 text-center">
-          <p className="text-[13px] font-bold uppercase tracking-wide text-gray-700">
-            Federación de Estudiantes de la Universidad de Chile
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Portal de Transparencia del Pleno
-          </p>
+      <footer className="mt-16 border-t-2 border-gray-800 bg-white">
+        <div className="fech-stripe h-1" />
+        <div className="mx-auto flex max-w-5xl flex-col gap-5 px-4 py-8 sm:flex-row sm:items-start sm:gap-8">
+          <img
+            src={`${import.meta.env.BASE_URL}logo-fech.png`}
+            alt="FECh 1906"
+            className="h-20 w-auto shrink-0 self-center sm:self-start"
+          />
+          <div className="space-y-2 text-center text-xs leading-relaxed text-gray-600 sm:text-left">
+            <p className="text-[13px] font-bold uppercase tracking-wide text-gray-800">
+              Federación de Estudiantes de la Universidad de Chile
+            </p>
+            <p className="font-medium italic text-primary">
+              «La transparencia es parte de la democracia: lo que se decide en común, se ve en común.»
+            </p>
+            <p>
+              Esta plataforma es una iniciativa creada y mantenida por la Federación de Estudiantes de la
+              Universidad de Chile, 2026 – 2027, y no asume ningún costo para la federación.
+            </p>
+            <p>
+              Contacto:{" "}
+              <a href="mailto:mesa@fech.cl" className="font-semibold text-primary hover:underline">
+                mesa@fech.cl
+              </a>
+            </p>
+          </div>
+        </div>
+        <div className="border-t border-gray-200 py-3 text-center text-[11px] text-muted-foreground">
+          Portal de Transparencia del Pleno · FECh 2026 – 2027
         </div>
       </footer>
     </div>
