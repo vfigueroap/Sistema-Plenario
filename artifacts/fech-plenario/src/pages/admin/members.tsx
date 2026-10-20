@@ -378,18 +378,54 @@ function ToggleActiveDialog({ member }: { member: Member }) {
   );
 }
 
+// Sin caracteres ambiguos (0/O, 1/l/I) para dictarla o copiarla sin errores.
+const CLAVE_CARACTERES = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+
+function generarClaveTemporal(largo = 10): string {
+  const limite = 256 - (256 % CLAVE_CARACTERES.length);
+  let clave = "";
+  while (clave.length < largo) {
+    for (const n of crypto.getRandomValues(new Uint8Array(largo * 2))) {
+      if (n < limite && clave.length < largo) clave += CLAVE_CARACTERES[n % CLAVE_CARACTERES.length];
+    }
+  }
+  return clave;
+}
+
 function ResetPasswordDialog({ memberId, memberName }: { memberId: number, memberName: string }) {
   const [password, setPassword] = useState("");
+  // Clave recién aplicada: se muestra una sola vez, porque el sistema solo guarda su hash.
+  const [aplicada, setAplicada] = useState<string | null>(null);
+  const [mostrar, setMostrar] = useState(false);
   const [open, setOpen] = useState(false);
   const resetPassword = useResetMemberPassword();
   const { toast } = useToast();
 
+  const cerrar = (abierto: boolean) => {
+    setOpen(abierto);
+    if (!abierto) {
+      setPassword("");
+      setAplicada(null);
+      setMostrar(false);
+    }
+  };
+
+  const copiar = async (texto: string) => {
+    try {
+      await navigator.clipboard.writeText(texto);
+      toast({ title: "Clave copiada" });
+    } catch {
+      toast({ title: "No se pudo copiar; selecciónala y cópiala a mano", variant: "destructive" });
+    }
+  };
+
   const handleReset = (e: React.FormEvent) => {
     e.preventDefault();
-    resetPassword.mutate({ id: memberId, data: { newPassword: password } }, {
+    const nueva = password;
+    resetPassword.mutate({ id: memberId, data: { newPassword: nueva } }, {
       onSuccess: () => {
         toast({ title: "Contraseña restablecida" });
-        setOpen(false);
+        setAplicada(nueva);
         setPassword("");
       },
       onError: () => toast({ title: "Error al restablecer contraseña", variant: "destructive" })
@@ -397,28 +433,49 @@ function ResetPasswordDialog({ memberId, memberName }: { memberId: number, membe
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={cerrar}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">Contraseña</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Restablecer Contraseña: {memberName}</DialogTitle>
-          <DialogDescription>Define una nueva contraseña. La contraseña anterior no se puede consultar.</DialogDescription>
+          <DialogDescription>
+            Escribe una nueva contraseña o genera una clave temporal. La contraseña anterior no se puede consultar.
+          </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleReset} className="space-y-4 pt-4">
-          <Label htmlFor={`reset-password-${memberId}`}>Nueva contraseña</Label>
-          <Input
-            id={`reset-password-${memberId}`}
-            type="password"
-            autoComplete="new-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Nueva contraseña"
-            required
-          />
-          <Button type="submit" disabled={resetPassword.isPending}>Restablecer</Button>
-        </form>
+        {aplicada ? (
+          <div className="space-y-4 pt-4">
+            <p className="text-sm">Clave aplicada. Entrégasela a {memberName}; <strong>no se podrá volver a ver</strong>.</p>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 select-all rounded border bg-muted px-3 py-2 font-mono text-lg tracking-wider">{aplicada}</code>
+              <Button type="button" variant="outline" onClick={() => copiar(aplicada)}>Copiar</Button>
+            </div>
+            <Button type="button" onClick={() => cerrar(false)}>Listo</Button>
+          </div>
+        ) : (
+          <form onSubmit={handleReset} className="space-y-4 pt-4">
+            <Label htmlFor={`reset-password-${memberId}`}>Nueva contraseña</Label>
+            <div className="flex gap-2">
+              <Input
+                id={`reset-password-${memberId}`}
+                type={mostrar ? "text" : "password"}
+                autoComplete="new-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Nueva contraseña"
+                required
+              />
+              <Button type="button" variant="outline" onClick={() => { setPassword(generarClaveTemporal()); setMostrar(true); }}>
+                Generar clave
+              </Button>
+              <Button type="button" variant="ghost" onClick={() => setMostrar((v) => !v)}>
+                {mostrar ? "Ocultar" : "Mostrar"}
+              </Button>
+            </div>
+            <Button type="submit" disabled={resetPassword.isPending}>Restablecer</Button>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -2,9 +2,24 @@
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
 
+/* Tipografías de la marca. Los archivos van en public/fonts/ (ver LEEME.txt).
+   Mientras no estén, se usan las fuentes instaladas o la alternativa del sistema. */
+@font-face { font-family: "Alte Haas Grotesk"; font-weight: 400; font-style: normal; font-display: swap;
+  src: local("Alte Haas Grotesk"), local("AlteHaasGrotesk"), url("/fonts/AlteHaasGrotesk.woff2") format("woff2"), url("/fonts/AlteHaasGrotesk.ttf") format("truetype"); }
+@font-face { font-family: "Alte Haas Grotesk"; font-weight: 700; font-style: normal; font-display: swap;
+  src: local("Alte Haas Grotesk Bold"), local("AlteHaasGrotesk-Bold"), url("/fonts/AlteHaasGrotesk_Bold.woff2") format("woff2"), url("/fonts/AlteHaasGrotesk_Bold.ttf") format("truetype"); }
+@font-face { font-family: "Creato Display"; font-weight: 400; font-style: normal; font-display: swap;
+  src: local("Creato Display"), local("CreatoDisplay-Regular"), url("/fonts/CreatoDisplay-Regular.woff2") format("woff2"), url("/fonts/CreatoDisplay-Regular.otf") format("opentype"); }
+@font-face { font-family: "Creato Display"; font-weight: 500; font-style: normal; font-display: swap;
+  src: local("Creato Display Medium"), local("CreatoDisplay-Medium"), url("/fonts/CreatoDisplay-Medium.woff2") format("woff2"), url("/fonts/CreatoDisplay-Medium.otf") format("opentype"); }
+@font-face { font-family: "Creato Display"; font-weight: 700; font-style: normal; font-display: swap;
+  src: local("Creato Display Bold"), local("CreatoDisplay-Bold"), url("/fonts/CreatoDisplay-Bold.woff2") format("woff2"), url("/fonts/CreatoDisplay-Bold.otf") format("opentype"); }
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --font-sans: "Alte Haas Grotesk", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-display: "Creato Display", "Alte Haas Grotesk", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
   --color-border: hsl(var(--border));
@@ -50,7 +65,7 @@
   --foreground: 220 30% 15%;
   --border: 220 20% 90%;
   --input: 220 20% 90%;
-  --ring: 220 80% 30%;
+  --ring: 346 72% 32%;
 
   --card: 0 0% 100%;
   --card-foreground: 220 30% 15%;
@@ -60,9 +75,9 @@
   --popover-foreground: 220 30% 15%;
   --popover-border: 220 20% 90%;
 
-  --primary: 220 80% 30%;
+  --primary: 346 72% 32%;
   --primary-foreground: 0 0% 100%;
-  --primary-border: 220 80% 20%;
+  --primary-border: 346 72% 22%;
 
   --secondary: 0 0% 96%;
   --secondary-foreground: 220 30% 15%;
@@ -72,9 +87,9 @@
   --muted-foreground: 220 20% 40%;
   --muted-border: 220 20% 86%;
 
-  --accent: 350 70% 40%;
+  --accent: 285 40% 47%;
   --accent-foreground: 0 0% 100%;
-  --accent-border: 350 70% 30%;
+  --accent-border: 285 40% 37%;
 
   --destructive: 0 80% 40%;
   --destructive-foreground: 0 0% 100%;
@@ -82,11 +97,11 @@
 
   --radius: 0.25rem;
 
-  --chart-1: 220 80% 30%;
-  --chart-2: 350 70% 40%;
-  --chart-3: 40 90% 50%;
-  --chart-4: 160 60% 40%;
-  --chart-5: 280 50% 40%;
+  --chart-1: 346 72% 32%;
+  --chart-2: 350 75% 50%;
+  --chart-3: 38 92% 54%;
+  --chart-4: 285 40% 47%;
+  --chart-5: 0 0% 14%;
 }
 
 .dark {
@@ -94,7 +109,7 @@
   --foreground: 0 0% 98%;
   --border: 220 20% 20%;
   --input: 220 20% 20%;
-  --ring: 220 80% 50%;
+  --ring: 346 70% 50%;
 
   --card: 220 30% 12%;
   --card-foreground: 0 0% 98%;
@@ -104,9 +119,9 @@
   --popover-foreground: 0 0% 98%;
   --popover-border: 220 20% 20%;
 
-  --primary: 220 80% 50%;
+  --primary: 346 70% 45%;
   --primary-foreground: 0 0% 100%;
-  --primary-border: 220 80% 40%;
+  --primary-border: 346 70% 35%;
 
   --secondary: 220 20% 20%;
   --secondary-foreground: 0 0% 98%;
@@ -116,9 +131,9 @@
   --muted-foreground: 220 10% 60%;
   --muted-border: 220 20% 26%;
 
-  --accent: 350 70% 50%;
+  --accent: 285 40% 55%;
   --accent-foreground: 0 0% 100%;
-  --accent-border: 350 70% 40%;
+  --accent-border: 285 40% 45%;
 
   --destructive: 0 80% 50%;
   --destructive-foreground: 0 0% 100%;
@@ -132,10 +147,13 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
 }
 
 @layer utilities {
   .fech-stripe {
-    background-image: linear-gradient(to right, #ef4444, #facc15, #84cc16);
+    background-image: linear-gradient(to right, #8e1530, #e0203f, #f5a623, #9b4bb0);
   }
 }

@@ -1,0 +1,9 @@
+Coloca aquí los archivos de las tipografías de la marca:
+
+  Alte Haas Grotesk:  AlteHaasGrotesk.woff2 (o .ttf)  y  AlteHaasGrotesk_Bold.woff2 (o .ttf)
+  Creato Display:     CreatoDisplay-Regular.woff2 (o .otf), CreatoDisplay-Medium.woff2 (o .otf), CreatoDisplay-Bold.woff2 (o .otf)
+
+Uso: Alte Haas Grotesk para el texto general; Creato Display para títulos (h1-h6).
+Verifica la licencia de cada fuente antes de publicarla.
+
+Origen: descargadas de cufonfonts.com el 2026-10-20. Creato Display: SIL Open Font License 1.1. Alte Haas Grotesk (Yann Le Coroller): la pagina no indica licencia; confirmar antes de uso institucional.
