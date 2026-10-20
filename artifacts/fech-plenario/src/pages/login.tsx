@@ -65,9 +65,9 @@ export default function Login() {
           <ArrowLeft className="h-4 w-4 mr-2" /> Panel público
         </Button>
       </div>
-      <div className="mb-8 text-center">
-        <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-red-600 via-amber-500 to-lime-600 bg-clip-text text-transparent">FECh Plenario</h1>
-        <p className="text-muted-foreground mt-2">Sistema de Votación Ponderada</p>
+      <div className="mb-8 flex flex-col items-center text-center">
+        <img src={`${import.meta.env.BASE_URL}logo-fech.png`} alt="FECh 1906" className="h-28 w-auto" />
+        <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-primary">Usuario Pleno FECh</h1>
       </div>
 
       <Card className="w-full max-w-sm overflow-hidden">

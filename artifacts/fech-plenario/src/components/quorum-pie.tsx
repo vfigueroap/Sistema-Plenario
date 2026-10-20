@@ -82,14 +82,14 @@ export function QuorumPie({ presente, total, minimo, size = 200, grande = false 
         <text
           x={cx} y={cy - (grande ? 4 : 2)} textAnchor="middle"
           fontSize={size * (grande ? 0.16 : 0.19)} fontWeight="800" fill={color}
-          fontFamily="ui-sans-serif, system-ui"
+          fontFamily="inherit"
         >
           {pct.toFixed(0)}%
         </text>
         <text
           x={cx} y={cy + size * (grande ? 0.075 : 0.085)} textAnchor="middle"
           fontSize={size * (grande ? 0.052 : 0.062)} fill="#6B7280"
-          fontFamily="ui-sans-serif, system-ui"
+          fontFamily="inherit"
         >
           {presente.toFixed(2)} / {total.toFixed(2)}
         </text>

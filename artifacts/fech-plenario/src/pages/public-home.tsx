@@ -25,7 +25,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { campusDe, ordenCampus, SIN_CAMPUS } from "@/lib/campus";
 import {
   ExternalLink, FileDown, LogIn, MapPin, Clock, Radio, CalendarDays, Archive,
-  Video, Users, UserX, ShieldCheck, BarChart2, Info, Home, ListOrdered, Scale,
+  Video, Users, UserX, BarChart2, Info, Home, ListOrdered, Scale,
   Mic, Search, Hourglass, Sparkles, FileText, CheckCircle2, XCircle, MinusCircle,
 } from "lucide-react";
 
@@ -1101,9 +1101,7 @@ export default function PublicHome() {
       <header className="sticky top-0 z-40 border-b-2 border-gray-800 bg-white">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center bg-gray-900">
-              <ShieldCheck className="h-5 w-5 text-white" />
-            </div>
+            <img src={`${import.meta.env.BASE_URL}logo-fech.png`} alt="FECh 1906" className="h-11 w-auto" />
             <div>
               <div className="text-sm font-bold uppercase leading-tight tracking-wide">Pleno FECh</div>
               <div className="text-[11px] leading-tight text-muted-foreground">Portal de Transparencia</div>

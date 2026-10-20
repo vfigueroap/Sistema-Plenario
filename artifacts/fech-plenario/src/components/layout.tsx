@@ -64,9 +64,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <div className="font-bold text-lg tracking-tight flex gap-4 items-center">
               <span className="flex items-center gap-2">
                 <span className="flex gap-0.5" aria-hidden>
-                  <span className="h-3 w-3 rounded-full bg-red-500" />
-                  <span className="h-3 w-3 rounded-full bg-yellow-400" />
-                  <span className="h-3 w-3 rounded-full bg-lime-500" />
+                  <span className="h-3 w-3 rounded-full bg-[#e0203f]" />
+                  <span className="h-3 w-3 rounded-full bg-[#f5a623]" />
+                  <span className="h-3 w-3 rounded-full bg-[#9b4bb0]" />
                 </span>
                 FECh Plenario
               </span>
