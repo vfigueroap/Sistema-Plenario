@@ -1191,6 +1191,13 @@ export default function PublicHome() {
               subtitle="Cada pleno en simple: su acta, su tabla y lo que se votó. Toca una moción para ver su detalle y cómo se votó."
               color="#0F766E" />
 
+            <p className="mb-6 border-l-4 border-teal-700 bg-white px-4 py-3 text-sm leading-relaxed text-gray-700">
+              <strong className="text-gray-900">El Pleno FECh</strong> es el órgano máximo de la Federación de
+              Estudiantes de la Universidad de Chile: una instancia deliberativa, abierta y pública, donde se
+              reúnen las y los representantes electos de los Centros de Estudiantes y de las Consejerías FECh
+              para decidir en conjunto el rumbo de la federación.
+            </p>
+
             {historyLoading ? (
               <div className="flex justify-center py-12"><Spinner /></div>
             ) : past.length === 0 ? (
