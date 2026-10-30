@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle 
 import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RealtimeStatusBadge } from "@/components/realtime-status-badge";
+import { RefreshButton } from "@/components/refresh-button";
 import { RealtimeOfflineNotice } from "@/components/realtime-offline-notice";
 
 function NavLink({ href, active, children }: { href: string; active: boolean; children: React.ReactNode }) {
@@ -84,6 +85,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             {/* Acciones de escritorio */}
             <div className="hidden md:flex items-center gap-4 text-sm">
               <RealtimeStatusBadge />
+              <RefreshButton />
               <span className="hidden sm:inline">{user?.displayName}</span>
               <Link href="/ayuda" className="hover:underline">¿Cómo usarme?</Link>
               <Link href="/settings" className="hover:underline">Ajustes</Link>
@@ -91,7 +93,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
 
             {/* Menú móvil */}
-            <div className="md:hidden">
+            <div className="flex items-center gap-2 md:hidden">
+              <RefreshButton iconOnly />
               <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
                 <SheetTrigger asChild>
                   <Button variant="secondary" size="icon" aria-label="Abrir menú">

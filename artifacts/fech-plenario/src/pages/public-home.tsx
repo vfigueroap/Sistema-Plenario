@@ -18,6 +18,7 @@ import type {
 import { Spinner } from "@/components/ui/spinner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { RefreshButton } from "@/components/refresh-button";
 import { Input } from "@/components/ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ResultsBar, CandidateResultsBar } from "@/components/results-bar";
@@ -1107,9 +1108,12 @@ export default function PublicHome() {
               <div className="text-[11px] leading-tight text-muted-foreground">Portal de Transparencia</div>
             </div>
           </div>
-          <Button size="sm" className="rounded-none" onClick={() => setLocation("/login")}>
-            <LogIn className="mr-2 h-4 w-4" /> Ingresar
-          </Button>
+          <div className="flex items-center gap-2">
+            <RefreshButton variant="outline" className="rounded-none" />
+            <Button size="sm" className="rounded-none" onClick={() => setLocation("/login")}>
+              <LogIn className="mr-2 h-4 w-4" /> Ingresar
+            </Button>
+          </div>
         </div>
         <nav className="overflow-x-auto border-t border-gray-200">
           <div className="mx-auto flex max-w-5xl">
