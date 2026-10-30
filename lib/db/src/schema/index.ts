@@ -6,6 +6,7 @@ export * from "./attendance";
 export * from "./topics";
 export * from "./votes";
 export * from "./speaking";
+export * from "./regularSpeakers";
 export * from "./session";
 export * from "./unidades";
 export * from "./sessionWeights";

@@ -1957,6 +1957,15 @@ components:
           type: integer
         agendaPointId:
           type: ["integer", "null"]
+        speakerName:
+          type: string
+        userId:
+          type: integer
+        elapsedSeconds:
+          type: integer
+        category:
+          type: string
+          enum: [pleno, base]
 
     SpeakingTurnControlInput:
       type: object

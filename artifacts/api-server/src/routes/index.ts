@@ -13,6 +13,7 @@ import adminRouter from "./admin";
 import storageRouter from "./storage";
 import unidadesRouter from "./unidades";
 import messagesRouter from "./messages";
+import regularSpeakersRouter from "./regular-speakers";
 
 const router: IRouter = Router();
 
@@ -30,5 +31,6 @@ router.use(adminRouter);
 router.use(storageRouter);
 router.use(unidadesRouter);
 router.use(messagesRouter);
+router.use(regularSpeakersRouter);
 
 export default router;

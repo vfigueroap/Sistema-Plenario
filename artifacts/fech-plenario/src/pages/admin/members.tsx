@@ -42,6 +42,8 @@ function CampusSelect({ id, value, onChange }: { id: string; value: string; onCh
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { RefreshCw, UserPlus, Trash2, Pencil, Ban, CheckCircle2, ArrowUpDown, Search } from "lucide-react";
 
+import { RegularSpeakersDialog } from "@/components/regular-speakers-dialog";
+
 function AddMemberDialog() {
   const [open, setOpen] = useState(false);
   const [username, setUsername] = useState("");
@@ -708,6 +710,7 @@ export default function AdminMembers() {
               <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`} />
               Actualizar
             </Button>
+            <RegularSpeakersDialog />
             <AddMemberDialog />
           </div>
         </div>

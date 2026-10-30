@@ -49,7 +49,7 @@ async function serializeTurns(turns: TurnRow[]) {
     if (t.kind === "colectiva") {
       label = `Palabra colectiva · ${t.faculty ?? ""}`.trim();
     } else if (t.category === "base") {
-      label = "Estudiante de base";
+      label = t.speakerName ?? "Estudiante de base";
     } else if (participants.length > 0) {
       label = participants[0].displayName;
     } else {
@@ -480,7 +480,7 @@ router.patch("/speaking-turns/:turnId", requireAdmin, async (req, res): Promise<
     return;
   }
 
-  const { durationSeconds, agendaPointId } = req.body;
+  const { durationSeconds, agendaPointId, speakerName, userId, elapsedSeconds, category } = req.body;
   const updates: Record<string, unknown> = {};
   if (durationSeconds !== undefined) {
     const parsed = Number(durationSeconds);
@@ -489,6 +489,58 @@ router.patch("/speaking-turns/:turnId", requireAdmin, async (req, res): Promise<
       return;
     }
     updates.durationSeconds = Math.max(1, Math.floor(parsed));
+  }
+  if (category !== undefined) {
+    if (category !== "pleno" && category !== "base") {
+      res.status(400).json({ error: "Categoría inválida (pleno o base)" });
+      return;
+    }
+    updates.category = category;
+  }
+  if (elapsedSeconds !== undefined) {
+    const parsed = Number(elapsedSeconds);
+    if (!Number.isFinite(parsed) || parsed < 0) {
+      res.status(400).json({ error: "Tiempo utilizado inválido" });
+      return;
+    }
+    if (existing.startedAt) {
+      res.status(409).json({ error: "Pausa o finaliza la palabra antes de editar su tiempo" });
+      return;
+    }
+    updates.elapsedSeconds = Math.floor(parsed);
+  }
+  let newParticipantId: number | null | undefined;
+  if (speakerName !== undefined || (userId !== undefined && userId !== null)) {
+    if (existing.kind === "colectiva") {
+      res.status(400).json({ error: "No se puede cambiar le orador de una palabra colectiva" });
+      return;
+    }
+    if (speakerName !== undefined && userId !== undefined && userId !== null) {
+      res.status(400).json({ error: "Indica un nombre o un miembro, no ambos" });
+      return;
+    }
+    if (speakerName !== undefined) {
+      const name = typeof speakerName === "string" ? speakerName.trim() : "";
+      if (!name || name.length > 120) {
+        res.status(400).json({ error: "Nombre inválido" });
+        return;
+      }
+      updates.speakerName = name;
+      updates.userId = null;
+      newParticipantId = null;
+    } else {
+      const memberId = Number(userId);
+      const [member] = Number.isInteger(memberId)
+        ? await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.id, memberId))
+        : [];
+      if (!member) {
+        res.status(400).json({ error: "Miembro no encontrado" });
+        return;
+      }
+      updates.userId = memberId;
+      updates.speakerName = null;
+      newParticipantId = memberId;
+    }
   }
   if (agendaPointId !== undefined) {
     const pointId = agendaPointId === null ? null : Number(agendaPointId);
@@ -513,6 +565,16 @@ router.patch("/speaking-turns/:turnId", requireAdmin, async (req, res): Promise<
   if (!updated) {
     res.status(404).json({ error: "Palabra no encontrada" });
     return;
+  }
+
+  if (newParticipantId !== undefined) {
+    await db.delete(speakingTurnParticipantsTable).where(eq(speakingTurnParticipantsTable.turnId, turnId));
+    if (newParticipantId !== null) {
+      await db
+        .insert(speakingTurnParticipantsTable)
+        .values({ turnId, userId: newParticipantId })
+        .onConflictDoNothing();
+    }
   }
 
   emitSessionEvent(updated.sessionId, "speaking:changed");

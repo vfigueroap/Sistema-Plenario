@@ -789,7 +789,11 @@ export const UpdateSpeakingTurnParams = zod.object({
 
 export const UpdateSpeakingTurnBody = zod.object({
   "durationSeconds": zod.number().optional(),
-  "agendaPointId": zod.number().nullish()
+  "agendaPointId": zod.number().nullish(),
+  "speakerName": zod.string().optional(),
+  "userId": zod.number().optional(),
+  "elapsedSeconds": zod.number().optional(),
+  "category": zod.enum(['pleno', 'base']).optional()
 })
 
 export const UpdateSpeakingTurnResponse = zod.object({
