@@ -38,7 +38,7 @@ function DisabledAccountScreen({ name }: { name: string }) {
 
 export function AuthGuard({ children, allowedRole }: { children: React.ReactNode, allowedRole?: "admin" | "miembro" }) {
   const { data: user, isLoading, isError } = useGetMe();
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
 
   // Flip to the disabled screen the instant an admin deactivates this account,
   // instead of waiting for the next /auth/me refetch.
@@ -52,13 +52,15 @@ export function AuthGuard({ children, allowedRole }: { children: React.ReactNode
         setLocation("/login");
       } else if (disabled) {
         // Stay put; the disabled screen renders below.
+      } else if (user.mustChangePassword && location !== "/settings") {
+        setLocation("/settings");
       } else if (allowedRole && user.rol !== allowedRole) {
         setLocation(user.rol === "admin" ? "/admin" : "/member");
       } else if (window.location.pathname === "/" || window.location.pathname === "") {
         setLocation(user.rol === "admin" ? "/admin" : "/member");
       }
     }
-  }, [user, isLoading, isError, allowedRole, setLocation, disabled]);
+  }, [user, isLoading, isError, allowedRole, setLocation, disabled, location]);
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center"><Spinner /></div>;
@@ -73,6 +75,10 @@ export function AuthGuard({ children, allowedRole }: { children: React.ReactNode
   }
 
   if (allowedRole && user.rol !== allowedRole) {
+    return null;
+  }
+
+  if (user.mustChangePassword && location !== "/settings") {
     return null;
   }
 

@@ -116,7 +116,7 @@ describe("members password privacy (database mocked, not integration)", () => {
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ ok: true });
     const stored = query.set.mock.calls[0][0];
-    expect(Object.keys(stored)).toEqual(["password"]);
+    expect(Object.keys(stored)).toEqual(["password", "mustChangePassword"]);
     expect(await bcrypt.compare("new-fixture", stored.password)).toBe(true);
     expect(bcrypt.getRounds(stored.password)).toBe(10);
   });

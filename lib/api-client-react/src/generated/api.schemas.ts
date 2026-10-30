@@ -35,6 +35,7 @@ export interface AuthUser {
   rol: AuthUserRol;
   votingWeight: number;
   active: boolean;
+  mustChangePassword?: boolean;
 }
 
 export interface Member {

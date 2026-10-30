@@ -17,6 +17,7 @@ export const usersTable = pgTable("users", {
   campus: text("campus"),
   email: text("email"),
   password: text("password").notNull(),
+  mustChangePassword: boolean("must_change_password").notNull().default(false),
   votingWeight: numeric("voting_weight", { precision: 10, scale: 4 }).notNull().default("0"),
   // Optional second ("alternative") weight; a votación restricted to an estamento
   // can opt to tally with this column instead of the standard votingWeight.
