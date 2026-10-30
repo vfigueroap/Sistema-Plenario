@@ -2555,6 +2555,20 @@ components:
         collective:
           type: boolean
           description: Si alguna de sus intervenciones fue palabra colectiva.
+        faculty:
+          type: ["string", "null"]
+          description: Espacio al que pertenece quien interviene.
+        interventions:
+          type: array
+          description: Detalle de cada intervención, con su punto de tabla y su duración.
+          items:
+            type: object
+            required: [point, seconds]
+            properties:
+              point:
+                type: ["string", "null"]
+              seconds:
+                type: integer
 
     InboxMessage:
       type: object

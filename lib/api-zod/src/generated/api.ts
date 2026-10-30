@@ -617,7 +617,12 @@ export const GetPublicHistoryResponseItem = zod.object({
   "group": zod.string().nullable(),
   "seconds": zod.number().describe('Tiempo total efectivamente usado, en segundos.'),
   "turns": zod.number().describe('Número de intervenciones.'),
-  "collective": zod.boolean().optional().describe('Si alguna de sus intervenciones fue palabra colectiva.')
+  "collective": zod.boolean().optional().describe('Si alguna de sus intervenciones fue palabra colectiva.'),
+  "faculty": zod.string().nullish().describe('Espacio al que pertenece quien interviene.'),
+  "interventions": zod.array(zod.object({
+  "point": zod.string().nullable(),
+  "seconds": zod.number()
+})).optional().describe('Detalle de cada intervención, con su punto de tabla y su duración.')
 }).describe('Registro de uso de la palabra de una persona en una sesión. Agrupa todas sus intervenciones finalizadas.\n')).optional().describe('Quiénes tomaron la palabra en la sesión y cuánto hablaron.'),
   "officialMinutes": zod.number().nullish().describe('Duración real en minutos, entre la apertura oficial y el cierre. Nulo si la sesión no se abrió oficialmente o si sigue en curso.\n'),
   "topics": zod.array(zod.object({
@@ -1174,7 +1179,12 @@ export const GetMyHistoryResponseItem = zod.object({
   "group": zod.string().nullable(),
   "seconds": zod.number().describe('Tiempo total efectivamente usado, en segundos.'),
   "turns": zod.number().describe('Número de intervenciones.'),
-  "collective": zod.boolean().optional().describe('Si alguna de sus intervenciones fue palabra colectiva.')
+  "collective": zod.boolean().optional().describe('Si alguna de sus intervenciones fue palabra colectiva.'),
+  "faculty": zod.string().nullish().describe('Espacio al que pertenece quien interviene.'),
+  "interventions": zod.array(zod.object({
+  "point": zod.string().nullable(),
+  "seconds": zod.number()
+})).optional().describe('Detalle de cada intervención, con su punto de tabla y su duración.')
 }).describe('Registro de uso de la palabra de una persona en una sesión. Agrupa todas sus intervenciones finalizadas.\n')).optional().describe('Quiénes tomaron la palabra en la sesión y cuánto hablaron.'),
   "mySeconds": zod.number().optional().describe('Tiempo propio en uso de la palabra en esta sesión, en segundos.'),
   "myTurns": zod.number().optional().describe('Intervenciones propias en esta sesión.'),
@@ -1222,7 +1232,12 @@ export const GetSessionsHistoryResponseItem = zod.object({
   "group": zod.string().nullable(),
   "seconds": zod.number().describe('Tiempo total efectivamente usado, en segundos.'),
   "turns": zod.number().describe('Número de intervenciones.'),
-  "collective": zod.boolean().optional().describe('Si alguna de sus intervenciones fue palabra colectiva.')
+  "collective": zod.boolean().optional().describe('Si alguna de sus intervenciones fue palabra colectiva.'),
+  "faculty": zod.string().nullish().describe('Espacio al que pertenece quien interviene.'),
+  "interventions": zod.array(zod.object({
+  "point": zod.string().nullable(),
+  "seconds": zod.number()
+})).optional().describe('Detalle de cada intervención, con su punto de tabla y su duración.')
 }).describe('Registro de uso de la palabra de una persona en una sesión. Agrupa todas sus intervenciones finalizadas.\n')).optional().describe('Quiénes tomaron la palabra en la sesión y cuánto hablaron.'),
   "officialMinutes": zod.number().nullish().describe('Duración real en minutos, entre la apertura oficial y el cierre. Nulo si la sesión no se abrió oficialmente o si sigue en curso.\n'),
   "topics": zod.array(zod.object({

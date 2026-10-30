@@ -515,8 +515,18 @@ function colorVoto(v: string | null): { texto: string; borde: string; fondo: str
   return { texto: "text-blue-800", borde: "border-blue-400", fondo: "bg-blue-50" };
 }
 
+const CARGO: Record<EstamentoKey, string> = {
+  mesa: "Mesa Directiva FECh", cosefech: "COSEFECH", consejero: "Consejería FECh",
+  cee: "Centro de Estudiantes", otro: "Interviniente externo",
+};
+
+function cargoDe(e: EstamentoKey, collective: boolean, faculty: string | null | undefined): string {
+  const espacio = faculty ? ` de ${faculty}` : "";
+  return collective ? `Palabra colectiva de consejerías${espacio}` : `${CARGO[e]}${espacio}`;
+}
+
 type SpeakerRow = {
-  name: string; group: string | null; estamento: EstamentoKey;
+  name: string; group: string | null; faculty: string | null; estamento: EstamentoKey;
   seconds: number; turns: number; sessionsSpoken: number; attended: number; collective: boolean;
 };
 
@@ -530,7 +540,7 @@ function buildSpeakers(sessions: AdminHistorySession[], attendance: MemberAttend
       let e = map.get(sp.name);
       if (!e) {
         e = {
-          name: sp.name, group: sp.group ?? null, estamento: estamentoOf(sp.group),
+          name: sp.name, group: sp.group ?? null, faculty: sp.faculty ?? null, estamento: estamentoOf(sp.group),
           seconds: 0, turns: 0, sessionsSpoken: 0,
           attended: attendedBy.get(sp.name) ?? 0, collective: false,
         };
@@ -620,6 +630,22 @@ function SpeakersTable({ speakers }: { speakers: PublicSpeaker[] }) {
                       </span>
                     )}
                   </span>
+                  <div className="ml-[18px] text-xs text-muted-foreground">{cargoDe(e, !!sp.collective, sp.faculty)}</div>
+                  {(sp.interventions?.length ?? 0) > 1 || sp.interventions?.[0]?.point ? (
+                    <details className="ml-[18px] mt-0.5 text-xs">
+                      <summary className="cursor-pointer text-muted-foreground hover:text-gray-900">
+                        Ver {sp.interventions!.length === 1 ? "la intervención" : `las ${sp.interventions!.length} intervenciones`}
+                      </summary>
+                      <ul className="mt-1 space-y-0.5 border-l-2 border-gray-200 pl-3">
+                        {sp.interventions!.map((iv, k) => (
+                          <li key={k} className="flex justify-between gap-3">
+                            <span>{iv.point ?? "Sin punto de tabla"}</span>
+                            <span className="tabular-nums text-muted-foreground">{mmss(iv.seconds)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  ) : null}
                 </td>
                 <td className="px-3 py-1.5 text-right tabular-nums">{mmss(sp.seconds)}</td>
                 <td className="px-3 py-1.5 text-right tabular-nums text-muted-foreground">{sp.turns}</td>
@@ -1500,6 +1526,20 @@ export default function PublicHome() {
             <SectionHeading icon={<Mic className="h-5 w-5" />} title="Uso de la Palabra"
               subtitle="Quiénes intervinieron en los plenos y cuánto tiempo usaron." color="#EA580C" />
 
+            {(() => {
+              const primera = sessions
+                .filter((x) => x.phase === "pasado" && (x.speakers?.length ?? 0) > 0)
+                .sort((a, b) => String(a.scheduledAt ?? "").localeCompare(String(b.scheduledAt ?? "")))[0];
+              return (
+                <p className="mb-4 border-l-[3px] border-amber-500 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-gray-700">
+                  <b>Advertencia.</b> Estos datos se consideran desde el inicio del sistema de toma de palabra dentro del
+                  Sistema Plenario
+                  {primera ? `, es decir desde el ${primera.title} (${formatShortDate(primera.scheduledAt)})` : ""}. Los plenos
+                  anteriores no tienen intervenciones registradas, por lo que no figuran en este conteo.
+                </p>
+              );
+            })()}
+
             {speakers.length === 0 ? (
               <div className="border border-gray-300 bg-white p-8 text-center text-muted-foreground">
                 Aún no hay intervenciones registradas en sesiones cerradas.
@@ -1569,6 +1609,9 @@ export default function PublicHome() {
                                       COLECTIVA
                                     </span>
                                   )}
+                                </div>
+                                <div className="ml-[18px] text-xs text-muted-foreground">
+                                  {cargoDe(s.estamento, s.collective, s.faculty)}
                                 </div>
                                 <div className="mt-1 h-1.5 w-full max-w-[220px] bg-gray-100">
                                   <div className="h-full" style={{ width: `${(val / max) * 100}%`, backgroundColor: cfg.hex }} />

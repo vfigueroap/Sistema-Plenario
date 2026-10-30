@@ -105,8 +105,17 @@ async function loadHistoryData(): Promise<LoadedData> {
   const memberById = new Map(members.map((m) => [m.id, m]));
   const speakersBySession = new Map<
     number,
-    { name: string; group: string | null; seconds: number; turns: number; collective: boolean }[]
+    {
+      name: string;
+      group: string | null;
+      faculty: string | null;
+      seconds: number;
+      turns: number;
+      collective: boolean;
+      interventions: { point: string | null; seconds: number }[];
+    }[]
   >();
+  const agendaTitleById = new Map(agendaRows.map((a) => [a.id, a.title]));
   for (const t of speakingRows) {
     // Una intervención colectiva la ejerce la unidad académica, no una
     // persona: atribuirla a quien la pidió inflaría su registro individual.
@@ -116,6 +125,8 @@ async function loadHistoryData(): Promise<LoadedData> {
       ? t.faculty ?? "Palabra colectiva"
       : member?.displayName ?? t.speakerName ?? "—";
     const group = isCollective ? t.faculty : member?.group ?? null;
+    const faculty = isCollective ? t.faculty : member?.faculty ?? null;
+    const point = t.agendaPointId !== null ? agendaTitleById.get(t.agendaPointId) ?? null : null;
 
     let arr = speakersBySession.get(t.sessionId);
     if (!arr) speakersBySession.set(t.sessionId, (arr = []));
@@ -124,8 +135,17 @@ async function loadHistoryData(): Promise<LoadedData> {
       existing.seconds += t.elapsedSeconds;
       existing.turns += 1;
       existing.collective ||= isCollective;
+      existing.interventions.push({ point, seconds: t.elapsedSeconds });
     } else {
-      arr.push({ name, group, seconds: t.elapsedSeconds, turns: 1, collective: isCollective });
+      arr.push({
+        name,
+        group,
+        faculty,
+        seconds: t.elapsedSeconds,
+        turns: 1,
+        collective: isCollective,
+        interventions: [{ point, seconds: t.elapsedSeconds }],
+      });
     }
   }
   for (const arr of speakersBySession.values()) {

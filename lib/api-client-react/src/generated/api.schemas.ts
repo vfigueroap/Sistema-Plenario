@@ -836,6 +836,19 @@ export interface PublicSpeaker {
   turns: number;
   /** Si alguna de sus intervenciones fue palabra colectiva. */
   collective?: boolean;
+  /**
+   * Espacio al que pertenece quien interviene.
+   * @nullable
+   */
+  faculty?: string | null;
+  /** Detalle de cada intervención, con su punto de tabla y su duración. */
+  interventions?: PublicSpeakerIntervention[];
+}
+
+export interface PublicSpeakerIntervention {
+  /** @nullable */
+  point: string | null;
+  seconds: number;
 }
 
 export interface MemberHistorySession {
