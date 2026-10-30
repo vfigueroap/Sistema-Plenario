@@ -47,6 +47,17 @@ export const pool = new Pool({
   idleTimeoutMillis: 30000,
   keepAlive: true,
 });
+const configuredSessionPoolMax = Number(process.env.SESSION_POOL_MAX ?? 3);
+if (!Number.isInteger(configuredSessionPoolMax) || configuredSessionPoolMax < 1) {
+  throw new Error("SESSION_POOL_MAX must be a positive integer");
+}
+
+export const sessionPool = new Pool({
+  connectionString,
+  max: configuredSessionPoolMax,
+  idleTimeoutMillis: 30000,
+  keepAlive: true,
+});
 const baseDb = drizzle(pool, { schema });
 
 export type InstitutionTransaction = Parameters<Parameters<typeof baseDb.transaction>[0]>[0];

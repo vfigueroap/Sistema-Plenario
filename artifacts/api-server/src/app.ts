@@ -3,7 +3,7 @@ import cors from "cors";
 import pinoHttp from "pino-http";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
-import { db, pool, usersTable, withInstitutionDb } from "@workspace/db";
+import { db, sessionPool, usersTable, withInstitutionDb } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import router from "./routes";
 import { logger } from "./lib/logger";
@@ -69,7 +69,7 @@ if (!sessionSecret && isProduction) {
 // middleware to authenticate websocket connections via the session cookie.
 export const sessionMiddleware: RequestHandler = session({
   store: new PgSession({
-    pool,
+    pool: sessionPool,
     tableName: "session",
     createTableIfMissing: !isProduction,
   }),
