@@ -107,6 +107,7 @@ router.post("/auth/login", async (req, res): Promise<void> => {
       rol: user.rol,
       votingWeight: parseFloat(user.votingWeight),
       active: user.active,
+      mustChangePassword: user.mustChangePassword,
     });
     });
   });
@@ -148,6 +149,7 @@ router.get("/auth/me", async (req, res): Promise<void> => {
     rol: user.rol,
     votingWeight: parseFloat(user.votingWeight),
     active: user.active,
+    mustChangePassword: user.mustChangePassword,
   });
 });
 

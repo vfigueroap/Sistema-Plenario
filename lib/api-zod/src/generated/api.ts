@@ -88,7 +88,8 @@ export const LoginResponse = zod.object({
   "email": zod.string().nullish(),
   "rol": zod.enum(['admin', 'miembro']),
   "votingWeight": zod.number(),
-  "active": zod.boolean()
+  "active": zod.boolean(),
+  "mustChangePassword": zod.boolean().optional()
 })
 
 
@@ -104,7 +105,8 @@ export const GetMeResponse = zod.object({
   "email": zod.string().nullish(),
   "rol": zod.enum(['admin', 'miembro']),
   "votingWeight": zod.number(),
-  "active": zod.boolean()
+  "active": zod.boolean(),
+  "mustChangePassword": zod.boolean().optional()
 })
 
 
@@ -223,7 +225,8 @@ export const UpdateMyEmailResponse = zod.object({
   "email": zod.string().nullish(),
   "rol": zod.enum(['admin', 'miembro']),
   "votingWeight": zod.number(),
-  "active": zod.boolean()
+  "active": zod.boolean(),
+  "mustChangePassword": zod.boolean().optional()
 })
 
 

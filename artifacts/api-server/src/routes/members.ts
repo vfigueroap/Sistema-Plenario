@@ -89,6 +89,7 @@ router.post("/members", requireAdmin, async (req, res): Promise<void> => {
         username: normalizedUsername,
         displayName: displayName.trim(),
         password: hashed,
+        mustChangePassword: true,
         group: typeof group === "string" && group.trim() !== "" ? group.trim() : null,
         faculty: typeof faculty === "string" && faculty.trim() !== "" ? faculty.trim() : null,
         campus: typeof campus === "string" && campus.trim() !== "" ? campus.trim() : null,
@@ -173,7 +174,7 @@ router.patch("/members/me/password", requireAuth, async (req, res): Promise<void
   const hashed = await bcrypt.hash(newPassword, 10);
   await db
     .update(usersTable)
-    .set({ password: hashed })
+    .set({ password: hashed, mustChangePassword: false })
     .where(eq(usersTable.id, user.id));
   res.json({ ok: true });
 });
@@ -398,7 +399,7 @@ router.patch("/members/:id/password", requireAdmin, async (req, res): Promise<vo
   const hashed = await bcrypt.hash(newPassword, 10);
   const [updated] = await db
     .update(usersTable)
-    .set({ password: hashed })
+    .set({ password: hashed, mustChangePassword: true })
     .where(eq(usersTable.id, id))
     .returning();
 

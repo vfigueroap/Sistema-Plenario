@@ -93,6 +93,12 @@ if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(inst
   process.exit(1);
 }
 
+const isAllowedBeforePasswordChange = (method: string, path: string): boolean =>
+  path.startsWith("/api/public/") ||
+  path === "/api/auth/me" ||
+  path === "/api/auth/logout" ||
+  (method === "PATCH" && path === "/api/members/me/password");
+
 app.use((req, res, next) => {
   if (req.path === "/api/healthz") return next();
   if (req.session.userId && req.session.institutionId !== institutionId) {
@@ -102,11 +108,21 @@ app.use((req, res, next) => {
   }
   void withInstitutionDb(institutionId, async () => {
     if (req.session.userId) {
-      const [currentUser] = await db.select({ rol: usersTable.rol, active: usersTable.active })
-        .from(usersTable).where(eq(usersTable.id, req.session.userId)).limit(1);
+      const [currentUser] = await db.select({
+        rol: usersTable.rol,
+        active: usersTable.active,
+        mustChangePassword: usersTable.mustChangePassword,
+      }).from(usersTable).where(eq(usersTable.id, req.session.userId)).limit(1);
       if (!currentUser) {
         req.session.destroy(() => {});
         res.status(401).json({ error: "Usuario no encontrado" });
+        return;
+      }
+      if (currentUser.mustChangePassword && !isAllowedBeforePasswordChange(req.method, req.path)) {
+        res.status(403).json({
+          error: "Debes cambiar tu contraseña inicial antes de continuar",
+          code: "password_change_required",
+        });
         return;
       }
       req.session.rol = currentUser.rol;

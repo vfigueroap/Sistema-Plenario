@@ -28,7 +28,9 @@ export default function Login() {
     e.preventDefault();
     loginMutation.mutate({ data: { username, password } }, {
       onSuccess: (user) => {
-        if (user.rol === "admin") {
+        if (user.mustChangePassword) {
+          setLocation("/settings");
+        } else if (user.rol === "admin") {
           setLocation("/admin");
         } else {
           setLocation("/member");

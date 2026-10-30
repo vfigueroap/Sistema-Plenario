@@ -1492,6 +1492,8 @@ components:
           type: number
         active:
           type: boolean
+        mustChangePassword:
+          type: boolean
 
     Member:
       type: object

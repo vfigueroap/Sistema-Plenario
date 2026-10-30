@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useChangeMyPassword, useUpdateMyEmail, useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { AppLayout } from "@/components/layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ export default function Settings() {
   const changePassword = useChangeMyPassword();
   const updateEmail = useUpdateMyEmail();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -50,6 +52,8 @@ export default function Settings() {
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
+        queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
+        if (me?.mustChangePassword) setLocation(me.rol === "admin" ? "/admin" : "/member");
       },
       onError: () => {
         toast({ title: "Error", description: "Verifica tu contraseña actual e intenta de nuevo.", variant: "destructive" });
@@ -61,6 +65,12 @@ export default function Settings() {
     <AppLayout>
       <div className="max-w-md mx-auto space-y-6">
         <h1 className="text-2xl font-bold text-gray-900">Ajustes</h1>
+
+        {me?.mustChangePassword && (
+          <div className="rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            Por seguridad, antes de continuar debes cambiar tu contraseña inicial por una propia.
+          </div>
+        )}
 
         <Card>
           <CardHeader>
