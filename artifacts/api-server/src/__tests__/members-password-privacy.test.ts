@@ -121,6 +121,16 @@ describe("members password privacy (database mocked, not integration)", () => {
     expect(bcrypt.getRounds(stored.password)).toBe(10);
   });
 
+  it("lifts the login lockout of the member whose password an admin resets", async () => {
+    const { rateLimitHit, rateLimitPeek } = await import("../lib/rate-limit");
+    const key = "login:user:00000000-0000-4000-8000-000000000001:fixture";
+    for (let i = 0; i < 6; i++) rateLimitHit(key, 5, 60_000);
+    expect(rateLimitPeek(key, 5).limited).toBe(true);
+    query.where.mockReset().mockReturnThis();
+    await request(app()).patch("/members/7/password").send({ newPassword: "new-fixture" }).expect(200);
+    expect(rateLimitPeek(key, 5).limited).toBe(false);
+  });
+
   it("still rejects an incorrect current password without writing", async () => {
     query.where.mockResolvedValueOnce([{ ...legacy }]);
     const res = await request(app("miembro")).patch("/members/me/password")

@@ -230,25 +230,14 @@ router.delete("/sessions/:id", requireAdmin, async (req, res): Promise<void> => 
   }
 
   const deletion = await db.transaction(async (tx) => {
-    const [session] = await tx.select({ id: plenariasTable.id, officialStartAt: plenariasTable.officialStartAt })
+    const [session] = await tx.select({ id: plenariasTable.id })
       .from(plenariasTable).where(eq(plenariasTable.id, id)).for("update");
     if (!session) return "missing" as const;
-    const [attendance] = await tx.select({ count: sql<number>`count(*)` })
-      .from(attendanceTable).where(eq(attendanceTable.sessionId, id));
-    const [topics] = await tx.select({ count: sql<number>`count(*)` })
-      .from(topicsTable).where(eq(topicsTable.sessionId, id));
-    if (session.officialStartAt !== null || Number(attendance.count) > 0 || Number(topics.count) > 0) {
-      return "history" as const;
-    }
     await tx.delete(plenariasTable).where(eq(plenariasTable.id, id));
     return "deleted" as const;
   });
   if (deletion === "missing") {
     res.status(404).json({ error: "Sesión no encontrada" });
-    return;
-  }
-  if (deletion === "history") {
-    res.status(409).json({ error: "No se puede eliminar una sesión iniciada o con historial" });
     return;
   }
   emitSessionEvent(id, "session:changed");

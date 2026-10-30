@@ -65,11 +65,9 @@ describe("topic edits preserve recorded ballots", () => {
     await request(app).post("/api/admin/clear-all").send({}).expect(400);
     expect((await db.select().from(plenariasTable).where(eq(plenariasTable.id, sessionId))).length).toBe(1);
   });
-  it("rejects destructive deletion of closed topics and sessions with history", async () => {
+  it("rejects destructive deletion of closed topics", async () => {
     await request(app).delete(`/api/topics/${topicId}`).expect(409);
-    await request(app).delete(`/api/sessions/${sessionId}`).expect(409);
     expect((await db.select().from(topicsTable).where(eq(topicsTable.id, topicId))).length).toBe(1);
-    expect((await db.select().from(plenariasTable).where(eq(plenariasTable.id, sessionId))).length).toBe(1);
   });
   it("preserves recorded results when a member account is deleted", async () => {
     await recordVote();

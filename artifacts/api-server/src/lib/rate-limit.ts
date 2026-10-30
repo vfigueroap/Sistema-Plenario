@@ -66,6 +66,10 @@ export function rateLimitPeek(key: string, max: number): RateLimitResult {
   return { limited: false, retryAfterSeconds: 0 };
 }
 
+export function rateLimitClear(key: string): void {
+  buckets.delete(key);
+}
+
 /** Clears all counters. Intended for tests. */
 export function resetRateLimits(): void {
   buckets.clear();
