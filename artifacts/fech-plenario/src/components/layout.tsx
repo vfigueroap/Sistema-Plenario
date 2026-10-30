@@ -52,7 +52,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         : [];
 
   const secondaryItems = [
-    { href: "/ayuda", label: "¿Cómo usarme?" },
     { href: "/settings", label: "Ajustes" },
   ];
 
@@ -87,7 +86,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               <RealtimeStatusBadge />
               <RefreshButton />
               <span className="hidden sm:inline">{user?.displayName}</span>
-              <Link href="/ayuda" className="hover:underline">¿Cómo usarme?</Link>
               <Link href="/settings" className="hover:underline">Ajustes</Link>
               <Button variant="secondary" size="sm" onClick={handleLogout} disabled={logout.isPending}>Salir</Button>
             </div>

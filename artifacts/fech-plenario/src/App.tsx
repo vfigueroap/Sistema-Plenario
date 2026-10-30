@@ -14,7 +14,6 @@ const MemberVote = lazy(() => import("@/pages/member/vote"));
 const MemberHistory = lazy(() => import("@/pages/member/history"));
 const MemberMessages = lazy(() => import("@/pages/member/messages"));
 const Settings = lazy(() => import("@/pages/settings"));
-const Help = lazy(() => import("@/pages/help"));
 const ForgotPassword = lazy(() => import("@/pages/forgot-password"));
 const PublicHome = lazy(() => import("@/pages/public-home"));
 
@@ -71,9 +70,6 @@ function App() {
 
             <Route path="/settings">
               <AuthGuard><Settings /></AuthGuard>
-            </Route>
-            <Route path="/ayuda">
-              <AuthGuard><Help /></AuthGuard>
             </Route>
 
             <Route path="/" component={PublicHome} />

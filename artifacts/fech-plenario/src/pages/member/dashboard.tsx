@@ -3,7 +3,6 @@ import { Link, useLocation } from "wouter";
 import { useGetMe, useListSessions, useMarkAttendance, useListTopics, useListAttendance, useListAgendaPoints, useCheckOutAttendance, useRejoinAttendance, getGetMeQueryKey, getListTopicsQueryKey, getListSessionsQueryKey, getListAttendanceQueryKey, getListAgendaPointsQueryKey, type AttendanceInputModality } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout";
-import { QrScannerDialog } from "@/components/qr-scanner";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +17,7 @@ import { useSessionLive } from "@/hooks/use-session-live";
 import { getSocket } from "@/lib/realtime";
 import { useLobbyLive } from "@/hooks/use-lobby-live";
 import { TopicBallotsPanel } from "@/components/topic-ballots-panel";
-import { QrCode, ArrowRight, RefreshCw, MapPin, Clock, Wifi, LogOut, CheckCircle2, Hand, ChevronDown, Users, LogIn } from "lucide-react";
+import { ArrowRight, RefreshCw, MapPin, Clock, Wifi, LogOut, CheckCircle2, Hand, ChevronDown, Users, LogIn } from "lucide-react";
 
 
 // Botón para plegar un apartado. Va junto al título y no sobre la cabecera
@@ -47,7 +46,6 @@ export default function MemberDashboard() {
   const [refreshing, setRefreshing] = useState(false);
 
   const [sessionCode, setSessionCode] = useState("");
-  const [scannerOpen, setScannerOpen] = useState(false);
 
   const [modality, setModality] = useState<AttendanceInputModality>("presencial");
 
@@ -138,12 +136,6 @@ export default function MemberDashboard() {
   const handleMarkAttendance = (e: React.FormEvent) => {
     e.preventDefault();
     submitCode(sessionCode);
-  };
-
-  const handleScan = (text: string) => {
-    const code = text.trim().toUpperCase();
-    setSessionCode(code);
-    submitCode(code);
   };
 
   return (
@@ -251,17 +243,6 @@ export default function MemberDashboard() {
                         Registrar Asistencia
                       </Button>
                     </form>
-                    <div className="mt-6">
-                      <div className="relative mb-4">
-                        <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                          <span className="bg-card px-2 text-muted-foreground">o</span>
-                        </div>
-                      </div>
-                      <Button type="button" variant="outline" className="w-full" onClick={() => setScannerOpen(true)}>
-                        <QrCode className="w-4 h-4 mr-2" /> Escanear código QR
-                      </Button>
-                    </div>
                   </>
                 )}
               </CardContent>}
@@ -400,7 +381,6 @@ export default function MemberDashboard() {
 
       </div>
 
-      <QrScannerDialog open={scannerOpen} onOpenChange={setScannerOpen} onResult={handleScan} />
     </AppLayout>
   );
 }

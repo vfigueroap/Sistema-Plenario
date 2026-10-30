@@ -264,10 +264,10 @@ function Hemicycle({ members }: { members: PublicMember[] }) {
     const consejeros = by("consejero");
     const k = Math.ceil(consejeros.length / 3) || 1;
 
-    // La Mesa va al centro, adelante; las consejerías ocupan tres anillos por
+    // La Mesa se sienta al centro, donde estaba el atril; las consejerías ocupan tres anillos por
     // ser el estamento más numeroso; los CEE cierran el hemiciclo.
     const rings: [PublicMember[], number][] = [
-      [[...by("mesa"), ...by("otro"), ...by("cosefech")], 95],
+      [[...by("otro"), ...by("cosefech")], 95],
       [consejeros.slice(0, k), 167],
       [consejeros.slice(k, 2 * k), 239],
       [consejeros.slice(2 * k), 311],
@@ -276,6 +276,14 @@ function Hemicycle({ members }: { members: PublicMember[] }) {
 
     const cx = 410, cy = 430;
     const out: { x: number; y: number; m: PublicMember; e: EstamentoKey }[] = [];
+    const mesa = by("mesa");
+    const porFila = 6;
+    mesa.forEach((m, i) => {
+      const fila = Math.floor(i / porFila);
+      const enFila = Math.min(porFila, mesa.length - fila * porFila);
+      const col = i % porFila;
+      out.push({ x: cx + (col - (enFila - 1) / 2) * 22, y: cy - 22 - fila * 24, m, e: "mesa" });
+    });
     for (const [group, r] of rings) {
       if (group.length === 0) continue;
       group.forEach((m, i) => {
@@ -291,8 +299,6 @@ function Hemicycle({ members }: { members: PublicMember[] }) {
     <div className="relative w-full">
       <svg ref={svgRef} viewBox="0 0 820 450" className="mx-auto block w-full max-w-3xl">
         <path d="M 24 430 A 386 386 0 0 1 796 430" fill="none" stroke="#D1D5DB" strokeWidth="1" />
-        <rect x={385} y={416} width={50} height={4} fill="#9CA3AF" />
-        <rect x={405} y={402} width={10} height={16} fill="#9CA3AF" />
         {seats.map((s, i) => (
           <Seat
             key={i} x={s.x} y={s.y} r={hovered === s.m ? 12 : 9}

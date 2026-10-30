@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useChangeMyPassword, useUpdateMyEmail, useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
+import { useState } from "react";
+import { useChangeMyPassword, useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { AppLayout } from "@/components/layout";
@@ -13,31 +13,12 @@ export default function Settings() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [email, setEmail] = useState("");
 
   const { data: me } = useGetMe();
   const changePassword = useChangeMyPassword();
-  const updateEmail = useUpdateMyEmail();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-
-  useEffect(() => {
-    if (me?.email) setEmail(me.email);
-  }, [me?.email]);
-
-  const handleEmailSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    updateEmail.mutate({ data: { email } }, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
-        toast({ title: "Correo actualizado exitosamente" });
-      },
-      onError: () => {
-        toast({ title: "Error", description: "Verifica que el correo sea válido.", variant: "destructive" });
-      },
-    });
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,31 +52,6 @@ export default function Settings() {
             Por seguridad, antes de continuar debes cambiar tu contraseña inicial por una propia.
           </div>
         )}
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Correo Electrónico</CardTitle>
-            <CardDescription>Necesario para recuperar tu contraseña si la olvidas.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleEmailSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Correo electrónico</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="tu@correo.cl"
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={updateEmail.isPending || !email}>
-                Guardar Correo
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
 
         <Card>
           <CardHeader>

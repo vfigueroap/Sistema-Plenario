@@ -28,7 +28,6 @@ import {
   type AgendaPoint,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { QRCodeSVG } from "qrcode.react";
 
 import { AppLayout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
@@ -150,7 +149,7 @@ export default function AdminSessionDetail() {
   // Al abrir hay que declarar si la apertura es oficial: solo esas registran
   // horario y suman al total de horas de pleno.
   const [openConfirmOpen, setOpenConfirmOpen] = useState(false);
-  // Quórum a pantalla completa, para proyectar en la sala igual que el QR.
+  // Quórum a pantalla completa, para proyectar en la sala igual que el código.
   const [quorumOpen, setQuorumOpen] = useState(false);
   // Cada apartado se puede plegar para concentrarse en lo que toca ahora.
   const [abierto, setAbierto] = useState<Record<string, boolean>>({
@@ -434,18 +433,15 @@ export default function AdminSessionDetail() {
                 <button
                   type="button"
                   onClick={() => setQrOpen(true)}
-                  className="group relative bg-white p-2 rounded-lg border shadow-sm transition-transform hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  aria-label="Ampliar código QR a pantalla completa"
+                  className="group relative rounded-lg border bg-white px-8 py-4 shadow-sm transition-transform hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  aria-label="Ampliar código de sesión a pantalla completa"
                 >
-                  <QRCodeSVG value={session.sessionCode} size={150} />
-                  <span className="absolute bottom-1 right-1 flex items-center justify-center h-7 w-7 rounded-md bg-black/60 text-white opacity-80 group-hover:opacity-100">
-                    <Maximize2 className="h-4 w-4" />
+                  <span className="text-3xl font-bold tracking-widest">{session.sessionCode}</span>
+                  <span className="absolute bottom-1 right-1 flex items-center justify-center h-6 w-6 rounded-md bg-black/60 text-white opacity-80 group-hover:opacity-100">
+                    <Maximize2 className="h-3.5 w-3.5" />
                   </span>
                 </button>
-                <div className="mt-4 text-center">
-                  <div className="text-3xl font-bold tracking-widest">{session.sessionCode}</div>
-                  <div className="text-sm text-muted-foreground mt-1">Código de sesión · toca el QR para ampliar</div>
-                </div>
+                <div className="text-sm text-muted-foreground mt-3">Código de sesión · toca el código para ampliar</div>
               </div>
 
               {/* Quórum. Antes esta tarjeta mostraba la ponderación presente
@@ -1049,12 +1045,9 @@ export default function AdminSessionDetail() {
             <DialogTitle className="text-center">{session.title}</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col items-center gap-6 py-4">
-            <div className="bg-white p-4 rounded-xl border shadow-sm w-full max-w-[min(80vw,80vh)] [&>svg]:w-full [&>svg]:h-auto">
-              <QRCodeSVG value={session.sessionCode} size={512} />
-            </div>
             <div className="text-center">
-              <div className="text-5xl sm:text-6xl font-bold tracking-[0.3em]">{session.sessionCode}</div>
-              <div className="text-muted-foreground mt-2">Escanea el código o ingresa el código de sesión</div>
+              <div className="text-6xl sm:text-8xl font-bold tracking-[0.3em]">{session.sessionCode}</div>
+              <div className="text-muted-foreground mt-4">Ingresa este código de sesión para registrar tu asistencia</div>
             </div>
           </div>
         </DialogContent>
