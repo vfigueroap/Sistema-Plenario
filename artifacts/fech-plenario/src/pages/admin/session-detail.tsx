@@ -999,8 +999,14 @@ export default function AdminSessionDetail() {
               <Pencil className="h-4 w-4 mr-2" /> Editar votaciones
             </Button>
             <Button variant="ghost" size="sm" className="rounded-none text-red-600 hover:bg-red-50 hover:text-red-700" onClick={() => {
-              if (confirm("¿Estás seguro de eliminar esta sesión y todos sus votos?")) {
-                deleteSession.mutate({ id }, { onSuccess: () => setLocation("/admin") });
+              if (confirm("¿Eliminar esta sesión definitivamente? Se borrarán también su asistencia, votaciones, turnos de palabra y tabla. Esta acción no se puede deshacer.")) {
+                deleteSession.mutate({ id }, {
+                  onSuccess: () => {
+                    toast({ title: "Sesión eliminada" });
+                    setLocation("/admin");
+                  },
+                  onError: () => toast({ title: "No se pudo eliminar la sesión", variant: "destructive" }),
+                });
               }
             }}>
               <Trash2 className="h-4 w-4 mr-2" /> Eliminar sesión

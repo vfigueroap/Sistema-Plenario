@@ -4,6 +4,7 @@ import { eq, sql, and, isNull } from "drizzle-orm";
 import { db, usersTable, attendanceTable, plenariasTable } from "@workspace/db";
 import { requireAuth, requireAdmin } from "../middlewares/auth";
 import { disconnectUser, evictUserFromSession, emitSessionEvent, emitUserEvent } from "../lib/realtime";
+import { rateLimitClear } from "../lib/rate-limit";
 
 const router: IRouter = Router();
 
@@ -405,6 +406,9 @@ router.patch("/members/:id/password", requireAdmin, async (req, res): Promise<vo
     res.status(404).json({ error: "Miembro no encontrado" });
     return;
   }
+
+  const institutionId = process.env.INSTITUTION_ID ?? "00000000-0000-4000-8000-000000000001";
+  rateLimitClear(`login:user:${institutionId}:${String(updated.username).trim().toLowerCase()}`);
 
   res.json({ ok: true });
 });
