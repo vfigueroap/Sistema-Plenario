@@ -43,6 +43,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { EditTopicTitleDialog } from "@/components/edit-topic-title-dialog";
 import { TopicResultsView } from "@/components/topic-results-view";
 import { TopicBallotsPanel } from "@/components/topic-ballots-panel";
 import { EditVotesDialog } from "@/components/edit-votes-dialog";
@@ -660,7 +661,10 @@ export default function AdminSessionDetail() {
                   <Card key={topic.id} className="overflow-hidden rounded-none border-gray-300">
                     <div className="p-4 flex items-start justify-between bg-gray-50/50">
                       <div>
-                        <h3 className="font-semibold text-lg">{topic.title}</h3>
+                        <div className="flex items-center gap-1">
+                          <h3 className="font-semibold text-lg">{topic.title}</h3>
+                          <EditTopicTitleDialog sessionId={id} topic={topic} />
+                        </div>
                         {topic.detail && (
                           <p className="text-sm text-muted-foreground mt-1 whitespace-pre-line">{topic.detail}</p>
                         )}

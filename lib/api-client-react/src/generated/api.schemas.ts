@@ -423,6 +423,10 @@ export interface SpeakingTurnUpdate {
   durationSeconds?: number;
   /** @nullable */
   agendaPointId?: number | null;
+  speakerName?: string;
+  userId?: number;
+  elapsedSeconds?: number;
+  category?: SpeakingTurnCategory;
 }
 
 export type SpeakingTurnControlInputAction = typeof SpeakingTurnControlInputAction[keyof typeof SpeakingTurnControlInputAction];

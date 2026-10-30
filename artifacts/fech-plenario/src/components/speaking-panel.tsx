@@ -25,6 +25,8 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { SpeakingTimer } from "@/components/speaking-timer";
+import { EditTurnDialog } from "@/components/edit-turn-dialog";
+import { useRegularSpeakers } from "@/lib/regular-speakers";
 import { Play, Pause, Square, Hand, ArrowUp, ArrowDown, Trash2, Users, Plus, Mic, Check, ChevronsUpDown } from "lucide-react";
 
 const CONSEJEROS_GROUP = "Consejeros FECh";
@@ -141,6 +143,8 @@ export function SpeakingPanel({
 
   // Managed catalog of unidades académicas (feature: CRUD from members section).
   const { data: unidades } = useListUnidadesAcademicas();
+  const { data: regularSpeakers } = useRegularSpeakers(isAdmin);
+  const activeRegulars = (regularSpeakers ?? []).filter((r) => r.active);
 
   // Collective word picker: list the managed unidades, annotated with how many
   // consejeres belong to each (whole group, not just present).
@@ -315,6 +319,7 @@ export function SpeakingPanel({
               </Button>
             </div>
             <div className="ml-auto flex items-center gap-0.5">
+              <EditTurnDialog turn={turn} members={members} sessionId={sessionId} />
               <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => move(groupTurns, index, -1)} disabled={index === 0}>
                 <ArrowUp className="h-3.5 w-3.5" />
               </Button>
@@ -460,7 +465,19 @@ export function SpeakingPanel({
                 </PopoverContent>
               </Popover>
             ) : (
-              <Input placeholder="Nombre del oradore" value={addName} onChange={(e) => setAddName(e.target.value)} />
+              <div className="space-y-2">
+                <Input placeholder="Nombre del oradore" value={addName} onChange={(e) => setAddName(e.target.value)} />
+                {activeRegulars.length > 0 && (
+                  <Select value="" onValueChange={setAddName}>
+                    <SelectTrigger><SelectValue placeholder="O elegir un interviniente regular" /></SelectTrigger>
+                    <SelectContent>
+                      {activeRegulars.map((r) => (
+                        <SelectItem key={r.id} value={r.name}>{r.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
             )}
             <Select value={addPoint} onValueChange={setAddPoint}>
               <SelectTrigger><SelectValue placeholder="Sin punto" /></SelectTrigger>
@@ -540,11 +557,17 @@ export function SpeakingPanel({
             <div key={t.id} className="flex items-center gap-2 text-sm text-muted-foreground">
               <Square className="h-3.5 w-3.5 shrink-0" />
               <span className="flex-1 truncate">{t.label}</span>
+              <span className="text-xs">
+                {Math.floor(t.elapsedSeconds / 60)}:{(t.elapsedSeconds % 60).toString().padStart(2, "0")}
+              </span>
               <span className="text-xs">{pointLabel(agenda, t.agendaPointId)}</span>
               {isAdmin && (
-                <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-red-600" onClick={() => remove(t.id)}>
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
+                <>
+                  <EditTurnDialog turn={t} members={members} sessionId={sessionId} />
+                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-red-600" onClick={() => remove(t.id)}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </>
               )}
             </div>
           ))}
