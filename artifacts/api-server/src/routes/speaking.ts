@@ -15,6 +15,7 @@ import { emitSessionEvent, emitLobbyEvent } from "../lib/realtime";
 const router: IRouter = Router();
 
 const CONSEJEROS_GROUP = "Consejeros FECh";
+const SPEAKING_QUEUE_LOCK = 7301;
 const DEFAULT_SECONDS = 60;
 // Palabra colectiva is capped at 3 minutes by default (admin may override).
 const DEFAULT_COLLECTIVE_SECONDS = 180;
@@ -195,6 +196,8 @@ router.post("/sessions/:id/speaking-turns", requireAuth, async (req, res): Promi
     res.status(400).json({ error: "El punto de tabla no pertenece a esta sesión" });
     return;
   }
+
+  await db.execute(sql`select pg_advisory_xact_lock(${SPEAKING_QUEUE_LOCK}::int, ${sessionId}::int)`);
 
   // Prevent duplicate queued requests for the same speaker on the same point
   if (speakerUserId !== null) {
