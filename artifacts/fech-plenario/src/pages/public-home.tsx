@@ -19,6 +19,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RefreshButton } from "@/components/refresh-button";
+import { Version20 } from "@/components/version-20";
 import { Input } from "@/components/ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ResultsBar, CandidateResultsBar } from "@/components/results-bar";
@@ -207,7 +208,7 @@ function CountUp({ value }: { value: number }) {
     let frame = 0;
     const start = performance.now();
     const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / 900);
+      const t = Math.min(1, (now - start) / 1900);
       setShown(Math.round(value * (1 - Math.pow(1 - t, 3))));
       if (t < 1) frame = requestAnimationFrame(tick);
     };
@@ -371,7 +372,7 @@ function Desplegable({ titulo, cuenta, color, defecto, children }: {
   defecto?: boolean; children: React.ReactNode;
 }) {
   return (
-    <details open={defecto} className="border border-gray-300 bg-white">
+    <details open={defecto} className="fech-appear border border-gray-300 bg-white">
       <summary
         className="flex cursor-pointer select-none items-center justify-between gap-3 border-l-4 px-4 py-2.5 hover:bg-gray-50"
         style={{ borderLeftColor: color }}
@@ -691,7 +692,7 @@ function SpeakersTable({ speakers }: { speakers: PublicSpeaker[] }) {
 
 function PublicTopicCard({ topic: t }: { topic: AdminHistoryTopic }) {
   return (
-    <div className="border border-gray-300 bg-white p-4">
+    <div className="fech-appear fech-lift border border-gray-300 bg-white p-4">
       <div className="mb-2 flex items-start justify-between gap-3">
         <div className="font-semibold">{t.title}</div>
         {t.approved !== null && (
@@ -817,7 +818,7 @@ function LiveSessionHero({ s }: { s: AdminHistorySession }) {
 function UpcomingCard({ s }: { s: AdminHistorySession }) {
   const when = formatDate(s.scheduledAt);
   return (
-    <div className="border border-gray-300 bg-white">
+    <div className="fech-appear fech-lift border border-gray-300 bg-white">
       <div className="border-b-2 border-violet-700 bg-violet-50 px-4 py-1.5 text-[10px] font-bold tracking-wider text-violet-700">
         PRÓXIMO PLENO
       </div>
@@ -847,7 +848,7 @@ function PastSession({ s }: { s: AdminHistorySession }) {
   const real = realMinutes(s);
   const est = estimatedMinutes(s);
   return (
-    <AccordionItem value={String(s.sessionId)} className="border border-gray-300 bg-white px-4">
+    <AccordionItem value={String(s.sessionId)} className="fech-appear border border-gray-300 bg-white px-4">
       <AccordionTrigger className="hover:no-underline">
         <div className="flex flex-1 items-center justify-between gap-3 pr-3 text-left">
           <div>
@@ -1010,6 +1011,7 @@ function MocionFila({ topic: t, pleno, fecha }: { topic: AdminHistoryTopic; plen
         </button>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto rounded-none">
+        <div className="fech-stripe fech-stripe-anim absolute inset-x-0 top-0 h-1" />
         <DialogHeader>
           <DialogTitle className="pr-6 text-base leading-snug">{t.title}</DialogTitle>
           <DialogDescription>{pleno} · {fecha}</DialogDescription>
@@ -1154,9 +1156,12 @@ export default function PublicHome() {
       <header className="sticky top-0 z-40 border-b-2 border-gray-800 bg-white">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
           <div className="flex items-center gap-3">
-            <img src={`${import.meta.env.BASE_URL}logo-fech.png`} alt="FECh 1906" className="h-11 w-auto" />
+            <img src={`${import.meta.env.BASE_URL}logo-fech.png`} alt="FECh 1906" className="fech-logo h-11 w-auto" />
             <div>
-              <div className="text-sm font-bold uppercase leading-tight tracking-wide">Pleno FECh</div>
+              <div className="flex items-center gap-2 text-sm font-bold uppercase leading-tight tracking-wide">
+                <span className="fech-title-grad">Pleno FECh</span>
+                <Version20 className="text-sm" sparkle={false} />
+              </div>
               <div className="text-[11px] leading-tight text-muted-foreground">Portal de Transparencia</div>
             </div>
           </div>
@@ -1197,13 +1202,7 @@ export default function PublicHome() {
             <div className="fech-appear mb-6 border-l-4 border-primary pl-4">
               <h1 className="flex flex-wrap items-center gap-x-3 gap-y-1 text-3xl font-black uppercase leading-tight tracking-tight sm:text-4xl">
                 <span className="fech-title-grad">Sistema Plenario</span>
-                <span
-                  aria-label="versión 2.0"
-                  className="fech-badge-20 relative inline-flex items-center rounded-md px-2.5 py-0.5 text-xl font-black normal-case tracking-normal text-white sm:text-2xl"
-                >
-                  2.0
-                  <Sparkles className="fech-spark absolute -right-2.5 -top-2.5 h-4 w-4 text-amber-400" />
-                </span>
+                <Version20 className="text-4xl sm:text-5xl" />
               </h1>
               <p className="mt-1 text-base font-medium text-gray-700">
                 Federación de Estudiantes de la Universidad de Chile
@@ -1221,7 +1220,7 @@ export default function PublicHome() {
                   const Icon = s.icon;
                   return (
                     <div key={s.l} className="fech-stat fech-appear border-b border-r border-gray-300 bg-white p-4"
-                      style={{ animationDelay: `${i * 90}ms` }}>
+                      style={{ animationDelay: `${i * 160}ms` }}>
                       <Icon className={`mb-2 h-4 w-4 ${s.c}`} />
                       <div className={`text-xl font-black tabular-nums ${s.c}`}>
                         {typeof s.v === "number" ? <CountUp value={s.v} /> : s.v}

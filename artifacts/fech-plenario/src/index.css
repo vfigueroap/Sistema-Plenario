@@ -166,13 +166,16 @@
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
   }
-  @keyframes fech-pop {
-    0%, 100% { transform: rotate(-5deg) scale(1); }
-    50% { transform: rotate(-5deg) scale(1.1); }
+  @keyframes fech-slide {
+    to { background-position: 200% 50%; }
   }
-  @keyframes fech-glow {
-    0% { box-shadow: 0 0 0 0 rgba(224, 32, 63, 0.5); }
-    70%, 100% { box-shadow: 0 0 0 12px rgba(224, 32, 63, 0); }
+  @keyframes fech-breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.07); }
+  }
+  @keyframes fech-float {
+    0%, 100% { transform: translateY(0); filter: drop-shadow(0 0 0 rgba(224, 32, 63, 0)); }
+    50% { transform: translateY(-3px); filter: drop-shadow(0 4px 6px rgba(224, 32, 63, 0.35)); }
   }
   @keyframes fech-spark {
     0%, 100% { opacity: 0.25; transform: scale(0.6) rotate(0deg); }
@@ -194,10 +197,25 @@
     color: transparent;
     animation: fech-gradient 9s ease infinite;
   }
-  .fech-badge-20 {
-    background-image: linear-gradient(110deg, #8e1530, #e0203f, #f5a623, #9b4bb0, #8e1530);
-    background-size: 300% 300%;
-    animation: fech-gradient 5s ease infinite, fech-pop 2.8s ease-in-out infinite, fech-glow 2.4s ease-out infinite;
+  .fech-num-grad {
+    background-image: linear-gradient(100deg, #8e1530 0%, #e0203f 25%, #f5a623 50%, #9b4bb0 75%, #8e1530 100%);
+    background-size: 200% 100%;
+    background-repeat: repeat-x;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 2px 5px rgba(224, 32, 63, 0.35));
+    animation: fech-slide 3.6s linear infinite, fech-breathe 3.2s ease-in-out infinite;
+  }
+  .fech-logo {
+    animation: fech-float 4.5s ease-in-out infinite;
+  }
+  .fech-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .fech-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px -10px rgba(142, 21, 48, 0.4);
   }
   .fech-spark {
     animation: fech-spark 2.2s ease-in-out infinite;
@@ -213,7 +231,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .fech-appear, .fech-stripe-anim, .fech-title-grad, .fech-badge-20, .fech-spark {
+    .fech-appear, .fech-stripe-anim, .fech-title-grad, .fech-num-grad, .fech-spark, .fech-logo {
       animation: none;
     }
     .fech-title-grad {

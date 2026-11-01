@@ -3,6 +3,7 @@ import { useLocation, Link } from "wouter";
 import { ArrowLeft } from "lucide-react";
 import { useLogin } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
+import { Version20 } from "@/components/version-20";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -68,11 +69,14 @@ export default function Login() {
         </Button>
       </div>
       <div className="mb-8 flex flex-col items-center text-center">
-        <img src={`${import.meta.env.BASE_URL}logo-fech.png`} alt="FECh 1906" className="h-28 w-auto" />
-        <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-primary">Usuario Pleno FECh</h1>
+        <img src={`${import.meta.env.BASE_URL}logo-fech.png`} alt="FECh 1906" className="fech-logo h-28 w-auto" />
+        <h1 className="mt-3 flex items-center gap-3 text-3xl font-extrabold tracking-tight">
+          <span className="fech-title-grad">Usuario Pleno FECh</span>
+          <Version20 className="text-3xl" />
+        </h1>
       </div>
 
-      <Card className="w-full max-w-sm overflow-hidden">
+      <Card className="fech-appear w-full max-w-sm overflow-hidden">
         <div className="h-1.5 fech-stripe" />
         <CardHeader>
           <CardTitle>Iniciar Sesión</CardTitle>
