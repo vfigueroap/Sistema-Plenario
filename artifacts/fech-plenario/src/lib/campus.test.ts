@@ -12,7 +12,7 @@ describe("campusDe", () => {
 
   it("deduce el campus de la unidad de una consejería", () => {
     expect(campusDe({ campus: null, faculty: "FAGRO" })).toBe("Sur");
-    expect(campusDe({ faculty: "Derecho" })).toBe("Centro");
+    expect(campusDe({ faculty: "Derecho" })).toBe("Andrés Bello");
   });
 
   it("relaciona un centro de estudiantes con el campus de su unidad", () => {
@@ -30,6 +30,6 @@ describe("campusDe", () => {
 describe("ordenCampus", () => {
   it("ordena los campus conocidos y deja los demás al final", () => {
     expect(ordenCampus("Juan Gómez Millas")).toBeLessThan(ordenCampus("Sur"));
-    expect(ordenCampus(SIN_CAMPUS)).toBeGreaterThan(ordenCampus("Centro"));
+    expect(ordenCampus(SIN_CAMPUS)).toBeGreaterThan(ordenCampus("Sur"));
   });
 });

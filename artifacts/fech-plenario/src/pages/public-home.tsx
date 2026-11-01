@@ -36,13 +36,13 @@ import {
 // grupos incluso en blanco y negro, y para quien no diferencia bien los colores.
 
 const MESA_FECH = [
-  "Laura Mlynarz Greibe",
-  "Monserrat Lagos Moreno",
-  "Javier Concha Rivas",
-  "Sofia Coña Guzman",
-  "Jorge Jesus Medalla Malebran",
-  "Thiare Uribe Cerda",
-  "Camila Bustamante Tapia",
+  { name: "Laura Mlynarz Greibe", cargo: "Presidencia" },
+  { name: "Monserrat Lagos Moreno", cargo: "Vicepresidencia" },
+  { name: "Javier Concha Rivas", cargo: "Secretaría General" },
+  { name: "Sofia Coña Guzman", cargo: "Secretaría de Participación" },
+  { name: "Jorge Jesus Medalla Malebran", cargo: "Secretaría de Bienestar" },
+  { name: "Thiare Uribe Cerda", cargo: "Secretaría de Comunicaciones" },
+  { name: "Camila Bustamante Tapia", cargo: "Secretaría de Finanzas" },
 ];
 
 type EstamentoKey = "mesa" | "cosefech" | "consejero" | "cee" | "otro";
@@ -1341,12 +1341,12 @@ export default function PublicHome() {
               (() => {
                 const integrantes: PublicMember[] = [
                   ...members.filter((m) => estamentoOf(m.group) !== "mesa"),
-                  ...MESA_FECH.map((name) => ({ name, group: "Mesa Directiva FECh", faculty: null }) as PublicMember),
+                  ...MESA_FECH.map(({ name, cargo }) => ({ name, group: "Mesa Directiva FECh", faculty: cargo }) as PublicMember),
                 ];
                 const de = (k: EstamentoKey) => integrantes
                   .filter((m) => estamentoOf(m.group) === k)
                   .sort((a, b) => a.name.localeCompare(b.name, "es"));
-                const mesa = integrantes.filter((m) => estamentoOf(m.group) === "mesa");
+                const mesa = MESA_FECH.map(({ name }) => integrantes.find((m) => m.name === name)!);
                 const cosefech = de("cosefech");
                 const consejeros = de("consejero");
                 const centros = de("cee");
@@ -1362,7 +1362,7 @@ export default function PublicHome() {
                 return (
                   <div className="space-y-4">
                     <div className="border border-gray-300 bg-white p-5">
-                      <Hemicycle members={integrantes} />
+                      <Hemicycle members={members} />
                     </div>
 
                     <div className="space-y-2">
@@ -1371,7 +1371,7 @@ export default function PublicHome() {
                       <ResumenCampus consejeros={consejeros} centros={centros} />
                     </Desplegable>
                     {mesa.length > 0 && (
-                      <Desplegable titulo={<Titulo k="mesa" />} cuenta={mesa.length}
+                      <Desplegable titulo={<Titulo k="mesa" />} cuenta={1}
                         color={ESTAMENTO.mesa.hex}>
                         <Nomina personas={mesa} />
                       </Desplegable>

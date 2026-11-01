@@ -14,7 +14,6 @@ export const CAMPUS_OPCIONES = [
   "Beauchef",
   "Norte",
   "Sur",
-  "Centro",
 ] as const;
 
 export const SIN_CAMPUS = "Otras unidades";
@@ -41,9 +40,9 @@ const CAMPUS_POR_UNIDAD: Record<string, string> = {
   FAGRO: "Sur",
   FAVET: "Sur",
   FCFCN: "Sur",
-  // Centro
-  Derecho: "Centro",
-  "Artes Centro": "Centro",
+  // Andrés Bello
+  Derecho: "Andrés Bello",
+  "Artes Centro": "Andrés Bello",
 };
 
 // A qué unidad pertenece cada Centro de Estudiantes. Solo figuran los que se
