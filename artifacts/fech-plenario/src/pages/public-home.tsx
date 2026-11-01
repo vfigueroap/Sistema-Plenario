@@ -35,6 +35,16 @@ import {
 // Cada estamento tiene color y forma propios. La forma importa: distingue los
 // grupos incluso en blanco y negro, y para quien no diferencia bien los colores.
 
+const MESA_FECH = [
+  "Laura Mlynarz Greibe",
+  "Monserrat Lagos Moreno",
+  "Javier Concha Rivas",
+  "Sofia Coña Guzman",
+  "Jorge Jesus Medalla Malebran",
+  "Thiare Uribe Cerda",
+  "Camila Bustamante Tapia",
+];
+
 type EstamentoKey = "mesa" | "cosefech" | "consejero" | "cee" | "otro";
 type Shape = "star" | "triangle" | "circle" | "square" | "diamond";
 
@@ -1329,10 +1339,14 @@ export default function PublicHome() {
               <div className="flex justify-center py-12"><Spinner /></div>
             ) : members && members.length > 0 ? (
               (() => {
-                const de = (k: EstamentoKey) => members
+                const integrantes: PublicMember[] = [
+                  ...members.filter((m) => estamentoOf(m.group) !== "mesa"),
+                  ...MESA_FECH.map((name) => ({ name, group: "Mesa Directiva FECh", faculty: null }) as PublicMember),
+                ];
+                const de = (k: EstamentoKey) => integrantes
                   .filter((m) => estamentoOf(m.group) === k)
                   .sort((a, b) => a.name.localeCompare(b.name, "es"));
-                const mesa = de("mesa");
+                const mesa = integrantes.filter((m) => estamentoOf(m.group) === "mesa");
                 const cosefech = de("cosefech");
                 const consejeros = de("consejero");
                 const centros = de("cee");
@@ -1348,7 +1362,7 @@ export default function PublicHome() {
                 return (
                   <div className="space-y-4">
                     <div className="border border-gray-300 bg-white p-5">
-                      <Hemicycle members={members} />
+                      <Hemicycle members={integrantes} />
                     </div>
 
                     <div className="space-y-2">
