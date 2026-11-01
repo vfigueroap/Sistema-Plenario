@@ -156,4 +156,69 @@
   .fech-stripe {
     background-image: linear-gradient(to right, #8e1530, #e0203f, #f5a623, #9b4bb0);
   }
+
+  @keyframes fech-fade-up {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes fech-gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @keyframes fech-pop {
+    0%, 100% { transform: rotate(-5deg) scale(1); }
+    50% { transform: rotate(-5deg) scale(1.1); }
+  }
+  @keyframes fech-glow {
+    0% { box-shadow: 0 0 0 0 rgba(224, 32, 63, 0.5); }
+    70%, 100% { box-shadow: 0 0 0 12px rgba(224, 32, 63, 0); }
+  }
+  @keyframes fech-spark {
+    0%, 100% { opacity: 0.25; transform: scale(0.6) rotate(0deg); }
+    50% { opacity: 1; transform: scale(1.1) rotate(35deg); }
+  }
+
+  .fech-appear {
+    animation: fech-fade-up 0.55s ease both;
+  }
+  .fech-stripe-anim {
+    background-size: 300% 100%;
+    animation: fech-gradient 7s ease infinite;
+  }
+  .fech-title-grad {
+    background-image: linear-gradient(90deg, #111827 0%, #8e1530 50%, #111827 100%);
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: fech-gradient 9s ease infinite;
+  }
+  .fech-badge-20 {
+    background-image: linear-gradient(110deg, #8e1530, #e0203f, #f5a623, #9b4bb0, #8e1530);
+    background-size: 300% 300%;
+    animation: fech-gradient 5s ease infinite, fech-pop 2.8s ease-in-out infinite, fech-glow 2.4s ease-out infinite;
+  }
+  .fech-spark {
+    animation: fech-spark 2.2s ease-in-out infinite;
+  }
+  .fech-stat {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .fech-stat:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 18px -8px rgba(142, 21, 48, 0.35);
+    position: relative;
+    z-index: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fech-appear, .fech-stripe-anim, .fech-title-grad, .fech-badge-20, .fech-spark {
+      animation: none;
+    }
+    .fech-title-grad {
+      color: #111827;
+      background: none;
+    }
+  }
 }

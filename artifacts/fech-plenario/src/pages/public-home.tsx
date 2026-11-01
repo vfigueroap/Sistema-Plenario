@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { useLocation } from "wouter";
 import {
   useGetPublicHistory,
@@ -197,11 +197,31 @@ const realMinutes = (s: AdminHistorySession) => s.officialMinutes ?? null;
 
 // ─── Encabezado de sección ───────────────────────────────────────────────────
 
+function CountUp({ value }: { value: number }) {
+  const [shown, setShown] = useState(0);
+  useEffect(() => {
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      setShown(value);
+      return;
+    }
+    let frame = 0;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / 900);
+      setShown(Math.round(value * (1 - Math.pow(1 - t, 3))));
+      if (t < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [value]);
+  return <>{shown}</>;
+}
+
 function SectionHeading({ icon, title, subtitle, color }: {
   icon: React.ReactNode; title: string; subtitle?: string; color: string;
 }) {
   return (
-    <div className="mb-5 border-l-4 pl-4" style={{ borderColor: color }}>
+    <div className="fech-appear mb-5 border-l-4 pl-4" style={{ borderColor: color }}>
       <h3 className="flex items-center gap-2 text-lg font-bold leading-tight">
         <span style={{ color }}>{icon}</span>{title}
       </h3>
@@ -1165,17 +1185,25 @@ export default function PublicHome() {
             })}
           </div>
         </nav>
+        <div className="fech-stripe fech-stripe-anim h-0.5" />
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 py-8">
+      <main key={tab} className="fech-appear mx-auto max-w-5xl px-4 py-8">
         {/* ── Inicio ── */}
         {tab === "inicio" && (
           <div>
             {active.map((s) => <LiveSessionHero key={s.sessionId} s={s} />)}
 
-            <div className="mb-6 border-l-4 border-gray-900 pl-4">
-              <h1 className="text-3xl font-black uppercase leading-tight tracking-tight sm:text-4xl">
-                Sistema Plenario
+            <div className="fech-appear mb-6 border-l-4 border-primary pl-4">
+              <h1 className="flex flex-wrap items-center gap-x-3 gap-y-1 text-3xl font-black uppercase leading-tight tracking-tight sm:text-4xl">
+                <span className="fech-title-grad">Sistema Plenario</span>
+                <span
+                  aria-label="versión 2.0"
+                  className="fech-badge-20 relative inline-flex items-center rounded-md px-2.5 py-0.5 text-xl font-black normal-case tracking-normal text-white sm:text-2xl"
+                >
+                  2.0
+                  <Sparkles className="fech-spark absolute -right-2.5 -top-2.5 h-4 w-4 text-amber-400" />
+                </span>
               </h1>
               <p className="mt-1 text-base font-medium text-gray-700">
                 Federación de Estudiantes de la Universidad de Chile
@@ -1189,12 +1217,15 @@ export default function PublicHome() {
                   { v: past.length, l: "Sesiones realizadas", icon: CalendarDays, c: "text-emerald-700" },
                   { v: totalMinutes > 0 ? hhmm(totalMinutes * 60) : "—", l: "Horas de pleno", icon: Hourglass, c: "text-orange-700" },
                   { v: totalVotes, l: "Votaciones", icon: BarChart2, c: "text-violet-700" },
-                ].map((s) => {
+                ].map((s, i) => {
                   const Icon = s.icon;
                   return (
-                    <div key={s.l} className="border-b border-r border-gray-300 bg-white p-4">
+                    <div key={s.l} className="fech-stat fech-appear border-b border-r border-gray-300 bg-white p-4"
+                      style={{ animationDelay: `${i * 90}ms` }}>
                       <Icon className={`mb-2 h-4 w-4 ${s.c}`} />
-                      <div className={`text-xl font-black tabular-nums ${s.c}`}>{s.v}</div>
+                      <div className={`text-xl font-black tabular-nums ${s.c}`}>
+                        {typeof s.v === "number" ? <CountUp value={s.v} /> : s.v}
+                      </div>
                       <div className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">{s.l}</div>
                     </div>
                   );
