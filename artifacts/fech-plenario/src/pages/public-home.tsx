@@ -560,7 +560,7 @@ function nombreCompleto(name: string, e: EstamentoKey): string {
 
 function cargoDe(e: EstamentoKey, collective: boolean, faculty: string | null | undefined): string {
   if (collective) return `Palabra colectiva de consejerías${faculty ? ` de ${faculty}` : ""}`;
-  if (e === "cee") return faculty ? `Centro de Estudiantes · sigla ${faculty}` : CARGO.cee;
+  if (e === "cee") return faculty ? `Centro de Estudiantes · ${faculty}` : CARGO.cee;
   return `${CARGO[e]}${faculty ? ` de ${faculty}` : ""}`;
 }
 
