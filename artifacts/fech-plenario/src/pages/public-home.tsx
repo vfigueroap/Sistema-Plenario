@@ -551,9 +551,17 @@ const CARGO: Record<EstamentoKey, string> = {
   cee: "Centro de Estudiantes", otro: "Interviniente externo",
 };
 
+function nombreCompleto(name: string, e: EstamentoKey): string {
+  if (e !== "cee") return name;
+  const m = /^CEs+(?:des+)?(.+)$/i.exec(name.trim());
+  if (!m) return name;
+  return /^Facultad/i.test(m[1]) ? `Centro de Estudiantes ${m[1]}` : `Centro de Estudiantes de ${m[1]}`;
+}
+
 function cargoDe(e: EstamentoKey, collective: boolean, faculty: string | null | undefined): string {
-  const espacio = faculty ? ` de ${faculty}` : "";
-  return collective ? `Palabra colectiva de consejerías${espacio}` : `${CARGO[e]}${espacio}`;
+  if (collective) return `Palabra colectiva de consejerías${faculty ? ` de ${faculty}` : ""}`;
+  if (e === "cee") return faculty ? `Centro de Estudiantes · sigla ${faculty}` : CARGO.cee;
+  return `${CARGO[e]}${faculty ? ` de ${faculty}` : ""}`;
 }
 
 type SpeakerRow = {
@@ -654,7 +662,7 @@ function SpeakersTable({ speakers }: { speakers: PublicSpeaker[] }) {
                 <td className="px-3 py-1.5">
                   <span className="flex items-center gap-2">
                     <ShapeMark estamento={e} size={10} />
-                    <span className="font-medium">{sp.name}</span>
+                    <span className="font-medium">{nombreCompleto(sp.name, e)}</span>
                     {sp.collective && (
                       <span className="border border-teal-300 bg-teal-50 px-1.5 text-[10px] font-bold text-teal-700">
                         COLECTIVA
@@ -1394,7 +1402,7 @@ export default function PublicHome() {
                     {centros.length > 0 && (
                       <Desplegable titulo={<Titulo k="cee" />} cuenta={centros.length}
                         color={ESTAMENTO.cee.hex}>
-                        <PorCampus personas={centros} color={ESTAMENTO.cee.hex}
+                        <PorCampus personas={centros.map((m) => ({ ...m, name: nombreCompleto(m.name, "cee") }))} color={ESTAMENTO.cee.hex}
                           nombreUnidad={nombreCentro} />
                       </Desplegable>
                     )}
@@ -1647,7 +1655,7 @@ export default function PublicHome() {
                               <td className="px-3 py-2">
                                 <div className="flex items-center gap-2">
                                   <ShapeMark estamento={s.estamento} size={10} />
-                                  <span className="font-medium">{s.name}</span>
+                                  <span className="font-medium">{nombreCompleto(s.name, s.estamento)}</span>
                                   {s.collective && (
                                     <span className="border border-teal-300 bg-teal-50 px-1.5 text-[10px] font-bold text-teal-700">
                                       COLECTIVA
