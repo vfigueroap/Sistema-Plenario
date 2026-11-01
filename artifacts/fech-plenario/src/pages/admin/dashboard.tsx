@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { useToast } from "@/hooks/use-toast";
 import { useLobbyLive } from "@/hooks/use-lobby-live";
+import { ActasEnLoteDialog } from "@/components/actas-en-lote-dialog";
 import { MapPin, Clock, ArrowRight, Plus, X, FileCheck2, Video, Radio } from "lucide-react";
 
 type Fase = "viva" | "futura" | "cerrada";
@@ -135,9 +136,12 @@ export default function AdminDashboard() {
               Entra a cualquier sesión para editarla y conducirla.
             </p>
           </div>
-          <Button onClick={() => setFormOpen((v) => !v)}>
-            {formOpen ? <><X className="mr-2 h-4 w-4" /> Cancelar</> : <><Plus className="mr-2 h-4 w-4" /> Nueva sesión</>}
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <ActasEnLoteDialog sessions={sessions ?? []} />
+            <Button onClick={() => setFormOpen((v) => !v)}>
+              {formOpen ? <><X className="mr-2 h-4 w-4" /> Cancelar</> : <><Plus className="mr-2 h-4 w-4" /> Nueva sesión</>}
+            </Button>
+          </div>
         </div>
 
         {formOpen && (
