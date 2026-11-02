@@ -17,6 +17,7 @@ const { db, query } = vi.hoisted(() => {
     select: vi.fn(() => query),
     insert: vi.fn(() => query),
     update: vi.fn(() => query),
+    execute: vi.fn(),
   } };
 });
 vi.mock("@workspace/db", () => ({

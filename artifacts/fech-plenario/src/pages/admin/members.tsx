@@ -430,7 +430,11 @@ function ResetPasswordDialog({ memberId, memberName }: { memberId: number, membe
         setAplicada(nueva);
         setPassword("");
       },
-      onError: () => toast({ title: "Error al restablecer contraseña", variant: "destructive" })
+      onError: (error) => toast({
+        title: "Error al restablecer contraseña",
+        description: (error as { data?: { error?: string } }).data?.error,
+        variant: "destructive",
+      })
     });
   };
 

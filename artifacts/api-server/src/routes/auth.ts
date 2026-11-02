@@ -26,8 +26,8 @@ declare module "express-session" {
 const router: IRouter = Router();
 
 router.post("/auth/login", async (req, res): Promise<void> => {
-  const { username, password } = req.body;
-  if (!username || !password) {
+  const { username, password } = req.body ?? {};
+  if (typeof username !== "string" || typeof password !== "string" || !username || !password || username.length > 200 || password.length > 1024) {
     res.status(400).json({ error: "Usuario y contraseña requeridos" });
     return;
   }

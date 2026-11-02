@@ -5,6 +5,8 @@ import { db, usersTable, attendanceTable, plenariasTable } from "@workspace/db";
 import { requireAuth, requireAdmin } from "../middlewares/auth";
 import { disconnectUser, evictUserFromSession, emitSessionEvent, emitUserEvent } from "../lib/realtime";
 import { rateLimitClear } from "../lib/rate-limit";
+import { validatePassword } from "../lib/password-policy";
+import { purgeUserSessions } from "../lib/session-purge";
 
 const router: IRouter = Router();
 
@@ -41,8 +43,9 @@ router.post("/members", requireAdmin, async (req, res): Promise<void> => {
     res.status(400).json({ error: "El nombre es obligatorio" });
     return;
   }
-  if (typeof password !== "string" || password === "") {
-    res.status(400).json({ error: "La contraseña es obligatoria" });
+  const passwordError = validatePassword(password);
+  if (passwordError) {
+    res.status(400).json({ error: passwordError });
     return;
   }
   if (rol !== undefined && rol !== "admin" && rol !== "miembro") {
@@ -153,9 +156,14 @@ router.patch("/members/me/email", requireAuth, async (req, res): Promise<void> =
 });
 
 router.patch("/members/me/password", requireAuth, async (req, res): Promise<void> => {
-  const { currentPassword, newPassword } = req.body;
-  if (!currentPassword || !newPassword) {
+  const { currentPassword, newPassword } = req.body ?? {};
+  if (typeof currentPassword !== "string" || currentPassword === "" || typeof newPassword !== "string") {
     res.status(400).json({ error: "Se requieren contraseña actual y nueva" });
+    return;
+  }
+  const newPasswordError = validatePassword(newPassword, currentPassword);
+  if (newPasswordError) {
+    res.status(400).json({ error: newPasswordError });
     return;
   }
 
@@ -176,6 +184,7 @@ router.patch("/members/me/password", requireAuth, async (req, res): Promise<void
     .update(usersTable)
     .set({ password: hashed, mustChangePassword: false })
     .where(eq(usersTable.id, user.id));
+  await purgeUserSessions(user.id, req.sessionID);
   res.json({ ok: true });
 });
 
@@ -390,9 +399,10 @@ router.patch("/members/:id/password", requireAdmin, async (req, res): Promise<vo
     return;
   }
 
-  const { newPassword } = req.body;
-  if (!newPassword) {
-    res.status(400).json({ error: "Se requiere la nueva contraseña" });
+  const { newPassword } = req.body ?? {};
+  const resetError = validatePassword(newPassword);
+  if (resetError) {
+    res.status(400).json({ error: resetError });
     return;
   }
 
@@ -407,6 +417,8 @@ router.patch("/members/:id/password", requireAdmin, async (req, res): Promise<vo
     res.status(404).json({ error: "Miembro no encontrado" });
     return;
   }
+
+  await purgeUserSessions(updated.id, updated.id === req.session.userId ? req.sessionID : undefined);
 
   const institutionId = process.env.INSTITUTION_ID ?? "00000000-0000-4000-8000-000000000001";
   rateLimitClear(`login:user:${institutionId}:${String(updated.username).trim().toLowerCase()}`);

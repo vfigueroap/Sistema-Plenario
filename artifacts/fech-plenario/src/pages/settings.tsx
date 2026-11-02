@@ -36,8 +36,9 @@ export default function Settings() {
         queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
         if (me?.mustChangePassword) setLocation(me.rol === "admin" ? "/admin" : "/member");
       },
-      onError: () => {
-        toast({ title: "Error", description: "Verifica tu contraseña actual e intenta de nuevo.", variant: "destructive" });
+      onError: (error) => {
+        const detalle = (error as { data?: { error?: string } }).data?.error;
+        toast({ title: "Error", description: detalle ?? "Verifica tu contraseña actual e intenta de nuevo.", variant: "destructive" });
       }
     });
   };

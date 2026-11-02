@@ -81,7 +81,7 @@ describe("POST /members (create member)", () => {
   it("rejects an unauthenticated request with 401", async () => {
     const res = await request(makeApp(membersRouter, fakeSession()))
       .post("/api/members")
-      .send({ username: newUsername, displayName: "New", password: "1234" });
+      .send({ username: newUsername, displayName: "New", password: "Clave-Inicial-2026" });
     expect(res.status).toBe(401);
   });
 
@@ -89,7 +89,7 @@ describe("POST /members (create member)", () => {
     const app = makeApp(membersRouter, fakeSession({ userId: existingMemberId, rol: "miembro" }));
     const res = await request(app)
       .post("/api/members")
-      .send({ username: newUsername, displayName: "New", password: "1234" });
+      .send({ username: newUsername, displayName: "New", password: "Clave-Inicial-2026" });
     expect(res.status).toBe(403);
   });
 
@@ -103,7 +103,7 @@ describe("POST /members (create member)", () => {
     const app = makeApp(membersRouter, fakeSession({ userId: adminId, rol: "admin" }));
     const res = await request(app)
       .post("/api/members")
-      .send({ username: newUsername, displayName: "New Member", password: "1234", group: "CEE", faculty: "FAU", votingWeight: 1.5 });
+      .send({ username: newUsername, displayName: "New Member", password: "Clave-Inicial-2026", group: "CEE", faculty: "FAU", votingWeight: 1.5 });
 
     expect(res.status).toBe(201);
     expect(res.body.username).toBe(newUsername);
@@ -113,8 +113,8 @@ describe("POST /members (create member)", () => {
     const [row] = await db.select().from(usersTable).where(eq(usersTable.username, newUsername));
     expect(row).toBeDefined();
     // Password is hashed, and the plaintext is stored for admin visibility.
-    expect(row.password).not.toBe("1234");
-    expect(await bcrypt.compare("1234", row.password)).toBe(true);
+    expect(row.password).not.toBe("Clave-Inicial-2026");
+    expect(await bcrypt.compare("Clave-Inicial-2026", row.password)).toBe(true);
     expect(row).not.toHaveProperty("plainPassword");
   });
 
@@ -122,7 +122,7 @@ describe("POST /members (create member)", () => {
     const app = makeApp(membersRouter, fakeSession({ userId: adminId, rol: "admin" }));
     const res = await request(app)
       .post("/api/members")
-      .send({ username: existingUsername.toUpperCase(), displayName: "Dup", password: "1234" });
+      .send({ username: existingUsername.toUpperCase(), displayName: "Dup", password: "Clave-Inicial-2026" });
     expect(res.status).toBe(409);
   });
 });
