@@ -8,6 +8,7 @@ import { eq } from "drizzle-orm";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { createAllowedOrigin, httpUrlOrigin } from "./lib/allowed-origin";
+import { pulseHandler } from "./routes/pulse";
 
 const app: Express = express();
 
@@ -67,6 +68,15 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+const testInstitutionId = "00000000-0000-4000-8000-000000000001";
+const institutionId = process.env.INSTITUTION_ID ?? (isProduction ? "" : testInstitutionId);
+if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(institutionId)) {
+  logger.error("INSTITUTION_ID must be a valid UUID");
+  process.exit(1);
+}
+
+app.get("/api/public/pulse", pulseHandler(institutionId));
+
 const PgSession = connectPgSimple(session);
 
 const sessionSecret = process.env.SESSION_SECRET;
@@ -82,6 +92,7 @@ export const sessionMiddleware: RequestHandler = session({
     pool: sessionPool,
     tableName: "session",
     createTableIfMissing: !isProduction,
+    disableTouch: true,
   }),
   secret: sessionSecret ?? "dev-secret-not-for-production",
   resave: false,
@@ -96,18 +107,32 @@ export const sessionMiddleware: RequestHandler = session({
 
 app.use(sessionMiddleware);
 
-const testInstitutionId = "00000000-0000-4000-8000-000000000001";
-const institutionId = process.env.INSTITUTION_ID ?? (isProduction ? "" : testInstitutionId);
-if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(institutionId)) {
-  logger.error("INSTITUTION_ID must be a valid UUID");
-  process.exit(1);
-}
-
 const isAllowedBeforePasswordChange = (method: string, path: string): boolean =>
   path.startsWith("/api/public/") ||
   path === "/api/auth/me" ||
   path === "/api/auth/logout" ||
   (method === "PATCH" && path === "/api/members/me/password");
+
+type CurrentUser = { rol: typeof usersTable.rol._.data; active: boolean; mustChangePassword: boolean };
+const CURRENT_USER_TTL_MS = 2000;
+const currentUserCache = new Map<number, { at: number; value: CurrentUser }>();
+
+async function loadCurrentUser(userId: number, allowCache: boolean): Promise<CurrentUser | undefined> {
+  const hit = currentUserCache.get(userId);
+  if (allowCache && hit && Date.now() - hit.at < CURRENT_USER_TTL_MS) return hit.value;
+  const [row] = await db.select({
+    rol: usersTable.rol,
+    active: usersTable.active,
+    mustChangePassword: usersTable.mustChangePassword,
+  }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+  if (!row) {
+    currentUserCache.delete(userId);
+    return undefined;
+  }
+  if (currentUserCache.size > 2000) currentUserCache.clear();
+  currentUserCache.set(userId, { at: Date.now(), value: row });
+  return row;
+}
 
 app.use((req, res, next) => {
   if (req.path === "/api/healthz") return next();
@@ -118,11 +143,7 @@ app.use((req, res, next) => {
   }
   void withInstitutionDb(institutionId, async () => {
     if (req.session.userId) {
-      const [currentUser] = await db.select({
-        rol: usersTable.rol,
-        active: usersTable.active,
-        mustChangePassword: usersTable.mustChangePassword,
-      }).from(usersTable).where(eq(usersTable.id, req.session.userId)).limit(1);
+      const currentUser = await loadCurrentUser(req.session.userId, req.method === "GET");
       if (!currentUser) {
         req.session.destroy(() => {});
         res.status(401).json({ error: "Usuario no encontrado" });
@@ -145,7 +166,7 @@ app.use((req, res, next) => {
     });
   }).catch((error) => {
     req.log.error({ error }, "Institution request failed");
-    if (!res.headersSent) res.status(500).json({ error: "Error interno" });
+    if (!res.headersSent && !res.destroyed) res.status(500).json({ error: "Error interno" });
   });
 });
 

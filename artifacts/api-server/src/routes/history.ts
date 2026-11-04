@@ -502,6 +502,7 @@ router.get("/history/sessions", requireAdmin, async (_req, res): Promise<void> =
 // Public (no auth): closed sessions with aggregate attendance + weighted results.
 // Personal/per-member vote data is intentionally excluded.
 router.get("/public/history", async (_req, res): Promise<void> => {
+  res.setHeader("Cache-Control", "public, s-maxage=5, stale-while-revalidate=30");
   const data = await loadHistoryData();
 
   const topicsBySession = topicsBySessionMap(data.topics);
@@ -680,6 +681,7 @@ router.get("/public/sessions/:id/acta", async (req, res): Promise<void> => {
 
 // Public transparency: list of all active members (name, group, faculty only — no credentials)
 router.get("/public/members", async (_req, res): Promise<void> => {
+  res.setHeader("Cache-Control", "public, s-maxage=30, stale-while-revalidate=120");
   const members = await db
     .select({
       name: usersTable.displayName,

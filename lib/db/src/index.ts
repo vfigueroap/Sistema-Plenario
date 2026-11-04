@@ -70,6 +70,9 @@ export const db = new Proxy(baseDb, {
   },
 }) as typeof baseDb;
 
+const INSTITUTION_CHECK_TTL_MS = 30000;
+const institutionChecked = new Map<string, number>();
+
 /** The caller must authorize this institution before opening its DB scope.
  * All helpers in the callback must use tx, not the legacy db/pool exports.
  * Emissions and external I/O belong AFTER this promise commits successfully.
@@ -82,12 +85,16 @@ export async function withInstitutionDb<T>(
     throw new Error("A valid institutionId is required");
   }
   return baseDb.transaction(async (tx) => {
-    // The login needs membership in this NOLOGIN/NOBYPASSRLS role. The
-    // migration owner is a separate credential; never use it in the server.
-    await tx.execute(sql`set local role plenario_runtime`);
-    await tx.execute(sql`select set_config('app.institution_id', ${institutionId}, true)`);
-    const result = await tx.execute(sql`select id from institutions where id = ${institutionId}::uuid and active`);
-    if (result.rows.length !== 1) throw new Error("Institution is unavailable");
+    await tx.execute(sql`select set_config('role', 'plenario_runtime', true), set_config('app.institution_id', ${institutionId}, true)`);
+    const checkedAt = institutionChecked.get(institutionId);
+    if (checkedAt === undefined || Date.now() - checkedAt > INSTITUTION_CHECK_TTL_MS) {
+      const result = await tx.execute(sql`select id from institutions where id = ${institutionId}::uuid and active`);
+      if (result.rows.length !== 1) {
+        institutionChecked.delete(institutionId);
+        throw new Error("Institution is unavailable");
+      }
+      institutionChecked.set(institutionId, Date.now());
+    }
     return institutionDb.run(tx, () => work(tx));
   });
 }

@@ -3,6 +3,7 @@
   "framework": null,
   "buildCommand": "pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/fech-plenario run build",
   "outputDirectory": "artifacts/fech-plenario/dist/public",
+  "regions": ["gru1"],
   "functions": {
     "api/index.ts": { "maxDuration": 30 }
   },
@@ -19,6 +20,9 @@
       },
       "continue": true
     },
+    { "src": "/api/public/pulse", "dest": "/api/index", "headers": { "Cache-Control": "public, s-maxage=2, stale-while-revalidate=10" } },
+    { "src": "/api/public/history", "dest": "/api/index", "headers": { "Cache-Control": "public, s-maxage=5, stale-while-revalidate=30" } },
+    { "src": "/api/public/members", "dest": "/api/index", "headers": { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=120" } },
     { "src": "/api(?:/.*)?", "dest": "/api/index", "headers": { "Cache-Control": "private, no-store" } },
     { "handle": "filesystem" },
     { "src": "/.*", "dest": "/index.html" }
