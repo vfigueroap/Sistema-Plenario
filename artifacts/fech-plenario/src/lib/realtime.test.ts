@@ -1,5 +1,9 @@
 import { QueryClient, QueryObserver } from "@tanstack/react-query";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+beforeEach(() => {
+  window.history.pushState({}, "", "/admin/sessions/1");
+});
 
 afterEach(() => {
   vi.useRealTimers();
@@ -146,6 +150,74 @@ describe("REST realtime polling", () => {
     stop();
     unobserve();
     unobserveDisabled();
+    client.clear();
+  });
+  it.each([["/member", false], ["/admin/sessions/1", true]])("reacts to attendance and vote changes only on admin screens (%s)", async (path, reacts) => {
+    window.history.pushState({}, "", path);
+    vi.useFakeTimers();
+    vi.spyOn(Math, "random").mockReturnValue(0);
+    let pulse = { s: "1", a: "1", x: "1", t: "1" };
+    stubPulse(() => pulse);
+    const { subscribeRealtimePolling } = await import("./realtime");
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const fetchAttendance = vi.fn(async () => 1);
+    const fetchTopics = vi.fn(async () => 1);
+    const attendance = new QueryObserver(client, { queryKey: ["/api/sessions/1/attendance"], queryFn: fetchAttendance });
+    const topics = new QueryObserver(client, { queryKey: ["/api/sessions/1/topics"], queryFn: fetchTopics });
+    const unobserveAttendance = attendance.subscribe(() => {});
+    const unobserveTopics = topics.subscribe(() => {});
+    await attendance.refetch();
+    await topics.refetch();
+    const stop = subscribeRealtimePolling(client);
+    await vi.advanceTimersByTimeAsync(3000);
+    const attendanceCalls = fetchAttendance.mock.calls.length;
+    const topicCalls = fetchTopics.mock.calls.length;
+
+    pulse = { ...pulse, a: "2" };
+    await vi.advanceTimersByTimeAsync(3000);
+    expect(fetchAttendance.mock.calls.length).toBe(attendanceCalls + (reacts ? 1 : 0));
+
+    pulse = { ...pulse, t: "2" };
+    await vi.advanceTimersByTimeAsync(3000);
+    expect(fetchTopics.mock.calls.length).toBe(topicCalls + 1);
+    stop();
+    unobserveAttendance();
+    unobserveTopics();
+    client.clear();
+  });
+
+  it("refreshes the public page every ninety seconds and pauses on hidden tabs", async () => {
+    vi.useFakeTimers();
+    vi.spyOn(Math, "random").mockReturnValue(0);
+    const { subscribePublicRefresh } = await import("./realtime");
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const fetchHistory = vi.fn(async () => 1);
+    const observer = new QueryObserver(client, { queryKey: ["/api/public/history"], queryFn: fetchHistory });
+    const unobserve = observer.subscribe(() => {});
+    const fetchOther = vi.fn(async () => 1);
+    const other = new QueryObserver(client, { queryKey: ["/api/sessions"], queryFn: fetchOther });
+    const unobserveOther = other.subscribe(() => {});
+    await observer.refetch();
+    await other.refetch();
+    const otherBaseline = fetchOther.mock.calls.length;
+    const baseline = fetchHistory.mock.calls.length;
+    const stop = subscribePublicRefresh(client);
+    await vi.advanceTimersByTimeAsync(89000);
+    expect(fetchHistory.mock.calls.length).toBe(baseline);
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(fetchHistory.mock.calls.length).toBe(baseline + 1);
+    expect(fetchOther.mock.calls.length).toBe(otherBaseline);
+    const visibility = vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
+    await vi.advanceTimersByTimeAsync(200000);
+    expect(fetchHistory.mock.calls.length).toBe(baseline + 1);
+    visibility.mockReturnValue("visible");
+    await vi.advanceTimersByTimeAsync(91000);
+    expect(fetchHistory.mock.calls.length).toBe(baseline + 2);
+    stop();
+    await vi.advanceTimersByTimeAsync(200000);
+    expect(fetchHistory.mock.calls.length).toBe(baseline + 2);
+    unobserve();
+    unobserveOther();
     client.clear();
   });
 });

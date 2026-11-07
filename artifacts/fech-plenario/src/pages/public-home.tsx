@@ -1,5 +1,7 @@
 import { useState, useRef, useMemo, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useQueryClient } from "@tanstack/react-query";
+import { subscribePublicRefresh } from "@/lib/realtime";
 import {
   useGetPublicHistory,
   getGetPublicHistoryQueryKey,
@@ -1154,6 +1156,9 @@ export default function PublicHome() {
   const [attSearch, setAttSearch] = useState("");
   const [speakSearch, setSpeakSearch] = useState("");
   const [speakSort, setSpeakSort] = useState<"total" | "promedio">("promedio");
+
+  const queryClient = useQueryClient();
+  useEffect(() => subscribePublicRefresh(queryClient), [queryClient]);
 
   const { data: history, isLoading: historyLoading } = useGetPublicHistory({
     query: { queryKey: getGetPublicHistoryQueryKey() },
