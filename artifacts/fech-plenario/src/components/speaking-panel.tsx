@@ -1,3 +1,4 @@
+import { liveQueryInterval } from "@/lib/realtime";
 import { useMemo, useState } from "react";
 import {
   useListSpeakingTurns,
@@ -76,7 +77,7 @@ export function SpeakingPanel({
       enabled: !!sessionId,
       // Realtime `speaking:changed` drives instant updates; this poll is only a
       // fallback for when the socket is down (relaxed from 5s to cut load at scale).
-      refetchInterval: 30000,
+      refetchInterval: liveQueryInterval,
       queryKey: getListSpeakingTurnsQueryKey(sessionId),
     },
   });

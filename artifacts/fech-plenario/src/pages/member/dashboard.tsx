@@ -1,3 +1,4 @@
+import { liveQueryInterval } from "@/lib/realtime";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useGetMe, useListSessions, useMarkAttendance, useListTopics, useListAttendance, useListAgendaPoints, useCheckOutAttendance, useRejoinAttendance, getGetMeQueryKey, getListTopicsQueryKey, getListSessionsQueryKey, getListAttendanceQueryKey, getListAgendaPointsQueryKey, type AttendanceInputModality } from "@workspace/api-client-react";
@@ -60,8 +61,8 @@ export default function MemberDashboard() {
   const sessionId = openSession?.id || 0;
   const { data: topics } = useListTopics(sessionId, { query: { enabled: !!openSession, queryKey: getListTopicsQueryKey(sessionId) } });
   // Polling kept as a fallback at a larger interval; Socket.io drives instant updates.
-  const { data: attendance } = useListAttendance(sessionId, { query: { enabled: !!openSession, refetchInterval: 30000, queryKey: getListAttendanceQueryKey(sessionId) } });
-  const { data: agenda } = useListAgendaPoints(sessionId, { query: { enabled: !!openSession, refetchInterval: 30000, queryKey: getListAgendaPointsQueryKey(sessionId) } });
+  const { data: attendance } = useListAttendance(sessionId, { query: { enabled: !!openSession, refetchInterval: liveQueryInterval, queryKey: getListAttendanceQueryKey(sessionId) } });
+  const { data: agenda } = useListAgendaPoints(sessionId, { query: { enabled: !!openSession, refetchInterval: liveQueryInterval, queryKey: getListAgendaPointsQueryKey(sessionId) } });
   const checkOut = useCheckOutAttendance();
   const rejoin = useRejoinAttendance();
 

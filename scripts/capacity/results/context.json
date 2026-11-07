@@ -1,0 +1,36 @@
+{
+  "baselineCommit": "0cbe3d5",
+  "institutionId": "00000000-0000-4000-8000-000000000001",
+  "database": "capacity_test",
+  "maxDatabaseConnections": 60,
+  "sharedBuffers": "224MB",
+  "passwordHashCost": 10,
+  "fixture": {
+    "members": 110,
+    "closedSessions": 17,
+    "motionsPerSession": 4,
+    "syntheticOnly": true,
+    "additionalSessionsCreatedByRuns": true
+  },
+  "measurements": {
+    "baseline-failed.json": "Código original. La prueba se interrumpió por timeouts. Después se observaron cinco conexiones idle in transaction, con una transacción de 78 segundos.",
+    "single-instance-intermediate.json": "Versión intermedia con la corrección de ingreso y caché pública, antes de compactar la escritura de turnos. Una instancia sin latencia artificial durante 180 segundos.",
+    "cluster-final.json": "Versión final. Cuatro instancias, cinco conexiones de aplicación y tres de sesiones por instancia. Retardo artificial de 5 ms por dirección y bloque de datos TCP hacia Postgres. Ráfagas y luego 90 segundos de carga mixta. Sin CDN ni compresión HTTP."
+  },
+  "validation": {
+    "serverTestsPassed": 264,
+    "frontendTestsPassed": 25,
+    "typecheck": true,
+    "apiBuild": true,
+    "frontendBuild": true,
+    "remainingDatabaseConnectionsAfterFinalRun": 0
+  },
+  "limits": [
+    "Postgres local no reproduce los límites de CPU ni la infraestructura compartida de Supabase Nano.",
+    "Cuatro procesos locales no reproducen los arranques en frío, el escalado, las cuotas ni el tiempo de ejecución de Vercel.",
+    "Los visitantes se simulan con solicitudes HTTP. No se ejecutaron 310 navegadores completos.",
+    "Las comprobaciones de SQL cuentan todo el tráfico del servidor local durante cada fase, incluidas las transacciones y la gestión de sesiones.",
+    "La prueba final no equivale a un pleno real de varias horas. No certifica producción.",
+    "Los archivos JSON no contienen datos ni credenciales de producción."
+  ]
+}

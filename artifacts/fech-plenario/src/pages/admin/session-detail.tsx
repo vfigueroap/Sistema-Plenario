@@ -1,3 +1,4 @@
+import { liveQueryInterval } from "@/lib/realtime";
 import { useRef, useState } from "react";
 import { useLocation, useParams } from "wouter";
 import {
@@ -102,10 +103,10 @@ export default function AdminSessionDetail() {
   const { toast } = useToast();
 
   // Polling kept as a fallback at a larger interval; Socket.io drives instant updates.
-  const { data: session, isLoading: sessionLoading } = useGetSession(id, { query: { enabled: !!id, refetchInterval: 30000, queryKey: getGetSessionQueryKey(id) } });
-  const { data: attendance } = useListAttendance(id, { query: { enabled: !!id, refetchInterval: 30000, queryKey: getListAttendanceQueryKey(id) } });
-  const { data: topics } = useListTopics(id, { query: { enabled: !!id, refetchInterval: 30000, queryKey: getListTopicsQueryKey(id) } });
-  const { data: agenda } = useListAgendaPoints(id, { query: { enabled: !!id, refetchInterval: 30000, queryKey: getListAgendaPointsQueryKey(id) } });
+  const { data: session, isLoading: sessionLoading } = useGetSession(id, { query: { enabled: !!id, refetchInterval: liveQueryInterval, queryKey: getGetSessionQueryKey(id) } });
+  const { data: attendance } = useListAttendance(id, { query: { enabled: !!id, refetchInterval: liveQueryInterval, queryKey: getListAttendanceQueryKey(id) } });
+  const { data: topics } = useListTopics(id, { query: { enabled: !!id, refetchInterval: liveQueryInterval, queryKey: getListTopicsQueryKey(id) } });
+  const { data: agenda } = useListAgendaPoints(id, { query: { enabled: !!id, refetchInterval: liveQueryInterval, queryKey: getListAgendaPointsQueryKey(id) } });
   const { data: members } = useListMembers({ query: { queryKey: getListMembersQueryKey() } });
 
   const { connected: liveConnected } = useSessionLive(id || undefined);

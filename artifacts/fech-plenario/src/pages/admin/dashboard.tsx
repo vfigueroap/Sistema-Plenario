@@ -1,3 +1,4 @@
+import { liveQueryInterval } from "@/lib/realtime";
 import { useState } from "react";
 import { Link } from "wouter";
 import {
@@ -37,7 +38,7 @@ const ORDEN: Record<Fase, number> = { viva: 0, futura: 1, cerrada: 2 };
 
 export default function AdminDashboard() {
   const { data: sessions, isLoading } = useListSessions({
-    query: { refetchInterval: 30000, queryKey: getListSessionsQueryKey() },
+    query: { refetchInterval: liveQueryInterval, queryKey: getListSessionsQueryKey() },
   });
   const createSession = useCreateSession();
   const queryClient = useQueryClient();

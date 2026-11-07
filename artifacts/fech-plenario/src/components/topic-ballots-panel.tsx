@@ -1,3 +1,4 @@
+import { liveQueryInterval } from "@/lib/realtime";
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -99,7 +100,7 @@ export function TopicBallotsPanel({
       // Realtime drives instant updates while the socket is connected; the 30s
       // poll is only the fallback when it is not (avoids ~200 clients polling
       // needlessly while push updates already cover them).
-      refetchInterval: live && realtime === "connected" ? false : 30000,
+      refetchInterval: live && realtime === "connected" ? false : liveQueryInterval,
       queryKey: getGetTopicBallotsQueryKey(topicId),
     },
   });

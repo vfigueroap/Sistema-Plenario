@@ -21,6 +21,28 @@ function stubPulse(next: () => Record<string, string>) {
 }
 
 describe("REST realtime polling", () => {
+  it("recupera una moción abierta antes de recibir el primer pulso",async () => {
+    vi.useFakeTimers();
+    vi.spyOn(Math,"random").mockReturnValue(0);
+    stubPulse(() => ({t:"abierto"}));
+    const {subscribeRealtimePolling}=await import("./realtime");
+    const client=new QueryClient({defaultOptions:{queries:{retry:false}}});
+    const query=new QueryObserver(client,{queryKey:["/api/sessions/1/topics"],initialData:"cerrado",staleTime:Infinity,queryFn:async () => "abierto"});
+    const unobserve=query.subscribe(() => {});
+    const stop=subscribeRealtimePolling(client);
+    await vi.advanceTimersByTimeAsync(4000);
+    expect(client.getQueryData(["/api/sessions/1/topics"])).toBe("abierto");
+    stop();
+    unobserve();
+    client.clear();
+  });
+  it("centraliza los refrescos de producción y conserva el respaldo para sockets", async () => {
+    vi.stubEnv("VITE_REALTIME_TRANSPORT", "polling");
+    expect((await import("./realtime")).liveQueryInterval).toBe(false);
+    vi.resetModules();
+    vi.stubEnv("VITE_REALTIME_TRANSPORT", "socket");
+    expect((await import("./realtime")).liveQueryInterval).toBe(30000);
+  });
   it("does not open a socket in polling mode", async () => {
     vi.stubEnv("VITE_REALTIME_TRANSPORT", "polling");
     const { getSocket } = await import("./realtime");
@@ -63,6 +85,7 @@ describe("REST realtime polling", () => {
     await client.fetchQuery({ queryKey: ["inactive"], queryFn: inactive });
     const stop1 = subscribeRealtimePolling(client);
     const stop2 = subscribeRealtimePolling(client);
+    await vi.advanceTimersByTimeAsync(3000);
     const attendanceCalls = fetchAttendance.mock.calls.length;
     const agendaCalls = fetchAgenda.mock.calls.length;
 
@@ -114,6 +137,7 @@ describe("REST realtime polling", () => {
     const unobserve = observer.subscribe(() => {});
     await observer.refetch();
     const stop = subscribeRealtimePolling(client);
+    await vi.advanceTimersByTimeAsync(3000);
     const baseline = fetchAttendance.mock.calls.length;
     await vi.advanceTimersByTimeAsync(54000);
     expect(fetchAttendance.mock.calls.length).toBe(baseline);

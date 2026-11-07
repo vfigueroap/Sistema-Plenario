@@ -1,3 +1,4 @@
+import { liveQueryInterval } from "@/lib/realtime";
 import { useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { useGetTopicResults, useCastVote, getGetTopicResultsQueryKey, type VoteAllocation } from "@workspace/api-client-react";
@@ -25,7 +26,7 @@ export default function MemberVote() {
       // Fallback poll while live sync catches the instant path. Kept modest so a
       // full room of voters doesn't stampede the API — realtime does the heavy
       // lifting; this only backstops a dropped socket.
-      refetchInterval: 30000,
+      refetchInterval: liveQueryInterval,
     },
   });
   const castVote = useCastVote();

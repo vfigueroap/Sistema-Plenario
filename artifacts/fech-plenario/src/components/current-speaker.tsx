@@ -1,3 +1,4 @@
+import { liveQueryInterval } from "@/lib/realtime";
 import { useEffect, useMemo, useState } from "react";
 import {
   useListSpeakingTurns,
@@ -44,7 +45,7 @@ export function CurrentSpeaker({
   const { data: turns } = useListSpeakingTurns(sessionId, {
     query: {
       enabled: !!sessionId,
-      refetchInterval: 30000,
+      refetchInterval: liveQueryInterval,
       queryKey: getListSpeakingTurnsQueryKey(sessionId),
     },
   });

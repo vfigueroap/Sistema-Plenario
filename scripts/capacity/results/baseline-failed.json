@@ -1,0 +1,106 @@
+{
+  "createdAt": "2026-11-07T21:27:00.783Z",
+  "members": 110,
+  "visitors": 200,
+  "bcryptCost": 10,
+  "cdn": false,
+  "instances": 1,
+  "simulatedDatabaseRoundTripMs": 0,
+  "phases": [
+    {
+      "name": "ingreso y llegada pública",
+      "wallMs": 30233,
+      "sql": 3180,
+      "requests": 510,
+      "errors": 136,
+      "codes": {
+        "200": 374,
+        "-1": 136
+      },
+      "p50": 23630,
+      "p95": 30020,
+      "p99": 30022,
+      "max": 30023,
+      "failures": [
+        "TimeoutError: The operation was aborted due to timeout"
+      ],
+      "groups": {
+        "ingreso": {
+          "requests": 110,
+          "errors": 0,
+          "codes": {
+            "200": 110
+          },
+          "p50": 8287,
+          "p95": 14747,
+          "p99": 15341,
+          "max": 15342,
+          "failures": []
+        },
+        "publico": {
+          "requests": 400,
+          "errors": 136,
+          "codes": {
+            "200": 264,
+            "-1": 136
+          },
+          "p50": 26711,
+          "p95": 30021,
+          "p99": 30022,
+          "max": 30023,
+          "failures": [
+            "TimeoutError: The operation was aborted due to timeout"
+          ]
+        }
+      }
+    },
+    {
+      "name": "asistencia y público",
+      "wallMs": 30334,
+      "sql": 151,
+      "requests": 510,
+      "errors": 510,
+      "codes": {
+        "-1": 510
+      },
+      "p50": 30052,
+      "p95": 30067,
+      "p99": 30078,
+      "max": 30078,
+      "failures": [
+        "TimeoutError: The operation was aborted due to timeout"
+      ],
+      "groups": {
+        "asistencia": {
+          "requests": 110,
+          "errors": 110,
+          "codes": {
+            "-1": 110
+          },
+          "p50": 30013,
+          "p95": 30058,
+          "p99": 30058,
+          "max": 30058,
+          "failures": [
+            "TimeoutError: The operation was aborted due to timeout"
+          ]
+        },
+        "publico": {
+          "requests": 400,
+          "errors": 400,
+          "codes": {
+            "-1": 400
+          },
+          "p50": 30055,
+          "p95": 30067,
+          "p99": 30078,
+          "max": 30078,
+          "failures": [
+            "TimeoutError: The operation was aborted due to timeout"
+          ]
+        }
+      }
+    }
+  ],
+  "checks": {}
+}

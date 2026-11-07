@@ -2,6 +2,7 @@ import { io, type Socket } from "socket.io-client";
 import type { QueryClient } from "@tanstack/react-query";
 
 export const usesRealtimePolling = import.meta.env.VITE_REALTIME_TRANSPORT === "polling";
+export const liveQueryInterval = usesRealtimePolling ? false : 30000;
 
 const PULSE_URL = "/api/public/pulse";
 const SAFETY_REFRESH_MS = 60000;
@@ -14,7 +15,7 @@ type Pulse = { v: string; c: Record<string, string> };
 
 async function fetchPulse(): Promise<Pulse | null> {
   try {
-    const response = await fetch(PULSE_URL, { cache: "no-store" });
+    const response = await fetch(PULSE_URL, { signal: AbortSignal.timeout(10000) });
     if (!response.ok) return null;
     const body = (await response.json()) as { v?: unknown; c?: unknown };
     if (typeof body.v !== "string" || typeof body.c !== "object" || body.c === null) return null;
@@ -53,7 +54,7 @@ export function subscribeRealtimePolling(client: QueryClient): () => void {
       try {
         const pulse = await fetchPulse();
         const now = Date.now();
-        const full = force || now - lastFullRefresh >= safetyMs;
+        const full = force || (pulse !== null && last === null) || now - lastFullRefresh >= safetyMs;
         const changed = new Set<string>();
         if (pulse && last) {
           for (const [key, value] of Object.entries(pulse.c)) if (last.c[key] !== value) changed.add(key);

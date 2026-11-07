@@ -1,0 +1,327 @@
+{
+  "createdAt": "2026-11-07T21:22:40.955Z",
+  "members": 110,
+  "visitors": 200,
+  "bcryptCost": 10,
+  "cdn": false,
+  "phases": [
+    {
+      "name": "ingreso y llegada pública",
+      "wallMs": 9437,
+      "sql": 1228,
+      "requests": 510,
+      "errors": 0,
+      "codes": {
+        "200": 510
+      },
+      "p50": 7863,
+      "p95": 9310,
+      "p99": 9319,
+      "max": 9320,
+      "failures": [],
+      "groups": {
+        "ingreso": {
+          "requests": 110,
+          "errors": 0,
+          "codes": {
+            "200": 110
+          },
+          "p50": 9256,
+          "p95": 9319,
+          "p99": 9320,
+          "max": 9320,
+          "failures": []
+        },
+        "publico": {
+          "requests": 400,
+          "errors": 0,
+          "codes": {
+            "200": 400
+          },
+          "p50": 7657,
+          "p95": 8463,
+          "p99": 8526,
+          "max": 8537,
+          "failures": []
+        }
+      }
+    },
+    {
+      "name": "asistencia y público",
+      "wallMs": 1393,
+      "sql": 898,
+      "requests": 510,
+      "errors": 0,
+      "codes": {
+        "200": 510
+      },
+      "p50": 539,
+      "p95": 1275,
+      "p99": 1275,
+      "max": 1275,
+      "failures": [],
+      "groups": {
+        "asistencia": {
+          "requests": 110,
+          "errors": 0,
+          "codes": {
+            "200": 110
+          },
+          "p50": 1274,
+          "p95": 1275,
+          "p99": 1275,
+          "max": 1275,
+          "failures": []
+        },
+        "publico": {
+          "requests": 400,
+          "errors": 0,
+          "codes": {
+            "200": 400
+          },
+          "p50": 267,
+          "p95": 1168,
+          "p99": 1227,
+          "max": 1241,
+          "failures": []
+        }
+      }
+    },
+    {
+      "name": "voto y público",
+      "wallMs": 1414,
+      "sql": 1008,
+      "requests": 510,
+      "errors": 0,
+      "codes": {
+        "200": 510
+      },
+      "p50": 523,
+      "p95": 1297,
+      "p99": 1297,
+      "max": 1297,
+      "failures": [],
+      "groups": {
+        "voto": {
+          "requests": 110,
+          "errors": 0,
+          "codes": {
+            "200": 110
+          },
+          "p50": 1297,
+          "p95": 1297,
+          "p99": 1297,
+          "max": 1297,
+          "failures": []
+        },
+        "publico": {
+          "requests": 400,
+          "errors": 0,
+          "codes": {
+            "200": 400
+          },
+          "p50": 516,
+          "p95": 1070,
+          "p99": 1257,
+          "max": 1270,
+          "failures": []
+        }
+      }
+    },
+    {
+      "name": "palabra y público",
+      "wallMs": 1719,
+      "sql": 1338,
+      "requests": 510,
+      "errors": 0,
+      "codes": {
+        "200": 400,
+        "201": 110
+      },
+      "p50": 713,
+      "p95": 1471,
+      "p99": 1572,
+      "max": 1600,
+      "failures": [],
+      "groups": {
+        "palabra": {
+          "requests": 110,
+          "errors": 0,
+          "codes": {
+            "201": 110
+          },
+          "p50": 1322,
+          "p95": 1572,
+          "p99": 1595,
+          "max": 1600,
+          "failures": []
+        },
+        "publico": {
+          "requests": 400,
+          "errors": 0,
+          "codes": {
+            "200": 400
+          },
+          "p50": 505,
+          "p95": 999,
+          "p99": 1095,
+          "max": 1120,
+          "failures": []
+        }
+      }
+    },
+    {
+      "name": "paneles y público",
+      "wallMs": 2093,
+      "sql": 3778,
+      "requests": 1280,
+      "errors": 0,
+      "codes": {
+        "200": 1280
+      },
+      "p50": 963,
+      "p95": 1713,
+      "p99": 1864,
+      "max": 1907,
+      "failures": [],
+      "groups": {
+        "panel": {
+          "requests": 880,
+          "errors": 0,
+          "codes": {
+            "200": 880
+          },
+          "p50": 751,
+          "p95": 1119,
+          "p99": 1143,
+          "max": 1174,
+          "failures": []
+        },
+        "publico": {
+          "requests": 400,
+          "errors": 0,
+          "codes": {
+            "200": 400
+          },
+          "p50": 1171,
+          "p95": 1847,
+          "p99": 1896,
+          "max": 1907,
+          "failures": []
+        }
+      }
+    },
+    {
+      "name": "uso mixto 180s",
+      "wallMs": 184076,
+      "sql": 39780,
+      "requests": 13557,
+      "errors": 0,
+      "codes": {
+        "200": 13557
+      },
+      "p50": 98,
+      "p95": 939,
+      "p99": 1344,
+      "max": 1527,
+      "failures": [],
+      "groups": {
+        "publico": {
+          "requests": 800,
+          "errors": 0,
+          "codes": {
+            "200": 800
+          },
+          "p50": 324,
+          "p95": 962,
+          "p99": 1080,
+          "max": 1117,
+          "failures": []
+        },
+        "administrador": {
+          "requests": 288,
+          "errors": 0,
+          "codes": {
+            "200": 288
+          },
+          "p50": 27,
+          "p95": 666,
+          "p99": 726,
+          "max": 726,
+          "failures": []
+        },
+        "pulso": {
+          "requests": 5539,
+          "errors": 0,
+          "codes": {
+            "200": 5539
+          },
+          "p50": 1,
+          "p95": 81,
+          "p99": 536,
+          "max": 1527,
+          "failures": []
+        },
+        "panel": {
+          "requests": 5280,
+          "errors": 0,
+          "codes": {
+            "200": 5280
+          },
+          "p50": 376,
+          "p95": 1239,
+          "p99": 1418,
+          "max": 1481,
+          "failures": []
+        },
+        "voto sostenido": {
+          "requests": 550,
+          "errors": 0,
+          "codes": {
+            "200": 550
+          },
+          "p50": 155,
+          "p95": 332,
+          "p99": 371,
+          "max": 383,
+          "failures": []
+        },
+        "retiro": {
+          "requests": 550,
+          "errors": 0,
+          "codes": {
+            "200": 550
+          },
+          "p50": 139,
+          "p95": 286,
+          "p99": 332,
+          "max": 364,
+          "failures": []
+        },
+        "reingreso": {
+          "requests": 550,
+          "errors": 0,
+          "codes": {
+            "200": 550
+          },
+          "p50": 151,
+          "p95": 292,
+          "p99": 314,
+          "max": 317,
+          "failures": []
+        }
+      }
+    }
+  ],
+  "checks": {
+    "attendance": 110,
+    "ballots": 110,
+    "votes": 110,
+    "turns": 110,
+    "positions": 110,
+    "incorrect_weights": 0,
+    "duplicateVotesRejected": 20,
+    "additionalBallots": 550
+  },
+  "passed": true
+}

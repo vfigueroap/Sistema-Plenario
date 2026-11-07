@@ -1,3 +1,4 @@
+import { liveQueryInterval } from "@/lib/realtime";
 import { useGetTopicResults, getGetTopicResultsQueryKey } from "@workspace/api-client-react";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -16,7 +17,7 @@ export function TopicResultsView({ topicId }: { topicId: number }) {
   const { data: results, isLoading } = useGetTopicResults(topicId, {
     // Realtime `votes:changed` drives instant updates; this poll is only a
     // fallback for when the socket is down (relaxed from 5s to cut load at scale).
-    query: { refetchInterval: 30000, queryKey: getGetTopicResultsQueryKey(topicId) },
+    query: { refetchInterval: liveQueryInterval, queryKey: getGetTopicResultsQueryKey(topicId) },
   });
 
   if (isLoading) return <Spinner />;
