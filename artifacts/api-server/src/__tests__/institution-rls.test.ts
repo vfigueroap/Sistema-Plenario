@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { eq, sql } from "drizzle-orm";
-import { db, institutionsTable, usersTable, withInstitutionDb } from "@workspace/db";
+import { db, institutionsTable, usersTable, withInstitutionDb, resetInstitutionActiveCache } from "@workspace/db";
 
 const first = crypto.randomUUID();
 const second = crypto.randomUUID();
@@ -35,6 +35,7 @@ describe("institution RLS context", () => {
 
   it("rejects an inactive institution", async () => {
     await db.update(institutionsTable).set({ active: false }).where(eq(institutionsTable.id, second));
+    resetInstitutionActiveCache();
     await expect(withInstitutionDb(second, (tx) => tx.select().from(usersTable)))
       .rejects.toThrow("Institution is unavailable");
   });

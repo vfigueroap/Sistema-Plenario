@@ -59,174 +59,116 @@ router.post("/topics/:topicId/vote", requireAuth, async (req, res): Promise<void
 
   const userId = req.session.userId!;
 
-  const [topic] = await db.select().from(topicsTable).where(eq(topicsTable.id, topicId));
-  if (!topic) {
-    res.status(404).json({ error: "Tema no encontrado" });
-    return;
-  }
-  if (topic.status !== "abierto") {
-    res.status(400).json({ error: "La votación no está abierta" });
-    return;
-  }
+  type VoteOutcome =
+    | { ok: true; sessionId: number; isCandidate: boolean; option: string | null; weightAtVote: string }
+    | { ok: false; status: number; error: string };
 
-  const [session] = await db.select({ status: plenariasTable.status })
-    .from(plenariasTable).where(eq(plenariasTable.id, topic.sessionId));
-  if (!session || session.status !== "abierta") {
-    res.status(400).json({ error: "La sesión no está abierta" });
-    return;
-  }
+  const outcome = await db.transaction(async (tx): Promise<VoteOutcome> => {
+    const topicRows = await tx.execute(sql`
+      select t.session_id as "sessionId", t.status as "topicStatus", t.type, t.candidate_mode as "candidateMode",
+        t.weight_source as "weightSource", t.votes_per_voter as "votesPerVoter", s.status as "sessionStatus",
+        coalesce((select array_agg(e.estamento_name) from vote_topic_estamentos e where e.vote_topic_id = t.id), '{}') as estamentos
+      from vote_topics t
+      join plenarias s on s.id = t.session_id
+      where t.id = ${topicId}
+      for share of t, s
+    `);
+    const topic = topicRows.rows[0] as {
+      sessionId: number; topicStatus: string; type: string; candidateMode: string | null;
+      weightSource: string; votesPerVoter: number; sessionStatus: string; estamentos: string[];
+    } | undefined;
+    if (!topic) return { ok: false, status: 404, error: "Tema no encontrado" };
+    if (topic.topicStatus !== "abierto") return { ok: false, status: 400, error: "La votación no está abierta" };
+    if (topic.sessionStatus !== "abierta") return { ok: false, status: 400, error: "La sesión no está abierta" };
 
-  // Active attendance required (retired members cannot vote)
-  const [attendance] = await db
-    .select()
-    .from(attendanceTable)
-    .where(
-      and(eq(attendanceTable.sessionId, topic.sessionId), eq(attendanceTable.userId, userId)),
-    );
-  if (!attendance) {
-    res.status(400).json({ error: "No tienes asistencia registrada en esta sesión" });
-    return;
-  }
-  if (attendance.checkedOutAt !== null) {
-    res.status(400).json({ error: "Te has retirado de la sesión y no puedes votar" });
-    return;
-  }
-
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
-  if (!user) {
-    res.status(400).json({ error: "Usuario no encontrado" });
-    return;
-  }
-  if (!user.active) {
-    res.status(403).json({ error: "Tu cuenta está inhabilitada" });
-    return;
-  }
-
-  // Estamento eligibility
-  const eligible = await getEligibleEstamentos(topicId);
-  if (!isEligible(eligible, user.group)) {
-    res.status(403).json({ error: "Tu estamento no participa en esta votación" });
-    return;
-  }
-
-  // Freeze the weight from the column the votación tallies with (normal vs
-  // alt), read from the session's weight snapshot so later user-weight edits
-  // never shift a vote already scoped to this session.
-  const sessionWeights = await getSessionWeightMap(topic.sessionId);
-  const weightAtVote = sessionWeightFor(
-    sessionWeights,
-    userId,
-    topic.weightSource === "alt",
-    user,
-  );
-  // Candidato (single or multiple) is candidate-based; single just caps at 1 vote.
-  const isCandidate = topic.type === "candidato";
-
-  // Build the detail rows to insert
-  let detailRows: { candidateId: number | null; option: string | null }[] = [];
-
-  if (isCandidate) {
-    const validCandidateIds = await getValidCandidateIds(topicId);
-    const built = buildCandidatoRows(topic, req.body?.allocations, validCandidateIds);
-    if (!built.ok) {
-      res.status(built.status).json({ error: built.error });
-      return;
+    const memberRows = await tx.execute(sql`
+      select a.checked_out_at as "checkedOutAt", u.active, u."group" as "group",
+        u.voting_weight as "votingWeight", u.voting_weight_alt as "votingWeightAlt",
+        sw.weight as "snapWeight", sw.weight_alt as "snapWeightAlt"
+      from attendance a
+      join users u on u.id = a.user_id
+      left join session_weights sw on sw.session_id = a.session_id and sw.user_id = a.user_id
+      where a.session_id = ${topic.sessionId} and a.user_id = ${userId}
+      for share of a, u
+    `);
+    const member = memberRows.rows[0] as {
+      checkedOutAt: Date | null; active: boolean; group: string | null;
+      votingWeight: string; votingWeightAlt: string; snapWeight: string | null; snapWeightAlt: string | null;
+    } | undefined;
+    if (!member) return { ok: false, status: 400, error: "No tienes asistencia registrada en esta sesión" };
+    if (member.checkedOutAt !== null) {
+      return { ok: false, status: 400, error: "Te has retirado de la sesión y no puedes votar" };
     }
-    detailRows = built.rows;
-  } else {
-    // moción: option-based (favor/contra/abstención)
-    const option = req.body?.option;
-    if (!option || !VOTE_OPTIONS.includes(option)) {
-      res.status(400).json({ error: "Opción inválida. Use: favor, contra, abstención" });
-      return;
-    }
-    detailRows = [{ candidateId: null, option }];
-  }
+    if (!member.active) return { ok: false, status: 403, error: "Tu cuenta está inhabilitada" };
 
-  // Atomic guard: one ballot per (topic,user). Also reject any legacy vote rows.
-  let inserted = false;
-  const rejection = await db.transaction(async (tx) => {
-    // Keep admission valid until COMMIT. Shared row locks allow other voters
-    // through, while closure, edits and checkout wait for this ballot to finish.
-    // Lock order: session -> topic -> user -> attendance.
-    const [currentSession] = await tx.select().from(plenariasTable)
-      .where(eq(plenariasTable.id, topic.sessionId)).for("share");
-    if (!currentSession || currentSession.status !== "abierta") {
-      return { status: 400, error: "La sesión no está abierta" };
+    if (!isEligible(new Set(topic.estamentos), member.group)) {
+      return { ok: false, status: 403, error: "Tu estamento no participa en esta votación" };
     }
-    const [currentTopic] = await tx.select().from(topicsTable)
-      .where(eq(topicsTable.id, topicId)).for("share");
-    if (!currentTopic || currentTopic.status !== "abierto") {
-      return { status: 400, error: "La votación no está abierta" };
-    }
-    if ((["type", "candidateMode", "weighted", "weightSource", "votesPerVoter"] as const)
-      .some((key) => currentTopic[key] !== topic[key])) {
-      return { status: 409, error: "La configuración de la votación cambió. Actualiza e intenta nuevamente" };
-    }
-    const [currentUser] = await tx.select().from(usersTable)
-      .where(eq(usersTable.id, userId)).for("share");
-    if (!currentUser?.active) return { status: 403, error: "Tu cuenta está inhabilitada" };
-    const [currentAttendance] = await tx.select().from(attendanceTable)
-      .where(and(eq(attendanceTable.sessionId, topic.sessionId), eq(attendanceTable.userId, userId))).for("share");
-    if (!currentAttendance || currentAttendance.checkedOutAt !== null) {
-      return { status: 400, error: "No tienes asistencia activa en esta sesión" };
-    }
-    const currentEstamentos = await tx.select().from(topicEstamentosTable)
-      .where(eq(topicEstamentosTable.voteTopicId, topicId));
-    if (!isEligible(new Set(currentEstamentos.map((e) => e.estamentoName)), currentUser.group)) {
-      return { status: 403, error: "Tu estamento no participa en esta votación" };
-    }
+
+    const useAlt = topic.weightSource === "alt";
+    const weightAtVote = member.snapWeight !== null
+      ? (useAlt ? member.snapWeightAlt! : member.snapWeight)
+      : (useAlt ? member.votingWeightAlt : member.votingWeight);
+
+    const isCandidate = topic.type === "candidato";
+    let detailRows: DetailRow[] = [];
+
     if (isCandidate) {
-      const candidates = await tx.select({ id: topicCandidatesTable.id }).from(topicCandidatesTable)
+      const candidateRows = await tx.select({ id: topicCandidatesTable.id }).from(topicCandidatesTable)
         .where(eq(topicCandidatesTable.voteTopicId, topicId));
-      const ids = new Set(candidates.map((c) => c.id));
-      if (detailRows.some((d) => d.candidateId !== null && !ids.has(d.candidateId))) {
-        return { status: 409, error: "Las candidaturas cambiaron. Actualiza e intenta nuevamente" };
+      const built = buildCandidatoRows(topic, req.body?.allocations, new Set(candidateRows.map((c) => c.id)));
+      if (!built.ok) return { ok: false, status: built.status, error: built.error };
+      detailRows = built.rows;
+    } else {
+      const option = req.body?.option;
+      if (!option || !VOTE_OPTIONS.includes(option)) {
+        return { ok: false, status: 400, error: "Opción inválida. Use: favor, contra, abstención" };
       }
+      detailRows = [{ candidateId: null, option }];
     }
-    const existing = await tx
-      .select({ id: votesTable.id })
-      .from(votesTable)
-      .where(and(eq(votesTable.voteTopicId, topicId), eq(votesTable.userId, userId)))
-      .limit(1);
-    if (existing.length > 0) return;
 
-    const [ballot] = await tx
-      .insert(voteBallotsTable)
-      .values({ voteTopicId: topicId, userId, weightAtVote })
-      .onConflictDoNothing()
-      .returning();
-    if (!ballot) return;
+    const written = await tx.execute(sql`
+      with existing as (
+        select 1 from votes where vote_topic_id = ${topicId} and user_id = ${userId} limit 1
+      ), ballot as (
+        insert into vote_ballots (vote_topic_id, user_id, weight_at_vote)
+        select ${topicId}, ${userId}, ${weightAtVote}::numeric
+        where not exists (select 1 from existing)
+        on conflict do nothing
+        returning id
+      ), ins as (
+        insert into votes (vote_topic_id, user_id, ballot_id, candidate_id, option, weight_at_vote)
+        select ${topicId}, ${userId}, ballot.id, d.candidate_id, d.option, ${weightAtVote}::numeric
+        from ballot
+        cross join jsonb_to_recordset(${JSON.stringify(detailRows.map((d) => ({ candidate_id: d.candidateId, option: d.option })))}::jsonb) as d(candidate_id int, option text)
+        returning id
+      )
+      select (select count(*) from ballot)::int as ballots
+    `);
+    if (Number((written.rows[0] as { ballots: number }).ballots) === 0) {
+      return { ok: false, status: 409, error: "Ya emitiste tu voto en este tema" };
+    }
 
-    await tx.insert(votesTable).values(
-      detailRows.map((d) => ({
-        voteTopicId: topicId,
-        userId,
-        ballotId: ballot.id,
-        candidateId: d.candidateId,
-        option: d.option,
-        weightAtVote,
-      })),
-    );
-    inserted = true;
-    return undefined;
+    return {
+      ok: true,
+      sessionId: topic.sessionId,
+      isCandidate,
+      option: isCandidate ? null : detailRows[0].option,
+      weightAtVote,
+    };
   });
 
-  if (rejection) {
-    res.status(rejection.status).json({ error: rejection.error });
-    return;
-  }
-  if (!inserted) {
-    res.status(409).json({ error: "Ya emitiste tu voto en este tema" });
+  if (!outcome.ok) {
+    res.status(outcome.status).json({ error: outcome.error });
     return;
   }
 
-  emitVotesChanged(topic.sessionId, topicId);
+  emitVotesChanged(outcome.sessionId, topicId);
 
   res.json({
     topicId,
-    option: isCandidate ? null : detailRows[0].option,
-    weightAtVote: parseFloat(weightAtVote),
+    option: outcome.option,
+    weightAtVote: parseFloat(outcome.weightAtVote),
   });
 });
 

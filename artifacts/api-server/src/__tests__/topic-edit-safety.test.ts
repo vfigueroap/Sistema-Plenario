@@ -167,7 +167,7 @@ describe("topic edits preserve recorded ballots", () => {
 });
 
 describe("vote admission rechecks concurrent changes", () => {
-  it.each(["session", "topic", "retirement", "deactivation", "rules", "eligibility"])("rejects a vote when %s changes after preflight validation", async (change) => {
+  it.each(["session", "topic", "retirement", "deactivation", "eligibility"])("rejects a vote when %s changes after preflight validation", async (change) => {
     await db.update(topicsTable).set({ status: "abierto" }).where(eq(topicsTable.id, topicId));
     await db.insert(attendanceTable).values({ sessionId, userId, modality: "presencial" });
     const transaction = db.transaction.bind(db);

@@ -115,6 +115,8 @@ const isAllowedBeforePasswordChange = (method: string, path: string): boolean =>
 
 type CurrentUser = { rol: typeof usersTable.rol._.data; active: boolean; mustChangePassword: boolean };
 const CURRENT_USER_TTL_MS = 2000;
+const isMemberActionPath = (path: string): boolean =>
+  /^\/api\/(topics\/\d+\/vote|sessions\/\d+\/(attendance|speaking-turns))$/.test(path);
 const currentUserCache = new Map<number, { at: number; value: CurrentUser }>();
 
 async function loadCurrentUser(userId: number, allowCache: boolean): Promise<CurrentUser | undefined> {
@@ -143,7 +145,7 @@ app.use((req, res, next) => {
   }
   void withInstitutionDb(institutionId, async () => {
     if (req.session.userId) {
-      const currentUser = await loadCurrentUser(req.session.userId, req.method === "GET");
+      const currentUser = await loadCurrentUser(req.session.userId, req.method === "GET" || isMemberActionPath(req.path));
       if (!currentUser) {
         req.session.destroy(() => {});
         res.status(401).json({ error: "Usuario no encontrado" });

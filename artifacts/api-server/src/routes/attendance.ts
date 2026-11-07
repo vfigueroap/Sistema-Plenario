@@ -156,42 +156,34 @@ router.post("/sessions/:id/attendance", requireAuth, async (req, res): Promise<v
 
   const userId = req.session.userId!;
 
-  const [user] = await db
-    .select({ active: usersTable.active })
-    .from(usersTable)
-    .where(eq(usersTable.id, userId));
-  if (!user?.active) {
-    res.status(403).json({ error: "Tu cuenta está inhabilitada" });
-    return;
-  }
-
-  // Check for duplicate attendance using INSERT ... ON CONFLICT
   const result = await db.execute(sql`
     INSERT INTO attendance (session_id, user_id, modality)
-    VALUES (${sessionId}, ${userId}, ${chosenModality})
+    SELECT ${sessionId}, id, ${chosenModality} FROM users WHERE id = ${userId} AND active
     ON CONFLICT (session_id, user_id) DO NOTHING
     RETURNING id
   `);
 
   if (!result.rows || result.rows.length === 0) {
+    const [user] = await db
+      .select({ active: usersTable.active })
+      .from(usersTable)
+      .where(eq(usersTable.id, userId));
+    if (!user?.active) {
+      res.status(403).json({ error: "Tu cuenta está inhabilitada" });
+      return;
+    }
     res.status(409).json({ error: "Asistencia ya registrada" });
     return;
   }
 
-  // Attending invalidates any prior "Inasistencia Justificada" label — without
-  // this, deleting the attendance row later would silently resurrect it.
-  await db
-    .delete(justifiedAbsencesTable)
-    .where(
-      and(
-        eq(justifiedAbsencesTable.sessionId, sessionId),
-        eq(justifiedAbsencesTable.userId, userId),
-      ),
-    );
-
-  // Members created after the session (joining an older open one) get their
-  // weights frozen for it at first attendance.
-  await ensureSessionWeightForUser(sessionId, userId);
+  await db.execute(sql`
+    WITH cleared AS (
+      DELETE FROM justified_absences WHERE session_id = ${sessionId} AND user_id = ${userId}
+    )
+    INSERT INTO session_weights (session_id, user_id, weight, weight_alt)
+    SELECT ${sessionId}, id, voting_weight, voting_weight_alt FROM users WHERE id = ${userId}
+    ON CONFLICT (session_id, user_id) DO NOTHING
+  `);
 
   emitSessionEvent(sessionId, "attendance:changed");
   res.json({ ok: true, message: "Asistencia registrada correctamente" });

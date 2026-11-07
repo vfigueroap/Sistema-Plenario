@@ -73,6 +73,10 @@ export const db = new Proxy(baseDb, {
 const INSTITUTION_CHECK_TTL_MS = 30000;
 const institutionChecked = new Map<string, number>();
 
+export function resetInstitutionActiveCache(): void {
+  institutionChecked.clear();
+}
+
 /** The caller must authorize this institution before opening its DB scope.
  * All helpers in the callback must use tx, not the legacy db/pool exports.
  * Emissions and external I/O belong AFTER this promise commits successfully.
