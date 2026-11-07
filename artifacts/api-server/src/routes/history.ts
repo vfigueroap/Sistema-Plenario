@@ -502,7 +502,7 @@ router.get("/history/sessions", requireAdmin, async (_req, res): Promise<void> =
 // Public (no auth): closed sessions with aggregate attendance + weighted results.
 // Personal/per-member vote data is intentionally excluded.
 router.get("/public/history", async (_req, res): Promise<void> => {
-  res.setHeader("Cache-Control", "public, s-maxage=5, stale-while-revalidate=30");
+  res.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
   const data = await loadHistoryData();
 
   const topicsBySession = topicsBySessionMap(data.topics);
