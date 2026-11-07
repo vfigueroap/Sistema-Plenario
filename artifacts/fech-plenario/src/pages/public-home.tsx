@@ -481,7 +481,8 @@ type VotoPropio = {
 type MemberAttendance = {
   name: string; group: string | null; estamento: EstamentoKey;
   attended: number; total: number;
-  sessions: { title: string; date: string; present: boolean }[];
+  presencial: number; online: number;
+  sessions: { title: string; date: string; present: boolean; modality: "presencial" | "online" | null }[];
   votos: VotoPropio[];
   emitidos: number;   // mociones en que efectivamente votó
   votables: number;   // mociones en que pudo votar (estaba presente y era elegible)
@@ -493,20 +494,27 @@ function buildAttendance(sessions: AdminHistorySession[]): MemberAttendance[] {
 
   const nuevo = (name: string, group: string | null): MemberAttendance => ({
     name, group, estamento: estamentoOf(group),
-    attended: 0, total: 0, sessions: [], votos: [], emitidos: 0, votables: 0,
+    attended: 0, total: 0, presencial: 0, online: 0, sessions: [], votos: [], emitidos: 0, votables: 0,
   });
 
   for (const s of past) {
     const rows = [
-      ...(s.attendees ?? []).map((a) => ({ name: a.name, group: a.group ?? null, present: true })),
-      ...(s.absentees ?? []).map((a) => ({ name: a.name, group: a.group ?? null, present: false })),
+      ...(s.attendees ?? []).map((a) => ({
+        name: a.name, group: a.group ?? null, present: true,
+        modality: (a.modality === "online" ? "online" : "presencial") as "presencial" | "online" | null,
+      })),
+      ...(s.absentees ?? []).map((a) => ({
+        name: a.name, group: a.group ?? null, present: false, modality: null as "presencial" | "online" | null,
+      })),
     ];
     for (const r of rows) {
       let e = map.get(r.name);
       if (!e) map.set(r.name, (e = nuevo(r.name, r.group)));
       e.total++;
       if (r.present) e.attended++;
-      e.sessions.push({ title: s.title, date: formatShortDate(s.scheduledAt), present: r.present });
+      if (r.modality === "presencial") e.presencial++;
+      if (r.modality === "online") e.online++;
+      e.sessions.push({ title: s.title, date: formatShortDate(s.scheduledAt), present: r.present, modality: r.modality });
     }
 
     // Voto nominal por moción. Los ballots solo traen a quienes estaban
@@ -1452,6 +1460,12 @@ export default function PublicHome() {
                       className="rounded-none border-gray-300 pl-9" />
                   </div>
 
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-600">
+                    <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 bg-emerald-700" /> Asistió presencial</span>
+                    <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 bg-blue-500" /> Asistió online</span>
+                    <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 bg-red-700" /> Ausente</span>
+                  </div>
+
                   <div className="flex flex-wrap gap-1.5">
                     {(["todos", ...ESTAMENTOS_VISIBLES] as (EstamentoKey | "todos")[]).map((k) => {
                       const n = k === "todos" ? attendance.length : attendance.filter((m) => m.estamento === k).length;
@@ -1477,6 +1491,8 @@ export default function PublicHome() {
                     <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                       {shown.map((m) => {
                         const pct = m.total > 0 ? Math.round((m.attended / m.total) * 100) : 0;
+                        const pctPresencial = m.total > 0 ? (m.presencial / m.total) * 100 : 0;
+                        const pctOnline = m.total > 0 ? (m.online / m.total) * 100 : 0;
                         const cfg = ESTAMENTO[m.estamento];
                         return (
                           <div key={m.name} className="border border-gray-300 border-l-[3px] bg-white p-3"
@@ -1491,8 +1507,18 @@ export default function PublicHome() {
                               <span className="shrink-0 px-1.5 py-0.5 text-xs font-bold tabular-nums text-white"
                                 style={{ backgroundColor: cfg.hex }}>{pct}%</span>
                             </div>
-                            <div className="h-2 w-full border border-gray-300 bg-gray-100">
-                              <div className="h-full" style={{ width: `${pct}%`, backgroundColor: cfg.hex }} />
+                            <div className="flex h-2 w-full overflow-hidden border border-gray-300 bg-gray-100"
+                              title={`Presencial ${m.presencial} · Online ${m.online}`}>
+                              <div className="h-full bg-emerald-700" style={{ width: `${pctPresencial}%` }} />
+                              <div className="h-full bg-blue-500" style={{ width: `${pctOnline}%` }} />
+                            </div>
+                            <div className="mt-1 flex items-center gap-3 text-[11px] text-gray-600">
+                              <span className="flex items-center gap-1">
+                                <span className="inline-block h-2 w-2 bg-emerald-700" /> Presencial {m.presencial}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <span className="inline-block h-2 w-2 bg-blue-500" /> Online {m.online}
+                              </span>
                             </div>
                             <p className="mt-1.5 text-xs text-muted-foreground">
                               {m.attended} de {m.total} sesiones
@@ -1500,10 +1526,11 @@ export default function PublicHome() {
                             </p>
                             <div className="mt-2 flex flex-wrap gap-0.5">
                               {m.sessions.map((s, i) => (
-                                <span key={i} title={`${s.title} — ${s.date}`}
+                                <span key={i}
+                                  title={`${s.title} — ${s.date}${s.modality ? ` — ${s.modality === "online" ? "Online" : "Presencial"}` : " — Ausente"}`}
                                   className={`flex h-4 w-4 items-center justify-center text-[9px] font-bold text-white ${
-                                    s.present ? "bg-emerald-700" : "bg-red-700"}`}>
-                                  {s.present ? "✓" : "✗"}
+                                    !s.present ? "bg-red-700" : s.modality === "online" ? "bg-blue-500" : "bg-emerald-700"}`}>
+                                  {!s.present ? "✗" : s.modality === "online" ? "O" : "P"}
                                 </span>
                               ))}
                             </div>
