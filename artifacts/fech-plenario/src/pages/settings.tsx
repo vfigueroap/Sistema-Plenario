@@ -6,6 +6,7 @@ import { AppLayout } from "@/components/layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/password-input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 
@@ -63,9 +64,9 @@ export default function Settings() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="current">Contraseña actual</Label>
-                <Input
+                <PasswordInput
                   id="current"
-                  type="password"
+                  autoComplete="current-password"
                   value={currentPassword}
                   onChange={e => setCurrentPassword(e.target.value)}
                   required
@@ -73,9 +74,9 @@ export default function Settings() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="new">Nueva contraseña</Label>
-                <Input
+                <PasswordInput
                   id="new"
-                  type="password"
+                  autoComplete="new-password"
                   value={newPassword}
                   onChange={e => setNewPassword(e.target.value)}
                   required
@@ -83,9 +84,9 @@ export default function Settings() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirm">Confirmar nueva contraseña</Label>
-                <Input
+                <PasswordInput
                   id="confirm"
-                  type="password"
+                  autoComplete="new-password"
                   value={confirmPassword}
                   onChange={e => setConfirmPassword(e.target.value)}
                   required

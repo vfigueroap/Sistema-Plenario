@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/password-input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -129,7 +130,7 @@ function AddMemberDialog() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="nm-password">Contraseña</Label>
-            <Input id="nm-password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <PasswordInput id="nm-password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -463,9 +464,10 @@ function ResetPasswordDialog({ memberId, memberName }: { memberId: number, membe
           <form onSubmit={handleReset} className="space-y-4 pt-4">
             <Label htmlFor={`reset-password-${memberId}`}>Nueva contraseña</Label>
             <div className="flex gap-2">
-              <Input
+              <PasswordInput
                 id={`reset-password-${memberId}`}
-                type={mostrar ? "text" : "password"}
+                visible={mostrar}
+                onVisibleChange={setMostrar}
                 autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -474,9 +476,6 @@ function ResetPasswordDialog({ memberId, memberName }: { memberId: number, membe
               />
               <Button type="button" variant="outline" onClick={() => { setPassword(generarClaveTemporal()); setMostrar(true); }}>
                 Generar clave
-              </Button>
-              <Button type="button" variant="ghost" onClick={() => setMostrar((v) => !v)}>
-                {mostrar ? "Ocultar" : "Mostrar"}
               </Button>
             </div>
             <Button type="submit" disabled={resetPassword.isPending}>Restablecer</Button>

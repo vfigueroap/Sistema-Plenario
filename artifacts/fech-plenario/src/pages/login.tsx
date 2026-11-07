@@ -5,6 +5,7 @@ import { useLogin } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Version20 } from "@/components/version-20";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/password-input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -95,9 +96,9 @@ export default function Login() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Contraseña</Label>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
