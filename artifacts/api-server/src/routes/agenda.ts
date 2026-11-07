@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { eq, sql } from "drizzle-orm";
 import { db, agendaPointsTable, plenariasTable } from "@workspace/db";
 import { requireAuth, requireAdmin } from "../middlewares/auth";
+import { sendShared } from "../lib/shared-cache";
 import { emitSessionEvent } from "../lib/realtime";
 
 const router: IRouter = Router();
@@ -25,13 +26,14 @@ router.get("/sessions/:id/agenda", requireAuth, async (req, res): Promise<void> 
     return;
   }
 
-  const points = await db
-    .select()
-    .from(agendaPointsTable)
-    .where(eq(agendaPointsTable.sessionId, sessionId))
-    .orderBy(sql`${agendaPointsTable.position} ASC, ${agendaPointsTable.id} ASC`);
-
-  res.json(points.map(serialize));
+  await sendShared(res, `agenda:${sessionId}`, async () => {
+    const points = await db
+      .select()
+      .from(agendaPointsTable)
+      .where(eq(agendaPointsTable.sessionId, sessionId))
+      .orderBy(sql`${agendaPointsTable.position} ASC, ${agendaPointsTable.id} ASC`);
+    return { status: 200, body: points.map(serialize) };
+  });
 });
 
 router.post("/sessions/:id/agenda", requireAdmin, async (req, res): Promise<void> => {

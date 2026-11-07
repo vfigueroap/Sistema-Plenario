@@ -15,6 +15,7 @@ import {
   ensureSessionWeightForUser,
 } from "../lib/sessionWeights";
 import { emitSessionEvent, evictUserFromSession, emitUserEvent } from "../lib/realtime";
+import { sendShared } from "../lib/shared-cache";
 
 const router: IRouter = Router();
 
@@ -26,94 +27,96 @@ router.get("/sessions/:id/attendance", requireAuth, async (req, res): Promise<vo
     return;
   }
 
-  // Get all active members (non-admin). Inactive accounts are excluded from the
-  // absent list and from every weight total.
-  const [rawMembers, [plenaria]] = await Promise.all([
-    db
-      .select()
-      .from(usersTable)
-      .where(and(eq(usersTable.rol, "miembro"), eq(usersTable.active, true))),
-    db.select().from(plenariasTable).where(eq(plenariasTable.id, sessionId)),
-  ]);
+  await sendShared(res, `attendance:${sessionId}`, async () => {
+    // Get all active members (non-admin). Inactive accounts are excluded from the
+    // absent list and from every weight total.
+    const [rawMembers, [plenaria]] = await Promise.all([
+      db
+        .select()
+        .from(usersTable)
+        .where(and(eq(usersTable.rol, "miembro"), eq(usersTable.active, true))),
+      db.select().from(plenariasTable).where(eq(plenariasTable.id, sessionId)),
+    ]);
 
-  if (!plenaria) {
-    res.status(404).json({ error: "Sesión no encontrada" });
-    return;
-  }
+    if (!plenaria) {
+      return { status: 404, body: { error: "Sesión no encontrada" } };
+    }
 
-  // Weights are frozen per session: use the snapshot, not current user weights.
-  const weightMap = await getSessionWeightMap(sessionId);
+    // Weights are frozen per session: use the snapshot, not current user weights.
+    const weightMap = await getSessionWeightMap(sessionId);
 
-  // Absences flagged "Inasistencia Justificada" (label only — still absent).
-  const justifiedRows = await db
-    .select({ userId: justifiedAbsencesTable.userId })
-    .from(justifiedAbsencesTable)
-    .where(eq(justifiedAbsencesTable.sessionId, sessionId));
+    // Absences flagged "Inasistencia Justificada" (label only — still absent).
+    const justifiedRows = await db
+      .select({ userId: justifiedAbsencesTable.userId })
+      .from(justifiedAbsencesTable)
+      .where(eq(justifiedAbsencesTable.sessionId, sessionId));
 
-  // Get attendance records
-  const attendanceRecords = await db
-    .select({
-      userId: attendanceTable.userId,
-      timestamp: attendanceTable.timestamp,
-      modality: attendanceTable.modality,
-      checkedOutAt: attendanceTable.checkedOutAt,
-      displayName: usersTable.displayName,
-      group: usersTable.group,
-      faculty: usersTable.faculty,
-      votingWeight: usersTable.votingWeight,
-    })
-    .from(attendanceTable)
-    .innerJoin(usersTable, eq(attendanceTable.userId, usersTable.id))
-    .where(eq(attendanceTable.sessionId, sessionId));
+    // Get attendance records
+    const attendanceRecords = await db
+      .select({
+        userId: attendanceTable.userId,
+        timestamp: attendanceTable.timestamp,
+        modality: attendanceTable.modality,
+        checkedOutAt: attendanceTable.checkedOutAt,
+        displayName: usersTable.displayName,
+        group: usersTable.group,
+        faculty: usersTable.faculty,
+        votingWeight: usersTable.votingWeight,
+      })
+      .from(attendanceTable)
+      .innerJoin(usersTable, eq(attendanceTable.userId, usersTable.id))
+      .where(eq(attendanceTable.sessionId, sessionId));
 
-  const attendedIds = new Set(attendanceRecords.map((a) => a.userId));
+    const attendedIds = new Set(attendanceRecords.map((a) => a.userId));
 
-  // Session-scoped roster: members created after this session don't show up as
-  // absentees nor count toward its quorum/total weight (unless they attended).
-  const allMembers = applySessionWeights(
-    scopeMembersToSession(rawMembers, plenaria?.createdAt ?? new Date(0), attendedIds),
-    weightMap,
-  );
+    // Session-scoped roster: members created after this session don't show up as
+    // absentees nor count toward its quorum/total weight (unless they attended).
+    const allMembers = applySessionWeights(
+      scopeMembersToSession(rawMembers, plenaria?.createdAt ?? new Date(0), attendedIds),
+      weightMap,
+    );
 
-  const toRecord = (a: (typeof attendanceRecords)[number]) => ({
-    userId: a.userId,
-    displayName: a.displayName,
-    group: a.group,
-    faculty: a.faculty,
-    votingWeight: parseFloat(weightMap.get(a.userId)?.weight ?? a.votingWeight),
-    timestamp: a.timestamp,
-    modality: a.modality,
-    checkedOutAt: a.checkedOutAt,
+    const toRecord = (a: (typeof attendanceRecords)[number]) => ({
+      userId: a.userId,
+      displayName: a.displayName,
+      group: a.group,
+      faculty: a.faculty,
+      votingWeight: parseFloat(weightMap.get(a.userId)?.weight ?? a.votingWeight),
+      timestamp: a.timestamp,
+      modality: a.modality,
+      checkedOutAt: a.checkedOutAt,
+    });
+
+    // Active present = attended AND not checked out
+    const present = attendanceRecords.filter((a) => a.checkedOutAt === null).map(toRecord);
+    // Retired = attended AND checked out
+    const checkedOut = attendanceRecords.filter((a) => a.checkedOutAt !== null).map(toRecord);
+
+    // Absent = members who never marked attendance (retired members are listed in checkedOut)
+    const absent = allMembers
+      .filter((m) => !attendedIds.has(m.id))
+      .map((m) => ({
+        id: m.id,
+        username: m.username,
+        displayName: m.displayName,
+        group: m.group,
+        faculty: m.faculty,
+        votingWeight: parseFloat(m.votingWeight),
+        rol: m.rol,
+      }));
+
+    const totalWeight = allMembers.reduce((sum, m) => sum + parseFloat(m.votingWeight), 0);
+    const presentWeight = present.reduce((sum, m) => sum + m.votingWeight, 0);
+
+    // Only absentees can carry the justified label (a present member's stale
+    // flag, if any, is ignored client-side).
+    const justifiedIds = justifiedRows
+      .map((j) => j.userId)
+      .filter((id) => !attendedIds.has(id));
+
+
+    return { status: 200, body: { present, absent, checkedOut, totalWeight, presentWeight, justifiedIds } };
   });
-
-  // Active present = attended AND not checked out
-  const present = attendanceRecords.filter((a) => a.checkedOutAt === null).map(toRecord);
-  // Retired = attended AND checked out
-  const checkedOut = attendanceRecords.filter((a) => a.checkedOutAt !== null).map(toRecord);
-
-  // Absent = members who never marked attendance (retired members are listed in checkedOut)
-  const absent = allMembers
-    .filter((m) => !attendedIds.has(m.id))
-    .map((m) => ({
-      id: m.id,
-      username: m.username,
-      displayName: m.displayName,
-      group: m.group,
-      faculty: m.faculty,
-      votingWeight: parseFloat(m.votingWeight),
-      rol: m.rol,
-    }));
-
-  const totalWeight = allMembers.reduce((sum, m) => sum + parseFloat(m.votingWeight), 0);
-  const presentWeight = present.reduce((sum, m) => sum + m.votingWeight, 0);
-
-  // Only absentees can carry the justified label (a present member's stale
-  // flag, if any, is ignored client-side).
-  const justifiedIds = justifiedRows
-    .map((j) => j.userId)
-    .filter((id) => !attendedIds.has(id));
-
-  res.json({ present, absent, checkedOut, totalWeight, presentWeight, justifiedIds });
 });
 
 router.post("/sessions/:id/attendance", requireAuth, async (req, res): Promise<void> => {

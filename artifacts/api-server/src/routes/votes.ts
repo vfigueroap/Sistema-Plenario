@@ -20,6 +20,7 @@ import {
   sessionWeightFor,
 } from "../lib/sessionWeights";
 import { emitVotesChanged } from "../lib/realtime";
+import { sharedValue } from "../lib/shared-cache";
 import { buildCandidatoRows, type DetailRow } from "../lib/candidate-votes";
 
 const router: IRouter = Router();
@@ -180,22 +181,27 @@ router.get("/topics/:topicId/results", requireAuth, async (req, res): Promise<vo
     return;
   }
 
-  const [topic] = await db.select().from(topicsTable).where(eq(topicsTable.id, topicId));
-  if (!topic) {
+  const userId = req.session.userId!;
+
+  const shared = await sharedValue(`results:${topicId}`, async () => {
+    const [topic] = await db.select().from(topicsTable).where(eq(topicsTable.id, topicId));
+    if (!topic) return null;
+    const [liveVotes, allMembers, attendanceRows, eligibleSet, [plenaria], weightMap] = await Promise.all([
+      db.select().from(votesTable).where(eq(votesTable.voteTopicId, topicId)),
+      db.select().from(usersTable).where(eq(usersTable.rol, "miembro")),
+      db.select().from(attendanceTable).where(eq(attendanceTable.sessionId, topic.sessionId)),
+      getEligibleEstamentos(topicId),
+      db.select().from(plenariasTable).where(eq(plenariasTable.id, topic.sessionId)),
+      getSessionWeightMap(topic.sessionId),
+    ]);
+    return { topic, liveVotes, allMembers, attendanceRows, eligibleSet, plenaria, weightMap };
+  });
+  if (!shared) {
     res.status(404).json({ error: "Tema no encontrado" });
     return;
   }
-
-  const userId = req.session.userId!;
-
-  const [liveVotes, allMembers, attendanceRows, eligibleSet, [me], [plenaria]] = await Promise.all([
-    db.select().from(votesTable).where(eq(votesTable.voteTopicId, topicId)),
-    db.select().from(usersTable).where(eq(usersTable.rol, "miembro")),
-    db.select().from(attendanceTable).where(eq(attendanceTable.sessionId, topic.sessionId)),
-    getEligibleEstamentos(topicId),
-    db.select().from(usersTable).where(eq(usersTable.id, userId)),
-    db.select().from(plenariasTable).where(eq(plenariasTable.id, topic.sessionId)),
-  ]);
+  const { topic, liveVotes, allMembers, attendanceRows, eligibleSet, plenaria, weightMap } = shared;
+  const [me] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
 
   const allVotes = topic.electorateSnapshot?.votes ?? liveVotes;
   const attendeeIds = new Set(
@@ -216,7 +222,7 @@ router.get("/topics/:topicId/results", requireAuth, async (req, res): Promise<vo
       plenaria?.createdAt ?? new Date(0),
       participantIds,
     ),
-    await getSessionWeightMap(topic.sessionId),
+    weightMap,
   );
 
   // Restrict the denominator to eligible members when the votation is scoped,

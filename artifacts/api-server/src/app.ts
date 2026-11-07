@@ -9,6 +9,7 @@ import router from "./routes";
 import { logger } from "./lib/logger";
 import { createAllowedOrigin, httpUrlOrigin } from "./lib/allowed-origin";
 import { pulseHandler } from "./routes/pulse";
+import { clearSharedCache } from "./lib/shared-cache";
 
 const app: Express = express();
 
@@ -169,6 +170,8 @@ app.use((req, res, next) => {
   }).catch((error) => {
     req.log.error({ error }, "Institution request failed");
     if (!res.headersSent && !res.destroyed) res.status(500).json({ error: "Error interno" });
+  }).finally(() => {
+    if (req.method !== "GET") clearSharedCache();
   });
 });
 

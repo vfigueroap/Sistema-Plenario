@@ -6,6 +6,7 @@ import { emitSessionEvent, emitLobbyEvent } from "../lib/realtime";
 import { snapshotSessionWeights } from "../lib/sessionWeights";
 import { randomBytes } from "crypto";
 import { captureElectorate } from "../lib/electorate";
+import { sendShared } from "../lib/shared-cache";
 
 const router: IRouter = Router();
 
@@ -14,29 +15,32 @@ function generateSessionCode(): string {
 }
 
 router.get("/sessions", requireAuth, async (_req, res): Promise<void> => {
-  const sessions = await db
-    .select()
-    .from(plenariasTable)
-    .orderBy(sql`${plenariasTable.createdAt} DESC`);
+  await sendShared(res, "sessions:list", async () => {
+    const sessions = await db
+      .select()
+      .from(plenariasTable)
+      .orderBy(sql`${plenariasTable.createdAt} DESC`);
 
-  res.json(
-    sessions.map((s) => ({
-      id: s.id,
-      title: s.title,
-      location: s.location,
-      scheduledAt: s.scheduledAt,
-      status: s.status,
-      sessionCode: s.sessionCode,
-      meetingLink: s.meetingLink,
-      actaObjectPath: s.actaObjectPath,
-      actaFileName: s.actaFileName,
-      speakingRoundOpen: s.speakingRoundOpen,
-      speakingRoundAgendaPointId: s.speakingRoundAgendaPointId,
-      officialStartAt: s.officialStartAt,
-      officialEndAt: s.officialEndAt,
-      createdAt: s.createdAt,
-    })),
-  );
+    return {
+      status: 200,
+      body: sessions.map((s) => ({
+        id: s.id,
+        title: s.title,
+        location: s.location,
+        scheduledAt: s.scheduledAt,
+        status: s.status,
+        sessionCode: s.sessionCode,
+        meetingLink: s.meetingLink,
+        actaObjectPath: s.actaObjectPath,
+        actaFileName: s.actaFileName,
+        speakingRoundOpen: s.speakingRoundOpen,
+        speakingRoundAgendaPointId: s.speakingRoundAgendaPointId,
+        officialStartAt: s.officialStartAt,
+        officialEndAt: s.officialEndAt,
+        createdAt: s.createdAt,
+      })),
+    };
+  });
 });
 
 router.post("/sessions", requireAdmin, async (req, res): Promise<void> => {

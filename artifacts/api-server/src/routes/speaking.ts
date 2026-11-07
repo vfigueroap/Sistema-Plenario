@@ -11,6 +11,7 @@ import {
 } from "@workspace/db";
 import { requireAuth, requireAdmin } from "../middlewares/auth";
 import { emitSessionEvent, emitLobbyEvent } from "../lib/realtime";
+import { sendShared } from "../lib/shared-cache";
 
 const router: IRouter = Router();
 
@@ -115,13 +116,15 @@ router.get("/sessions/:id/speaking-turns", requireAuth, async (req, res): Promis
     return;
   }
 
-  const turns = await db
-    .select()
-    .from(speakingTurnsTable)
-    .where(eq(speakingTurnsTable.sessionId, sessionId))
-    .orderBy(sql`${speakingTurnsTable.position} ASC, ${speakingTurnsTable.id} ASC`);
+  await sendShared(res, `turns:${sessionId}`, async () => {
+    const turns = await db
+      .select()
+      .from(speakingTurnsTable)
+      .where(eq(speakingTurnsTable.sessionId, sessionId))
+      .orderBy(sql`${speakingTurnsTable.position} ASC, ${speakingTurnsTable.id} ASC`);
 
-  res.json(await serializeTurns(turns));
+    return { status: 200, body: await serializeTurns(turns) };
+  });
 });
 
 router.post("/sessions/:id/speaking-turns", requireAuth, async (req, res): Promise<void> => {
@@ -192,29 +195,24 @@ router.post("/sessions/:id/speaking-turns", requireAuth, async (req, res): Promi
     pointId = session.speakingRoundAgendaPointId ?? null;
   }
 
-  if (pointId !== null && !(await agendaPointBelongsToSession(pointId, sessionId))) {
+  if (isAdmin && pointId !== null && !(await agendaPointBelongsToSession(pointId, sessionId))) {
     res.status(400).json({ error: "El punto de tabla no pertenece a esta sesión" });
     return;
   }
 
   await db.execute(sql`select pg_advisory_xact_lock(${SPEAKING_QUEUE_LOCK}::int, ${sessionId}::int)`);
 
-  // Prevent duplicate queued requests for the same speaker on the same point
-  if (speakerUserId !== null) {
-    const existing = await db
-      .select()
-      .from(speakingTurnsTable)
-      .where(
-        sql`${speakingTurnsTable.sessionId} = ${sessionId}
-          AND ${speakingTurnsTable.userId} = ${speakerUserId}
-          AND ${speakingTurnsTable.status} <> 'finalizada'
-          AND ${speakingTurnsTable.kind} = 'individual'
-          AND ${pointId === null ? sql`${speakingTurnsTable.agendaPointId} IS NULL` : sql`${speakingTurnsTable.agendaPointId} = ${pointId}`}`,
-      );
-    if (existing.length > 0) {
-      res.status(409).json({ error: "Ya tienes una palabra en cola para este punto" });
-      return;
-    }
+  const queueRows = await db.execute(sql`
+    SELECT
+      coalesce(max(position), -1) + 1 AS next_position,
+      coalesce(bool_or(user_id = ${speakerUserId} AND status <> 'finalizada' AND kind = 'individual'), false) AS duplicated
+    FROM speaking_turns
+    WHERE session_id = ${sessionId} AND agenda_point_id IS NOT DISTINCT FROM ${pointId}
+  `);
+  const queue = queueRows.rows[0] as { next_position: number | string; duplicated: boolean };
+  if (speakerUserId !== null && queue.duplicated) {
+    res.status(409).json({ error: "Ya tienes una palabra en cola para este punto" });
+    return;
   }
 
   // Duration is base 60s and adjustable only by admin; member requests are always DEFAULT_SECONDS.
@@ -228,7 +226,7 @@ router.post("/sessions/:id/speaking-turns", requireAuth, async (req, res): Promi
     duration = Math.max(1, Math.floor(parsed));
   }
 
-  const position = await nextPosition(sessionId, pointId);
+  const position = Number(queue.next_position);
 
   const [turn] = await db
     .insert(speakingTurnsTable)
@@ -252,7 +250,8 @@ router.post("/sessions/:id/speaking-turns", requireAuth, async (req, res): Promi
   }
 
   emitSessionEvent(sessionId, "speaking:changed");
-  res.status(201).json(await serializeOne(turn.id));
+  const [serializedTurn] = await serializeTurns([turn]);
+  res.status(201).json(serializedTurn);
 });
 
 router.post(

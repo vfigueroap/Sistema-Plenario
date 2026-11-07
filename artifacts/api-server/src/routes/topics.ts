@@ -10,6 +10,7 @@ import {
   voteBallotsTable,
 } from "@workspace/db";
 import { requireAuth, requireAdmin } from "../middlewares/auth";
+import { sendShared } from "../lib/shared-cache";
 import { emitSessionEvent } from "../lib/realtime";
 import { MAX_VOTES_PER_VOTER } from "../lib/candidate-votes";
 import { captureElectorate } from "../lib/electorate";
@@ -121,17 +122,20 @@ router.get("/sessions/:id/topics", requireAuth, async (req, res): Promise<void> 
     return;
   }
 
-  const topics = await db
-    .select()
-    .from(topicsTable)
-    .where(eq(topicsTable.sessionId, sessionId))
-    .orderBy(asc(topicsTable.createdAt));
+  await sendShared(res, `topics:${sessionId}`, async () => {
+    const topics = await db
+      .select()
+      .from(topicsTable)
+      .where(eq(topicsTable.sessionId, sessionId))
+      .orderBy(asc(topicsTable.createdAt));
 
-  const { candByTopic, estByTopic } = await loadTopicRelations(topics.map((t) => t.id));
+    const { candByTopic, estByTopic } = await loadTopicRelations(topics.map((t) => t.id));
 
-  res.json(
-    topics.map((t) => serializeTopic(t, candByTopic.get(t.id) ?? [], estByTopic.get(t.id) ?? [])),
-  );
+    return {
+      status: 200,
+      body: topics.map((t) => serializeTopic(t, candByTopic.get(t.id) ?? [], estByTopic.get(t.id) ?? [])),
+    };
+  });
 });
 
 router.post("/sessions/:id/topics", requireAdmin, async (req, res): Promise<void> => {
