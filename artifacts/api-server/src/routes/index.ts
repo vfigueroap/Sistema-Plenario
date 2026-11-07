@@ -9,6 +9,7 @@ import speakingRouter from "./speaking";
 import topicsRouter from "./topics";
 import votesRouter from "./votes";
 import historyRouter from "./history";
+export { publicHistoryRouter } from "./history";
 import adminRouter from "./admin";
 import storageRouter from "./storage";
 import unidadesRouter from "./unidades";

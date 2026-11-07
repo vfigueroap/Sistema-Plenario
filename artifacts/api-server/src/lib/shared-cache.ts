@@ -1,4 +1,5 @@
 import type { Response } from "express";
+import { currentInstitutionId } from "@workspace/db";
 
 const TTL_MS = process.env.NODE_ENV === "test" ? 0 : 1500;
 const MAX_ENTRIES = 512;
@@ -14,6 +15,7 @@ export function clearSharedCache(): void {
 }
 
 export async function sharedValue<T>(key: string, load: () => Promise<T>): Promise<T> {
+  key = `${currentInstitutionId() ?? process.env.INSTITUTION_ID ?? "test"}:${key}`;
   const now = Date.now();
   const current = entries.get(key);
   if (current && current.generation === generation && current.expiresAt > now) {

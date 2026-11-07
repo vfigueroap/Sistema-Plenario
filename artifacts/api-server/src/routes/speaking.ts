@@ -144,7 +144,8 @@ router.post("/sessions/:id/speaking-turns", requireAuth, async (req, res): Promi
   const [session] = await db
     .select()
     .from(plenariasTable)
-    .where(eq(plenariasTable.id, sessionId));
+    .where(eq(plenariasTable.id, sessionId))
+    .for("share");
   if (!session) {
     res.status(404).json({ error: "Sesión no encontrada" });
     return;
@@ -170,18 +171,19 @@ router.post("/sessions/:id/speaking-turns", requireAuth, async (req, res): Promi
   } else {
     speakerUserId = req.session.userId!;
     // Members can only request the floor while the speaking round is open
-    if (!session.speakingRoundOpen) {
+    if (!session.speakingRoundOpen || session.status !== "abierta") {
       res.status(400).json({ error: "La ronda de palabras está cerrada" });
       return;
     }
     // Members must have active attendance to request the floor
     const [attendance] = await db
-      .select()
+      .select({ checkedOutAt: attendanceTable.checkedOutAt, active: usersTable.active })
       .from(attendanceTable)
+      .innerJoin(usersTable, eq(usersTable.id, attendanceTable.userId))
       .where(
         sql`${attendanceTable.sessionId} = ${sessionId} AND ${attendanceTable.userId} = ${speakerUserId}`,
-      );
-    if (!attendance || attendance.checkedOutAt !== null) {
+      ).for("share", { of: [attendanceTable, usersTable] });
+    if (!attendance || attendance.checkedOutAt !== null || !attendance.active) {
       res.status(400).json({ error: "Debes tener asistencia activa para pedir la palabra" });
       return;
     }
@@ -200,21 +202,6 @@ router.post("/sessions/:id/speaking-turns", requireAuth, async (req, res): Promi
     return;
   }
 
-  await db.execute(sql`select pg_advisory_xact_lock(${SPEAKING_QUEUE_LOCK}::int, ${sessionId}::int)`);
-
-  const queueRows = await db.execute(sql`
-    SELECT
-      coalesce(max(position), -1) + 1 AS next_position,
-      coalesce(bool_or(user_id = ${speakerUserId} AND status <> 'finalizada' AND kind = 'individual'), false) AS duplicated
-    FROM speaking_turns
-    WHERE session_id = ${sessionId} AND agenda_point_id IS NOT DISTINCT FROM ${pointId}
-  `);
-  const queue = queueRows.rows[0] as { next_position: number | string; duplicated: boolean };
-  if (speakerUserId !== null && queue.duplicated) {
-    res.status(409).json({ error: "Ya tienes una palabra en cola para este punto" });
-    return;
-  }
-
   // Duration is base 60s and adjustable only by admin; member requests are always DEFAULT_SECONDS.
   let duration = DEFAULT_SECONDS;
   if (isAdmin && durationSeconds !== undefined && durationSeconds !== null) {
@@ -226,32 +213,43 @@ router.post("/sessions/:id/speaking-turns", requireAuth, async (req, res): Promi
     duration = Math.max(1, Math.floor(parsed));
   }
 
-  const position = Number(queue.next_position);
-
-  const [turn] = await db
-    .insert(speakingTurnsTable)
-    .values({
-      sessionId,
-      agendaPointId: pointId,
-      category,
-      kind: "individual",
-      userId: speakerUserId,
-      speakerName,
-      durationSeconds: duration,
-      position,
-    })
-    .returning();
-
-  if (speakerUserId !== null) {
-    await db
-      .insert(speakingTurnParticipantsTable)
-      .values({ turnId: turn.id, userId: speakerUserId })
-      .onConflictDoNothing();
+  await db.execute(sql`select pg_advisory_xact_lock(${SPEAKING_QUEUE_LOCK}::int, ${sessionId}::int)`);
+  const inserted = await db.execute(sql`
+    WITH queue AS (
+      SELECT coalesce(max(position), -1) + 1 AS next_position,
+        coalesce(bool_or(user_id = ${speakerUserId} AND status <> 'finalizada' AND kind = 'individual'), false) AS duplicated
+      FROM speaking_turns
+      WHERE session_id = ${sessionId} AND agenda_point_id IS NOT DISTINCT FROM ${pointId}
+    ), turn AS (
+      INSERT INTO speaking_turns (session_id, agenda_point_id, category, kind, user_id, speaker_name, duration_seconds, position)
+      SELECT ${sessionId}, ${pointId}, ${category}, 'individual', ${speakerUserId}, ${speakerName}, ${duration}, next_position
+      FROM queue WHERE NOT duplicated
+      RETURNING *
+    ), participant AS (
+      INSERT INTO speaking_turn_participants (turn_id, user_id)
+      SELECT id, user_id FROM turn WHERE user_id IS NOT NULL
+      ON CONFLICT DO NOTHING
+    )
+    SELECT jsonb_build_object(
+      'id', t.id, 'sessionId', t.session_id, 'agendaPointId', t.agenda_point_id,
+      'category', t.category, 'kind', t.kind, 'status', t.status, 'position', t.position,
+      'durationSeconds', t.duration_seconds, 'elapsedSeconds', t.elapsed_seconds,
+      'startedAt', t.started_at, 'faculty', t.faculty, 'userId', t.user_id, 'createdAt', t.created_at,
+      'label', CASE WHEN t.category = 'base' THEN coalesce(t.speaker_name, 'Estudiante de base') ELSE coalesce(u.display_name, t.speaker_name, 'Orador') END,
+      'participants', CASE WHEN u.id IS NULL THEN '[]'::jsonb ELSE jsonb_build_array(jsonb_build_object('userId', u.id, 'displayName', u.display_name, 'faculty', u.faculty)) END
+    ) AS body FROM turn t LEFT JOIN users u ON u.id = t.user_id
+  `);
+  const body = (inserted.rows[0] as { body: { createdAt: string; startedAt: string | null } } | undefined)?.body;
+  if (!body) {
+    res.status(409).json({ error: "Ya tienes una palabra en cola para este punto" });
+    return;
   }
-
   emitSessionEvent(sessionId, "speaking:changed");
-  const [serializedTurn] = await serializeTurns([turn]);
-  res.status(201).json(serializedTurn);
+  res.status(201).json({
+    ...body,
+    createdAt: new Date(body.createdAt).toISOString(),
+    startedAt: body.startedAt ? new Date(body.startedAt).toISOString() : null,
+  });
 });
 
 router.post(
@@ -385,6 +383,7 @@ router.post(
       return;
     }
 
+    await db.execute(sql`select pg_advisory_xact_lock(${SPEAKING_QUEUE_LOCK}::int, ${sessionId}::int)`);
     const position = await nextPosition(sessionId, pointId);
 
     const turnId = await db.transaction(async (tx) => {

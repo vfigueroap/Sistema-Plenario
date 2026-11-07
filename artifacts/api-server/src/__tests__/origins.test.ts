@@ -7,6 +7,7 @@ const { institutionScope } = vi.hoisted(() => ({
 }));
 vi.mock("@workspace/db", () => ({
   pool: {},
+  sessionPool: {},
   db: {},
   usersTable: {},
   withInstitutionDb: institutionScope,
@@ -26,7 +27,7 @@ vi.mock("../routes", async () => {
   router.get("/origin-error", (_req, res) => {
     res.status(401).json({ error: "No autenticado" });
   });
-  return { default: router };
+  return { default: router, publicHistoryRouter: Router() };
 });
 
 vi.stubEnv("NODE_ENV", "production");

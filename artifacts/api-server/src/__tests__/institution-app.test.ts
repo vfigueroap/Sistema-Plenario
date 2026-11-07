@@ -34,4 +34,17 @@ describe("application institution boundary", () => {
     expect(response.body).toMatchObject({ id: firstUserId, displayName: "Visible" });
     expect(response.body.id).not.toBe(secondUserId);
   });
+
+  it("exige cambiar la clave inicial y permite continuar inmediatamente después",async () => {
+    await db.update(usersTable).set({mustChangePassword:true}).where(eq(usersTable.id,firstUserId));
+    const agent=request.agent(app);
+    await agent.post("/api/auth/login").set("Origin","http://localhost:3000")
+      .send({username,password:"correct-password"}).expect(200);
+    const blocked=await agent.get("/api/sessions");
+    expect(blocked.status).toBe(403);
+    expect(blocked.body.code).toBe("password_change_required");
+    await agent.patch("/api/members/me/password").set("Origin","http://localhost:3000")
+      .send({currentPassword:"correct-password",newPassword:"correct-password-updated"}).expect(200);
+    await agent.get("/api/sessions").expect(200);
+  });
 });

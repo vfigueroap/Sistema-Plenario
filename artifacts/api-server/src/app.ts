@@ -5,11 +5,12 @@ import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import { db, sessionPool, usersTable, withInstitutionDb } from "@workspace/db";
 import { eq } from "drizzle-orm";
-import router from "./routes";
+import router, { publicHistoryRouter } from "./routes";
 import { logger } from "./lib/logger";
 import { createAllowedOrigin, httpUrlOrigin } from "./lib/allowed-origin";
 import { pulseHandler } from "./routes/pulse";
 import { clearSharedCache } from "./lib/shared-cache";
+import { committedResponse } from "./lib/committed-response";
 
 const app: Express = express();
 
@@ -77,6 +78,7 @@ if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(inst
 }
 
 app.get("/api/public/pulse", pulseHandler(institutionId));
+app.use("/api/public", publicHistoryRouter);
 
 const PgSession = connectPgSimple(session);
 
@@ -122,7 +124,7 @@ const currentUserCache = new Map<number, { at: number; value: CurrentUser }>();
 
 async function loadCurrentUser(userId: number, allowCache: boolean): Promise<CurrentUser | undefined> {
   const hit = currentUserCache.get(userId);
-  if (allowCache && hit && Date.now() - hit.at < CURRENT_USER_TTL_MS) return hit.value;
+  if (allowCache && hit && !hit.value.mustChangePassword && Date.now() - hit.at < CURRENT_USER_TTL_MS) return hit.value;
   const [row] = await db.select({
     rol: usersTable.rol,
     active: usersTable.active,
@@ -138,13 +140,15 @@ async function loadCurrentUser(userId: number, allowCache: boolean): Promise<Cur
 }
 
 app.use((req, res, next) => {
-  if (req.path === "/api/healthz") return next();
+  if (req.path === "/api/healthz" || req.path === "/api/auth/login") return next();
   if (req.session.userId && req.session.institutionId !== institutionId) {
     req.session.destroy(() => {});
     res.status(401).json({ error: "La sesión pertenece a otra institución" });
     return;
   }
+  const response = committedResponse(res);
   void withInstitutionDb(institutionId, async () => {
+    if (res.destroyed) throw new Error("Request aborted");
     if (req.session.userId) {
       const currentUser = await loadCurrentUser(req.session.userId, req.method === "GET" || isMemberActionPath(req.path));
       if (!currentUser) {
@@ -162,16 +166,17 @@ app.use((req, res, next) => {
       req.session.rol = currentUser.rol;
       req.session.active = currentUser.active;
     }
-    await new Promise<void>((resolve, reject) => {
-      res.once("finish", () => res.statusCode >= 500 ? reject(new Error("Request failed")) : resolve());
-      res.once("close", () => res.writableEnded ? resolve() : reject(new Error("Request aborted")));
-      next();
-    });
+    if (res.destroyed) throw new Error("Request aborted");
+    next();
+    await response.ready;
+  }).then(() => {
+    if (req.method !== "GET") clearSharedCache();
+    if (req.method !== "GET" && req.path.startsWith("/api/members")) currentUserCache.clear();
+    response.send();
   }).catch((error) => {
     req.log.error({ error }, "Institution request failed");
-    if (!res.headersSent && !res.destroyed) res.status(500).json({ error: "Error interno" });
-  }).finally(() => {
     if (req.method !== "GET") clearSharedCache();
+    response.fail();
   });
 });
 

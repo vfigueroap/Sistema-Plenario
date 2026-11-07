@@ -45,6 +45,7 @@ export const pool = new Pool({
   connectionString,
   max: configuredPoolMax,
   idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
   keepAlive: true,
 });
 const configuredSessionPoolMax = Number(process.env.SESSION_POOL_MAX ?? 3);
@@ -56,16 +57,28 @@ export const sessionPool = new Pool({
   connectionString,
   max: configuredSessionPoolMax,
   idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
   keepAlive: true,
 });
 const baseDb = drizzle(pool, { schema });
+for (const connectionPool of [pool, sessionPool]) {
+  connectionPool.on("error", (error) => {
+    console.error("Conexión inactiva de base de datos interrumpida", {
+      code: (error as Error & { code?: string }).code ?? error.name,
+    });
+  });
+}
 
 export type InstitutionTransaction = Parameters<Parameters<typeof baseDb.transaction>[0]>[0];
-const institutionDb = new AsyncLocalStorage<InstitutionTransaction>();
+const institutionDb = new AsyncLocalStorage<{ tx: InstitutionTransaction; institutionId: string }>();
+
+export function currentInstitutionId(): string | undefined {
+  return institutionDb.getStore()?.institutionId;
+}
 
 export const db = new Proxy(baseDb, {
   get(target, property, receiver) {
-    const active = institutionDb.getStore();
+    const active = institutionDb.getStore()?.tx;
     return Reflect.get(active ?? target, property, active ?? receiver);
   },
 }) as typeof baseDb;
@@ -99,7 +112,7 @@ export async function withInstitutionDb<T>(
       }
       institutionChecked.set(institutionId, Date.now());
     }
-    return institutionDb.run(tx, () => work(tx));
+    return institutionDb.run({ tx, institutionId }, () => work(tx));
   });
 }
 

@@ -1,9 +1,9 @@
 import { Router, type IRouter } from "express";
-import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
-import { db, usersTable } from "@workspace/db";
+import { db, usersTable, withInstitutionDb } from "@workspace/db";
 import { logger } from "../lib/logger";
 import { rateLimitHit, rateLimitPeek } from "../lib/rate-limit";
+import { checkPassword, PasswordQueueFullError } from "../lib/password-check";
 
 // Throttle failed login attempts so a member's short password can't be
 // brute-forced. Only failures count toward the limit (successful logins never
@@ -60,10 +60,10 @@ router.post("/auth/login", async (req, res): Promise<void> => {
     rateLimitHit(ipKey, LOGIN_MAX_FAILURES_PER_IP, LOGIN_WINDOW_MS);
   };
 
-  const [user] = await db
+  const [user] = await withInstitutionDb(institutionId, (tx) => tx
     .select()
     .from(usersTable)
-    .where(eq(usersTable.username, username));
+    .where(eq(usersTable.username, username)));
 
   if (!user) {
     recordFailure();
@@ -71,12 +71,28 @@ router.post("/auth/login", async (req, res): Promise<void> => {
     return;
   }
 
-  const valid = await bcrypt.compare(password, user.password);
+  let valid: boolean;
+  try {
+    valid = await checkPassword(password, user.password);
+  } catch (error) {
+    if (!(error instanceof PasswordQueueFullError)) throw error;
+    res.status(503).setHeader("Retry-After", "3");
+    res.json({ error: "Hay muchos ingresos en curso. Intenta nuevamente en unos segundos." });
+    return;
+  }
   if (!valid) {
     recordFailure();
     res.status(401).json({ error: "Credenciales inválidas" });
     return;
   }
+
+  const [current] = await withInstitutionDb(institutionId, (tx) => tx.select().from(usersTable).where(eq(usersTable.id, user.id)));
+  if (!current || current.password !== user.password) {
+    recordFailure();
+    res.status(401).json({ error: "Credenciales inválidas" });
+    return;
+  }
+  Object.assign(user, current);
 
   req.session.regenerate((regenerateErr) => {
     if (regenerateErr) {

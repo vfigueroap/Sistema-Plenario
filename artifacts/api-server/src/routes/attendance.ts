@@ -140,7 +140,8 @@ router.post("/sessions/:id/attendance", requireAuth, async (req, res): Promise<v
   const [session] = await db
     .select()
     .from(plenariasTable)
-    .where(eq(plenariasTable.id, sessionId));
+    .where(eq(plenariasTable.id, sessionId))
+    .for("share");
 
   if (!session) {
     res.status(404).json({ error: "Sesión no encontrada" });

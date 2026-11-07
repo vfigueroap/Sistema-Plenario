@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { eq, sql } from "drizzle-orm";
 import { db, institutionsTable, usersTable, withInstitutionDb, resetInstitutionActiveCache } from "@workspace/db";
+import { sharedValue } from "../lib/shared-cache";
 
 const first = crypto.randomUUID();
 const second = crypto.randomUUID();
@@ -22,6 +23,17 @@ afterAll(async () => {
 });
 
 describe("institution RLS context", () => {
+  it("separa lecturas simultáneas de la caché entre instituciones",async () => {
+    const read=(id:string) => withInstitutionDb(id,async () => sharedValue("same-key",async () => {
+      await new Promise((resolve) => setTimeout(resolve,20));
+      return db.select().from(usersTable);
+    }));
+    const [a,b]=await Promise.all([read(first),read(second)]);
+    expect(a.every((row) => row.institutionId===first)).toBe(true);
+    expect(b.every((row) => row.institutionId===second)).toBe(true);
+    expect(a).toHaveLength(1);
+    expect(b).toHaveLength(1);
+  });
   it("returns only rows from the selected institution", async () => {
     const rows = await withInstitutionDb(first, (tx) => tx.select().from(usersTable));
     expect(rows.map((row) => row.institutionId)).toEqual([first]);

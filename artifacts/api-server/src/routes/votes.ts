@@ -50,6 +50,24 @@ async function getValidCandidateIds(topicId: number): Promise<Set<number>> {
   return new Set(rows.map((c) => c.id));
 }
 
+async function loadTopicData(topicId: number) {
+  return sharedValue(`topic-data:${topicId}`, async () => {
+    const [topic] = await db.select().from(topicsTable).where(eq(topicsTable.id, topicId));
+    if (!topic) return null;
+    const [liveVotes, allMembers, attendanceRows, eligibleSet, [plenaria], weightMap, candidates] = await Promise.all([
+      db.select().from(votesTable).where(eq(votesTable.voteTopicId, topicId)),
+      db.select().from(usersTable).where(eq(usersTable.rol, "miembro")),
+      db.select().from(attendanceTable).where(eq(attendanceTable.sessionId, topic.sessionId)),
+      getEligibleEstamentos(topicId),
+      db.select().from(plenariasTable).where(eq(plenariasTable.id, topic.sessionId)),
+      getSessionWeightMap(topic.sessionId),
+      db.select().from(topicCandidatesTable).where(eq(topicCandidatesTable.voteTopicId, topicId))
+        .orderBy(topicCandidatesTable.position, topicCandidatesTable.id),
+    ]);
+    return { topic, liveVotes, allMembers, attendanceRows, eligibleSet, plenaria, weightMap, candidates };
+  });
+}
+
 router.post("/topics/:topicId/vote", requireAuth, async (req, res): Promise<void> => {
   const raw = Array.isArray(req.params.topicId) ? req.params.topicId[0] : req.params.topicId;
   const topicId = parseInt(raw, 10);
@@ -183,24 +201,12 @@ router.get("/topics/:topicId/results", requireAuth, async (req, res): Promise<vo
 
   const userId = req.session.userId!;
 
-  const shared = await sharedValue(`results:${topicId}`, async () => {
-    const [topic] = await db.select().from(topicsTable).where(eq(topicsTable.id, topicId));
-    if (!topic) return null;
-    const [liveVotes, allMembers, attendanceRows, eligibleSet, [plenaria], weightMap] = await Promise.all([
-      db.select().from(votesTable).where(eq(votesTable.voteTopicId, topicId)),
-      db.select().from(usersTable).where(eq(usersTable.rol, "miembro")),
-      db.select().from(attendanceTable).where(eq(attendanceTable.sessionId, topic.sessionId)),
-      getEligibleEstamentos(topicId),
-      db.select().from(plenariasTable).where(eq(plenariasTable.id, topic.sessionId)),
-      getSessionWeightMap(topic.sessionId),
-    ]);
-    return { topic, liveVotes, allMembers, attendanceRows, eligibleSet, plenaria, weightMap };
-  });
+  const shared = await loadTopicData(topicId);
   if (!shared) {
     res.status(404).json({ error: "Tema no encontrado" });
     return;
   }
-  const { topic, liveVotes, allMembers, attendanceRows, eligibleSet, plenaria, weightMap } = shared;
+  const { topic, liveVotes, allMembers, attendanceRows, eligibleSet, plenaria, weightMap, candidates } = shared;
   const [me] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
 
   const allVotes = topic.electorateSnapshot?.votes ?? liveVotes;
@@ -251,12 +257,6 @@ router.get("/topics/:topicId/results", requireAuth, async (req, res): Promise<vo
   };
 
   if (topic.type === "candidato") {
-    const candidates = await db
-      .select()
-      .from(topicCandidatesTable)
-      .where(eq(topicCandidatesTable.voteTopicId, topicId))
-      .orderBy(sql`${topicCandidatesTable.position} ASC, ${topicCandidatesTable.id} ASC`);
-
     const ballotUserIds = new Set(allVotes.map((v) => v.userId));
     const r = computeCandidateResult(
       allVotes,
@@ -334,21 +334,13 @@ router.get("/topics/:topicId/ballots", requireAuth, async (req, res): Promise<vo
     return;
   }
 
-  const [topic] = await db.select().from(topicsTable).where(eq(topicsTable.id, topicId));
-  if (!topic) {
+  const shared = await loadTopicData(topicId);
+  if (!shared) {
     res.status(404).json({ error: "Tema no encontrado" });
     return;
   }
 
-  const [liveVotes, allMembers, attendanceRows, eligibleSet, candidates, [plenaria]] =
-    await Promise.all([
-      db.select().from(votesTable).where(eq(votesTable.voteTopicId, topicId)),
-      db.select().from(usersTable).where(eq(usersTable.rol, "miembro")),
-      db.select().from(attendanceTable).where(eq(attendanceTable.sessionId, topic.sessionId)),
-      getEligibleEstamentos(topicId),
-      db.select().from(topicCandidatesTable).where(eq(topicCandidatesTable.voteTopicId, topicId)),
-      db.select().from(plenariasTable).where(eq(plenariasTable.id, topic.sessionId)),
-    ]);
+  const { topic, liveVotes, allMembers, attendanceRows, eligibleSet, candidates, plenaria, weightMap } = shared;
 
   const candidateNameById = new Map(candidates.map((c) => [c.id, c.name]));
   const allVotes = topic.electorateSnapshot?.votes ?? liveVotes;
@@ -389,7 +381,7 @@ router.get("/topics/:topicId/ballots", requireAuth, async (req, res): Promise<vo
       plenaria?.createdAt ?? new Date(0),
       participantIds,
     ),
-    await getSessionWeightMap(topic.sessionId),
+    weightMap,
   );
   const eligibleMembers =
     eligibleSet.size === 0

@@ -13,6 +13,7 @@ import {
   justifiedAbsencesTable,
   agendaPointsTable,
   speakingTurnsTable,
+  withInstitutionDb,
 } from "@workspace/db";
 import { requireAuth, requireAdmin } from "../middlewares/auth";
 import { computeTopicResult, computeCandidateResult } from "../lib/results";
@@ -23,10 +24,12 @@ import {
   type SessionWeightMap,
 } from "../lib/sessionWeights";
 import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
+import { publicRead } from "../lib/public-read";
 
 const objectStorageService = new ObjectStorageService();
 
 const router: IRouter = Router();
+export const publicHistoryRouter: IRouter = Router();
 
 type TopicRow = typeof topicsTable.$inferSelect;
 type VoteRow = typeof votesTable.$inferSelect;
@@ -501,8 +504,7 @@ router.get("/history/sessions", requireAdmin, async (_req, res): Promise<void> =
 
 // Public (no auth): closed sessions with aggregate attendance + weighted results.
 // Personal/per-member vote data is intentionally excluded.
-router.get("/public/history", async (_req, res): Promise<void> => {
-  res.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
+publicHistoryRouter.get("/history", publicRead(async () => {
   const data = await loadHistoryData();
 
   const topicsBySession = topicsBySessionMap(data.topics);
@@ -637,12 +639,12 @@ router.get("/public/history", async (_req, res): Promise<void> => {
     };
   });
 
-  res.json(result);
-});
+  return result;
+}, "public, s-maxage=60, stale-while-revalidate=30"));
 
 // Public (no auth): download the acta (PDF) of a CLOSED session only. Guarded by
 // looking up the session's stored acta path — no arbitrary object access.
-router.get("/public/sessions/:id/acta", async (req, res): Promise<void> => {
+publicHistoryRouter.get("/sessions/:id/acta", async (req, res): Promise<void> => {
   const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const sessionId = parseInt(raw, 10);
   if (isNaN(sessionId)) {
@@ -650,10 +652,11 @@ router.get("/public/sessions/:id/acta", async (req, res): Promise<void> => {
     return;
   }
 
-  const [session] = await db
+  const institutionId = process.env.INSTITUTION_ID ?? "00000000-0000-4000-8000-000000000001";
+  const [session] = await withInstitutionDb(institutionId, (tx) => tx
     .select()
     .from(plenariasTable)
-    .where(eq(plenariasTable.id, sessionId));
+    .where(eq(plenariasTable.id, sessionId)));
   if (!session || session.status !== "cerrada" || !session.actaObjectPath) {
     res.status(404).json({ error: "Acta no disponible" });
     return;
@@ -680,8 +683,7 @@ router.get("/public/sessions/:id/acta", async (req, res): Promise<void> => {
 });
 
 // Public transparency: list of all active members (name, group, faculty only — no credentials)
-router.get("/public/members", async (_req, res): Promise<void> => {
-  res.setHeader("Cache-Control", "public, s-maxage=30, stale-while-revalidate=120");
+publicHistoryRouter.get("/members", publicRead(async () => {
   const members = await db
     .select({
       name: usersTable.displayName,
@@ -692,7 +694,9 @@ router.get("/public/members", async (_req, res): Promise<void> => {
     .from(usersTable)
     .where(and(eq(usersTable.rol, "miembro"), eq(usersTable.active, true)))
     .orderBy(usersTable.displayName);
-  res.json(members);
-});
+  return members;
+}, "public, s-maxage=30, stale-while-revalidate=120"));
+
+router.use("/public", publicHistoryRouter);
 
 export default router;
