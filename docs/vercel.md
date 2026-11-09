@@ -35,12 +35,15 @@ debe registrarse explícitamente.
 
 ## Tiempo real
 
-Vercel no mantiene el servidor Socket.IO entre invocaciones. El build activa el
-modo de consultas REST periódicas: refresca consultas visibles cada pocos
-segundos y pausa cuando la pestaña queda oculta o sin red. Esta solución evita
-infraestructura adicional y es adecuada para el alcance actual; si la carga de
-lecturas de plenarios simultáneos supera el pooler, el siguiente paso es usar
-Supabase Realtime o un servicio WebSocket persistente.
+El build activa consultas REST con un pulso compartido cada 15 segundos. La fase inicial aleatoria reparte los clientes. Solo se actualizan los apartados que cambiaron, con una lectura de seguridad cada 5 a 10 minutos y una comprobaci?n por minuto de las consultas sin versi?n. Las acciones propias mantienen su actualizaci?n inmediata. El pulso se cachea 5 segundos en el CDN, por lo que la visibilidad de una acci?n ajena puede sumar ese tiempo al intervalo.
+
+El panel p?blico conserva su actualizaci?n cada 90 a 100 segundos. Las pesta?as ocultas o sin red dejan de consultar. Al cerrar el pleno, el polling autenticado se pausa. Para detectar una sesi?n nueva se pulsa Actualizar o se vuelve a la pesta?a. Fuera de un pleno, la mensajer?a se consulta al abrirla o actualizar manualmente.
+
+VITE_POLL_INTERVAL_MS permite ampliar el intervalo de 15000 ms al construir el frontend. Los valores menores o inv?lidos vuelven a 15000. El servidor conserva la comprobaci?n de acceso de cada solicitud y la cach? de usuario de 2 segundos. Las respuestas privadas nunca se almacenan en el CDN.
+
+La compilaci?n de producci?n ejecuta scripts/deploy-migrations.mjs antes de publicar. Usa DATABASE_URL del entorno de Vercel, verifica el pooler de transacciones y aplica ?nicamente la funci?n idempotente 0006. No cambia registros. Si falla, la compilaci?n se detiene. Los previews no ejecutan esta migraci?n y requieren su base separada preparada.
+
+En producci?n se reemplaza el registro de cada petici?n por un agregado por ruta cada minuto de actividad. Incluye recuento, errores y latencias, adem?s de CPU del proceso completo. Esta CPU incluye todas las solicitudes concurrentes y no representa CPU individual por ruta ni la factura de Vercel. Los registros son por instancia y pueden perder el ?ltimo intervalo al reciclarse. Los fallos 5xx se registran de inmediato.
 
 ## Lista previa al tráfico
 
@@ -48,7 +51,7 @@ Supabase Realtime o un servicio WebSocket persistente.
 2. Crear institución/admin y bucket privado.
 3. Configurar todas las variables en Vercel.
 4. Confirmar que `/api/healthz` responde correctamente.
-5. Probar login, creación/apertura/cierre de sesión, QR/asistencia, votación,
+5. Probar login, creación/apertura/cierre de sesión, asistencia, votación,
    turno de palabra, acta y exportaciones con datos sintéticos.
 6. Abrir dos navegadores y confirmar que el polling propaga cambios.
 7. Verificar que un origen no autorizado recibe 403 y que las respuestas de API

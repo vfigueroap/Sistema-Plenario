@@ -1,0 +1,153 @@
+{
+  "generatedAt": "2026-11-09T19:17:50.401Z",
+  "source": "Usage aportado por el usuario del 9 de noviembre de 2026",
+  "members": 120,
+  "visitors": 200,
+  "remainingCpuSeconds": 12829,
+  "cpuPerInvocationSeconds": 0.06169978791925222,
+  "method": [
+    "Modelo de solicitudes, no medición de facturación ni garantía de capacidad en Vercel",
+    "Después, el reloj virtual ejecuta el poller real durante dos horas con seis consultas activas y mide 480 pulsos y 240 lecturas por integrante",
+    "Antes, modelo del código previo con intervalo medio de 3,5 s y seis lecturas cada 90 s",
+    "Después se usa el extremo conservador de seguridad cada 300 s, sin el ahorro de pestañas ocultas ni sesiones cerradas",
+    "Se añaden 8000 invocaciones privadas por cada dos horas para llegada, acciones, cambios de pantalla, administración y refrescos por cambios",
+    "CDN ideal con 1 o 10 nodos independientes y una renovación por TTL y ruta; cero nodos representa ningún acierto de caché",
+    "La caché evita invocar la función, pero todas las solicitudes siguen contando en CDN",
+    "CPU y memoria se extrapolan de promedios históricos, no de las latencias HTTP ni de la CPU del equipo local",
+    "Una caché con menos aciertos, más pestañas, archivos grandes o más acciones cambia el resultado"
+  ],
+  "scenarios": [
+    {
+      "version": "antes",
+      "hours": 2,
+      "cacheNodes": 1,
+      "browserRequests": 344560,
+      "invocations": 69560,
+      "estimatedCpuMinutes": 71.5,
+      "remainingCpuPercent": 33.5,
+      "estimatedMemoryGBhAtHistoricalAverage": 46.2,
+      "withinCpuGoal": false
+    },
+    {
+      "version": "antes",
+      "hours": 2,
+      "cacheNodes": 10,
+      "browserRequests": 344560,
+      "invocations": 105200,
+      "estimatedCpuMinutes": 108.2,
+      "remainingCpuPercent": 50.6,
+      "estimatedMemoryGBhAtHistoricalAverage": 69.8,
+      "withinCpuGoal": false
+    },
+    {
+      "version": "antes",
+      "hours": 2,
+      "cacheNodes": 0,
+      "browserRequests": 344560,
+      "invocations": 344560,
+      "estimatedCpuMinutes": 354.3,
+      "remainingCpuPercent": 165.7,
+      "estimatedMemoryGBhAtHistoricalAverage": 228.7,
+      "withinCpuGoal": false
+    },
+    {
+      "version": "después",
+      "hours": 2,
+      "cacheNodes": 1,
+      "browserRequests": 126400,
+      "invocations": 38600,
+      "estimatedCpuMinutes": 39.7,
+      "remainingCpuPercent": 18.6,
+      "estimatedMemoryGBhAtHistoricalAverage": 25.6,
+      "withinCpuGoal": true
+    },
+    {
+      "version": "después",
+      "hours": 2,
+      "cacheNodes": 10,
+      "browserRequests": 126400,
+      "invocations": 54800,
+      "estimatedCpuMinutes": 56.4,
+      "remainingCpuPercent": 26.4,
+      "estimatedMemoryGBhAtHistoricalAverage": 36.4,
+      "withinCpuGoal": true
+    },
+    {
+      "version": "después",
+      "hours": 2,
+      "cacheNodes": 0,
+      "browserRequests": 126400,
+      "invocations": 126400,
+      "estimatedCpuMinutes": 130,
+      "remainingCpuPercent": 60.8,
+      "estimatedMemoryGBhAtHistoricalAverage": 83.9,
+      "withinCpuGoal": false
+    },
+    {
+      "version": "antes",
+      "hours": 4,
+      "cacheNodes": 1,
+      "browserRequests": 689000,
+      "invocations": 139120,
+      "estimatedCpuMinutes": 143.1,
+      "remainingCpuPercent": 66.9,
+      "estimatedMemoryGBhAtHistoricalAverage": 92.3,
+      "withinCpuGoal": false
+    },
+    {
+      "version": "antes",
+      "hours": 4,
+      "cacheNodes": 10,
+      "browserRequests": 689000,
+      "invocations": 210400,
+      "estimatedCpuMinutes": 216.4,
+      "remainingCpuPercent": 101.2,
+      "estimatedMemoryGBhAtHistoricalAverage": 139.6,
+      "withinCpuGoal": false
+    },
+    {
+      "version": "antes",
+      "hours": 4,
+      "cacheNodes": 0,
+      "browserRequests": 689000,
+      "invocations": 689000,
+      "estimatedCpuMinutes": 708.5,
+      "remainingCpuPercent": 331.4,
+      "estimatedMemoryGBhAtHistoricalAverage": 457.3,
+      "withinCpuGoal": false
+    },
+    {
+      "version": "después",
+      "hours": 4,
+      "cacheNodes": 1,
+      "browserRequests": 252800,
+      "invocations": 77200,
+      "estimatedCpuMinutes": 79.4,
+      "remainingCpuPercent": 37.1,
+      "estimatedMemoryGBhAtHistoricalAverage": 51.2,
+      "withinCpuGoal": true
+    },
+    {
+      "version": "después",
+      "hours": 4,
+      "cacheNodes": 10,
+      "browserRequests": 252800,
+      "invocations": 109600,
+      "estimatedCpuMinutes": 112.7,
+      "remainingCpuPercent": 52.7,
+      "estimatedMemoryGBhAtHistoricalAverage": 72.7,
+      "withinCpuGoal": true
+    },
+    {
+      "version": "después",
+      "hours": 4,
+      "cacheNodes": 0,
+      "browserRequests": 252800,
+      "invocations": 252800,
+      "estimatedCpuMinutes": 260,
+      "remainingCpuPercent": 121.6,
+      "estimatedMemoryGBhAtHistoricalAverage": 167.8,
+      "withinCpuGoal": false
+    }
+  ]
+}

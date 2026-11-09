@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "buildCommand": "pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/fech-plenario run build",
+  "buildCommand": "node scripts/deploy-migrations.mjs && pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/fech-plenario run build",
   "outputDirectory": "artifacts/fech-plenario/dist/public",
   "regions": ["gru1"],
   "crons": [{ "path": "/api/public/pulse", "schedule": "0 12 * * *" }],
