@@ -4,10 +4,16 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import assert from "node:assert/strict";
 import http from "node:http";
+import { gunzipSync } from "node:zlib";
 
 const require = createRequire(new URL("../package.json", import.meta.url));
 const { Client } = require("pg");
 const root = fileURLToPath(new URL("../../", import.meta.url));
+const memberCount = Number(process.env.CAPACITY_MEMBERS ?? 110);
+const visitorCount = Number(process.env.CAPACITY_VISITORS ?? 200);
+for (const count of [memberCount, visitorCount])
+  if (!Number.isInteger(count) || count < 1 || count > 1000)
+    throw new Error("Cantidad de participantes inválida");
 const base = new URL(process.env.CAPACITY_BASE_URL ?? "http://127.0.0.1:5188");
 const bases = (process.env.CAPACITY_BASE_URLS ?? base.href)
   .split(",")
@@ -22,9 +28,9 @@ if (!/^\/[a-z0-9_]+_test$/.test(dbUrl.pathname) || dbUrl.search)
 const client = new Client({ connectionString: dbUrl.href });
 const agent = new http.Agent({
   keepAlive: true,
-  maxSockets: 310,
-  maxFreeSockets: 310,
-  maxTotalSockets: 310,
+  maxSockets: memberCount + visitorCount,
+  maxFreeSockets: memberCount + visitorCount,
+  maxTotalSockets: memberCount + visitorCount,
 });
 await client.connect();
 const metadata = JSON.parse(
@@ -38,8 +44,8 @@ const countSql = () =>
   ).length;
 const report = {
   createdAt: new Date().toISOString(),
-  members: 110,
-  visitors: 200,
+  members: memberCount,
+  visitors: visitorCount,
   bcryptCost: 10,
   cdn: false,
   instances: bases.length,
@@ -69,6 +75,7 @@ async function call(actor, method, endpoint, body, label = endpoint) {
             Origin: "https://capacity.example",
             "X-Forwarded-Proto": "https",
             "Content-Type": "application/json",
+            "Accept-Encoding": "gzip",
             ...(payload
               ? { "Content-Length": Buffer.byteLength(payload) }
               : {}),
@@ -77,16 +84,16 @@ async function call(actor, method, endpoint, body, label = endpoint) {
           signal: AbortSignal.timeout(30000),
         },
         (res) => {
-          let text = "";
-          res.setEncoding("utf8");
+          const chunks = [];
           res.on("data", (chunk) => {
-            text += chunk;
+            chunks.push(chunk);
           });
           res.on("error", reject);
           res.on("end", () =>
             resolve({
               status: res.statusCode,
-              text,
+              body: Buffer.concat(chunks),
+              encoding: res.headers["content-encoding"],
               cookie: res.headers["set-cookie"]?.[0],
             }),
           );
@@ -95,18 +102,18 @@ async function call(actor, method, endpoint, body, label = endpoint) {
       req.on("error", reject);
       req.end(payload);
     });
-    const { text, cookie } = response;
+    const { body: responseBody, cookie, encoding } = response;
     if (cookie) actor.cookie = cookie.split(";")[0];
     let data;
     if (!["publico", "panel", "pulso", "administrador"].includes(label)) {
       try {
-        data = JSON.parse(text);
+        data = JSON.parse((encoding === "gzip" ? gunzipSync(responseBody) : responseBody).toString("utf8"));
       } catch {}
     }
     return {
       status: response.status,
       ms: performance.now() - started,
-      bytes: text.length,
+      bytes: responseBody.length,
       data,
       label,
     };
@@ -140,6 +147,8 @@ function summarize(rows) {
     p95: percentile(rows, 0.95),
     p99: percentile(rows, 0.99),
     max: percentile(rows, 1),
+    overFiveSeconds: rows.filter((r) => r.ms > 5000).length,
+    bytes: rows.reduce((total, row) => total + (row.bytes ?? 0), 0),
     failures: [
       ...new Set(rows.filter((r) => r.status < 0).map((r) => r.error)),
     ],
@@ -171,17 +180,17 @@ async function phase(name, action) {
   );
   return rows;
 }
-const members = Array.from({ length: 110 }, (_, i) => ({
+const members = Array.from({ length: memberCount }, (_, i) => ({
   username: `capacity_${i + 1}`,
 }));
 const publicWave = () =>
-  Array.from({ length: 200 }, () =>
+  Array.from({ length: visitorCount }, () =>
     ["/api/public/history", "/api/public/members"].map((p) =>
       call({}, "GET", p, undefined, "publico"),
     ),
   ).flat();
 const warmup = await Promise.all(
-  Array.from({ length: 310 }, () =>
+  Array.from({ length: memberCount + visitorCount }, () =>
     call({}, "GET", "/api/healthz", undefined, "conexion"),
   ),
 );
@@ -217,7 +226,7 @@ const arrivals = await phase("ingreso y llegada pública", () =>
 );
 assert.equal(
   arrivals.filter((r) => r.label === "ingreso" && r.status === 200).length,
-  110,
+  memberCount,
 );
 await phase("asistencia y público", () =>
   Promise.all([
@@ -410,11 +419,11 @@ report.checks = (
   )
 ).rows[0];
 assert.deepEqual(report.checks, {
-  attendance: 110,
-  ballots: 110,
-  votes: 110,
-  turns: 110,
-  positions: 110,
+  attendance: memberCount,
+  ballots: memberCount,
+  votes: memberCount,
+  turns: memberCount,
+  positions: memberCount,
   incorrect_weights: 0,
 });
 const duplicates = await Promise.all(
@@ -443,11 +452,12 @@ for (const id of extraTopics) {
         [id],
       )
     ).rows[0].n,
-    110,
+    memberCount,
   );
 }
-report.checks.additionalBallots = 110 * extraTopics.length;
+report.checks.additionalBallots = memberCount * extraTopics.length;
 report.passed = report.phases.every((phase) => phase.errors === 0);
+report.underFiveSeconds = report.phases.every((phase) => phase.overFiveSeconds === 0);
 await adminCall("PATCH", `/api/sessions/${session.id}`, { status: "cerrada" });
 fs.writeFileSync(
   path.join(

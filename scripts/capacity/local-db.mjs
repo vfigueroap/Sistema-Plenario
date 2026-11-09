@@ -8,6 +8,9 @@ const require = createRequire(new URL("../package.json", import.meta.url));
 const { Client } = require("pg");
 const bcrypt = require("bcryptjs");
 const root = fileURLToPath(new URL("../../", import.meta.url));
+const memberCount = Number(process.env.CAPACITY_MEMBERS ?? 110);
+if (!Number.isInteger(memberCount) || memberCount < 1 || memberCount > 1000)
+  throw new Error("Cantidad de integrantes inválida");
 const modulePath = process.env.EMBEDDED_POSTGRES_MODULE;
 const { default: EmbeddedPostgres } = await import(
   modulePath ? pathToFileURL(modulePath).href : "embedded-postgres"
@@ -70,9 +73,9 @@ for (const name of ["capacity_test", "plenario_test"]) {
     );
     await client.query(
       `insert into users (username,display_name,password,rol,voting_weight,"group",faculty,created_at)
-      select 'capacity_'||n, 'Integrante ficticio '||n, $1, 'miembro', 100.0/110, 'Consejeros FECh', 'Unidad ficticia', now()-interval '1 year'
-      from generate_series(1,110) n`,
-      [hash],
+      select 'capacity_'||n, 'Integrante ficticio '||n, $1, 'miembro', 100.0/$2, 'Consejeros FECh', 'Unidad ficticia', now()-interval '1 year'
+      from generate_series(1,$2::int) n`,
+      [hash, memberCount],
     );
     await client.query(`insert into plenarias (title,session_code,status,created_at,official_start_at,official_end_at)
       select 'Sesión ficticia '||n, 'TEST'||n, 'cerrada', now()-n*interval '7 days', now()-n*interval '7 days', now()-n*interval '7 days'+interval '3 hours'

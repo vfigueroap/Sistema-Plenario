@@ -1,0 +1,377 @@
+{
+  "createdAt": "2026-11-09T15:11:53.269Z",
+  "members": 111,
+  "visitors": 200,
+  "bcryptCost": 10,
+  "cdn": false,
+  "instances": 4,
+  "simulatedDatabaseRoundTripMs": 10,
+  "phases": [
+    {
+      "name": "ingreso y llegada pública",
+      "wallMs": 2501,
+      "sql": 1257,
+      "requests": 511,
+      "errors": 0,
+      "codes": {
+        "200": 511
+      },
+      "p50": 1628,
+      "p95": 2038,
+      "p99": 2222,
+      "max": 2253,
+      "overFiveSeconds": 0,
+      "bytes": 12480120,
+      "failures": [],
+      "groups": {
+        "ingreso": {
+          "requests": 111,
+          "errors": 0,
+          "codes": {
+            "200": 111
+          },
+          "p50": 1824,
+          "p95": 2222,
+          "p99": 2253,
+          "max": 2253,
+          "overFiveSeconds": 0,
+          "bytes": 24320,
+          "failures": []
+        },
+        "publico": {
+          "requests": 400,
+          "errors": 0,
+          "codes": {
+            "200": 400
+          },
+          "p50": 988,
+          "p95": 1738,
+          "p99": 1739,
+          "max": 1742,
+          "overFiveSeconds": 0,
+          "bytes": 12455800,
+          "failures": []
+        }
+      }
+    },
+    {
+      "name": "asistencia y público",
+      "wallMs": 1757,
+      "sql": 924,
+      "requests": 511,
+      "errors": 0,
+      "codes": {
+        "200": 511
+      },
+      "p50": 834,
+      "p95": 1143,
+      "p99": 1389,
+      "max": 1560,
+      "overFiveSeconds": 0,
+      "bytes": 12451349,
+      "failures": [],
+      "groups": {
+        "asistencia": {
+          "requests": 111,
+          "errors": 0,
+          "codes": {
+            "200": 111
+          },
+          "p50": 834,
+          "p95": 1389,
+          "p99": 1560,
+          "max": 1560,
+          "overFiveSeconds": 0,
+          "bytes": 6549,
+          "failures": []
+        },
+        "publico": {
+          "requests": 400,
+          "errors": 0,
+          "codes": {
+            "200": 400
+          },
+          "p50": 205,
+          "p95": 1050,
+          "p99": 1052,
+          "max": 1052,
+          "overFiveSeconds": 0,
+          "bytes": 12444800,
+          "failures": []
+        }
+      }
+    },
+    {
+      "name": "voto y público",
+      "wallMs": 1908,
+      "sql": 1115,
+      "requests": 511,
+      "errors": 0,
+      "codes": {
+        "200": 511
+      },
+      "p50": 152,
+      "p95": 1389,
+      "p99": 1670,
+      "max": 1700,
+      "overFiveSeconds": 0,
+      "bytes": 12450942,
+      "failures": [],
+      "groups": {
+        "voto": {
+          "requests": 111,
+          "errors": 0,
+          "codes": {
+            "200": 111
+          },
+          "p50": 863,
+          "p95": 1670,
+          "p99": 1700,
+          "max": 1700,
+          "overFiveSeconds": 0,
+          "bytes": 6142,
+          "failures": []
+        },
+        "publico": {
+          "requests": 400,
+          "errors": 0,
+          "codes": {
+            "200": 400
+          },
+          "p50": 74,
+          "p95": 156,
+          "p99": 157,
+          "max": 159,
+          "overFiveSeconds": 0,
+          "bytes": 12444800,
+          "failures": []
+        }
+      }
+    },
+    {
+      "name": "palabra y público",
+      "wallMs": 4069,
+      "sql": 924,
+      "requests": 511,
+      "errors": 0,
+      "codes": {
+        "200": 400,
+        "201": 111
+      },
+      "p50": 947,
+      "p95": 3089,
+      "p99": 3712,
+      "max": 3868,
+      "overFiveSeconds": 0,
+      "bytes": 12446598,
+      "failures": [],
+      "groups": {
+        "palabra": {
+          "requests": 111,
+          "errors": 0,
+          "codes": {
+            "201": 111
+          },
+          "p50": 2150,
+          "p95": 3712,
+          "p99": 3837,
+          "max": 3868,
+          "overFiveSeconds": 0,
+          "bytes": 41198,
+          "failures": []
+        },
+        "publico": {
+          "requests": 400,
+          "errors": 0,
+          "codes": {
+            "200": 400
+          },
+          "p50": 176,
+          "p95": 978,
+          "p99": 978,
+          "max": 978,
+          "overFiveSeconds": 0,
+          "bytes": 12405400,
+          "failures": []
+        }
+      }
+    },
+    {
+      "name": "paneles y público",
+      "wallMs": 4336,
+      "sql": 2798,
+      "requests": 1288,
+      "errors": 0,
+      "codes": {
+        "200": 1288
+      },
+      "p50": 2418,
+      "p95": 4071,
+      "p99": 4076,
+      "max": 4077,
+      "overFiveSeconds": 0,
+      "bytes": 27745315,
+      "failures": [],
+      "groups": {
+        "panel": {
+          "requests": 888,
+          "errors": 0,
+          "codes": {
+            "200": 888
+          },
+          "p50": 1574,
+          "p95": 2953,
+          "p99": 2964,
+          "max": 3030,
+          "overFiveSeconds": 0,
+          "bytes": 15339915,
+          "failures": []
+        },
+        "publico": {
+          "requests": 400,
+          "errors": 0,
+          "codes": {
+            "200": 400
+          },
+          "p50": 2924,
+          "p95": 4074,
+          "p99": 4076,
+          "max": 4077,
+          "overFiveSeconds": 0,
+          "bytes": 12405400,
+          "failures": []
+        }
+      }
+    },
+    {
+      "name": "uso mixto 180s",
+      "wallMs": 183603,
+      "sql": 31503,
+      "requests": 13098,
+      "errors": 0,
+      "codes": {
+        "200": 13098
+      },
+      "p50": 322,
+      "p95": 1533,
+      "p99": 1978,
+      "max": 2343,
+      "overFiveSeconds": 0,
+      "bytes": 123329606,
+      "failures": [],
+      "groups": {
+        "publico": {
+          "requests": 800,
+          "errors": 0,
+          "codes": {
+            "200": 800
+          },
+          "p50": 112,
+          "p95": 1352,
+          "p99": 1358,
+          "max": 1360,
+          "overFiveSeconds": 0,
+          "bytes": 24809800,
+          "failures": []
+        },
+        "pulso": {
+          "requests": 5382,
+          "errors": 0,
+          "codes": {
+            "200": 5382
+          },
+          "p50": 81,
+          "p95": 383,
+          "p99": 878,
+          "max": 1749,
+          "overFiveSeconds": 0,
+          "bytes": 1506960,
+          "failures": []
+        },
+        "administrador": {
+          "requests": 256,
+          "errors": 0,
+          "codes": {
+            "200": 256
+          },
+          "p50": 374,
+          "p95": 1381,
+          "p99": 1958,
+          "max": 2005,
+          "overFiveSeconds": 0,
+          "bytes": 4511224,
+          "failures": []
+        },
+        "panel": {
+          "requests": 5328,
+          "errors": 0,
+          "codes": {
+            "200": 5328
+          },
+          "p50": 712,
+          "p95": 1808,
+          "p99": 2114,
+          "max": 2343,
+          "overFiveSeconds": 0,
+          "bytes": 92431470,
+          "failures": []
+        },
+        "voto sostenido": {
+          "requests": 444,
+          "errors": 0,
+          "codes": {
+            "200": 444
+          },
+          "p50": 880,
+          "p95": 1669,
+          "p99": 1700,
+          "max": 1715,
+          "overFiveSeconds": 0,
+          "bytes": 23532,
+          "failures": []
+        },
+        "retiro": {
+          "requests": 444,
+          "errors": 0,
+          "codes": {
+            "200": 444
+          },
+          "p50": 634,
+          "p95": 1165,
+          "p99": 1190,
+          "max": 1193,
+          "overFiveSeconds": 0,
+          "bytes": 23532,
+          "failures": []
+        },
+        "reingreso": {
+          "requests": 444,
+          "errors": 0,
+          "codes": {
+            "200": 444
+          },
+          "p50": 621,
+          "p95": 1149,
+          "p99": 1171,
+          "max": 1236,
+          "overFiveSeconds": 0,
+          "bytes": 23088,
+          "failures": []
+        }
+      }
+    }
+  ],
+  "checks": {
+    "attendance": 111,
+    "ballots": 111,
+    "votes": 111,
+    "turns": 111,
+    "positions": 111,
+    "incorrect_weights": 0,
+    "duplicateVotesRejected": 20,
+    "duplicateTurnsRejected": 20,
+    "additionalBallots": 444
+  },
+  "passed": true,
+  "underFiveSeconds": true
+}

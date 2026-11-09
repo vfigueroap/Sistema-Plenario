@@ -1,0 +1,63 @@
+{
+  "date": "2026-11-09",
+  "startingCommit": "21f8465",
+  "implementationCommit": "01dc662",
+  "primaryTarget": { "members": 111, "visitors": 200, "responseBudgetMs": 5000 },
+  "stressTarget": { "members": 220, "visitors": 400 },
+  "environment": {
+    "syntheticOnly": true,
+    "productionAccessed": false,
+    "database": "capacity_test",
+    "institutionId": "00000000-0000-4000-8000-000000000001",
+    "fixtureMembers": 220,
+    "historicSessionsInitially": 17,
+    "historicMotionsPerSession": 4,
+    "additionalSessionsCreatedByRuns": true,
+    "instances": 4,
+    "applicationPoolPerInstance": 5,
+    "sessionPoolPerInstance": 3,
+    "postgresMaxConnections": 60,
+    "sharedBuffers": "224MB",
+    "artificialDelayEachDirectionPerTcpChunkMs": 5,
+    "passwordHashCost": 10,
+    "cdn": false
+  },
+  "measurements": {
+    "620-before.json": "Versión inicial de la auditoría anterior. 60 solicitudes de palabra fallaron y se guardaron 160 de 220 turnos. La ejecución se detuvo en la comprobación de integridad. El cliente anterior acumulaba texto; el cliente final acumula buffers y anuncia gzip como un navegador.",
+    "111-final.json": "Versión final. Ráfagas más 180 segundos de uso mixto. 16430 solicitudes medidas, cero errores y ninguna mayor a 5 segundos. El máximo fue 4077 ms. Se conservaron los 111 votos y turnos, más 444 votos adicionales de cuatro mociones. Se rechazaron 20 votos duplicados y 20 turnos duplicados.",
+    "620-final.json": "Versión final. Ráfagas sin prueba sostenida. 6640 solicitudes medidas, cero errores, 895 por encima de 5 segundos y máximo de 7142 ms. Las 220 asistencias, votos y palabras se conservaron correctamente. No cumple el objetivo de 5 segundos con el doble de participantes."
+  },
+  "validation": {
+    "serverTestsPassed": 276,
+    "frontendTestsPassed": 25,
+    "typecheck": true,
+    "apiBuild": true,
+    "frontendBuild": true,
+    "remainingDatabaseConnectionsAfterRuns": 0
+  },
+  "deploymentRequirement": "Aplicar lib/db/migrations/fresh/0006_enqueue_speaking.sql antes del despliegue. Solo se aplicó en las bases locales de prueba. Instalar las dependencias con pnpm y el lockfile, que incluyen bcrypt nativo.",
+  "limits": [
+    "Postgres local no reproduce la CPU ni las restricciones de Supabase Nano.",
+    "Cuatro procesos locales no reproducen los arranques en frío, escalado ni cuotas de Vercel.",
+    "Se midieron respuestas HTTP completas, no el renderizado de 311 o 620 navegadores ni redes móviles reales.",
+    "La apertura de paneles solicita ocho recursos por integrante al mismo tiempo. Cada visitante solicita historial e integrantes. Los filtros y pestañas públicas trabajan con esos datos en el cliente.",
+    "La prueba no representa un pleno de varias horas ni certifica producción.",
+    "La cuenta SQL mide entradas de log_statement y no las sentencias internas de la nueva función de PostgreSQL.",
+    "El número de sockets del cliente está limitado a integrantes más visitantes. Algunas solicitudes pueden esperar un socket en el generador; su tiempo de espera está incluido en la latencia.",
+    "La prueba sostenida mide pulsos cada 3,5 segundos y paneles cada nueve pulsos, una frecuencia de lecturas completas mayor que el refresco de seguridad habitual."
+  ],
+  "vercelQuotaRisk": {
+    "usageDashboardReviewed": false,
+    "suppliedScreenshots": "Analytics de siete días, con 498 visitantes y 2056 páginas vistas. No muestran las cuotas consumidas.",
+    "hobbyCdnRequestsMonthly": 1000000,
+    "hobbyFunctionInvocationsMonthly": 1000000,
+    "hobbyActiveCpuHoursMonthly": 4,
+    "codePulseIntervalMs": [3000, 3999],
+    "fourHourExample": "111 pestañas visibles durante cuatro horas pueden generar aproximadamente 399600 a 532800 consultas de pulso. Es una estimación sin contar otras consultas ni descontar pausas de actividad. La caché reduce ejecuciones y consultas a la base pero las solicitudes que llegan a la CDN cuentan.",
+    "sources": [
+      "https://vercel.com/docs/plans/hobby",
+      "https://vercel.com/docs/manage-cdn-usage",
+      "https://vercel.com/docs/pricing/manage-and-optimize-usage"
+    ]
+  }
+}

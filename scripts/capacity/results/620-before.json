@@ -1,0 +1,250 @@
+{
+  "createdAt": "2026-11-09T14:04:33.007Z",
+  "members": 220,
+  "visitors": 400,
+  "bcryptCost": 10,
+  "cdn": false,
+  "instances": 4,
+  "simulatedDatabaseRoundTripMs": 10,
+  "phases": [
+    {
+      "name": "ingreso y llegada pública",
+      "wallMs": 18643,
+      "sql": 2484,
+      "requests": 1020,
+      "errors": 0,
+      "codes": {
+        "200": 1020
+      },
+      "p50": 10719,
+      "p95": 18202,
+      "p99": 18420,
+      "max": 18481,
+      "overFiveSeconds": 1020,
+      "bytes": 770808518,
+      "failures": [],
+      "groups": {
+        "ingreso": {
+          "requests": 220,
+          "errors": 0,
+          "codes": {
+            "200": 220
+          },
+          "p50": 13562,
+          "p95": 18420,
+          "p99": 18424,
+          "max": 18481,
+          "overFiveSeconds": 220,
+          "bytes": 48518,
+          "failures": []
+        },
+        "publico": {
+          "requests": 800,
+          "errors": 0,
+          "codes": {
+            "200": 800
+          },
+          "p50": 8359,
+          "p95": 17560,
+          "p99": 18130,
+          "max": 18288,
+          "overFiveSeconds": 800,
+          "bytes": 770760000,
+          "failures": []
+        }
+      }
+    },
+    {
+      "name": "asistencia y público",
+      "wallMs": 12271,
+      "sql": 1824,
+      "requests": 1020,
+      "errors": 0,
+      "codes": {
+        "200": 1020
+      },
+      "p50": 2008,
+      "p95": 6809,
+      "p99": 11903,
+      "max": 12022,
+      "overFiveSeconds": 260,
+      "bytes": 770899793,
+      "failures": [],
+      "groups": {
+        "asistencia": {
+          "requests": 220,
+          "errors": 0,
+          "codes": {
+            "200": 220
+          },
+          "p50": 5161,
+          "p95": 5621,
+          "p99": 5625,
+          "max": 5625,
+          "overFiveSeconds": 112,
+          "bytes": 12980,
+          "failures": []
+        },
+        "publico": {
+          "requests": 800,
+          "errors": 0,
+          "codes": {
+            "200": 800
+          },
+          "p50": 960,
+          "p95": 9461,
+          "p99": 11922,
+          "max": 12022,
+          "overFiveSeconds": 148,
+          "bytes": 770886813,
+          "failures": []
+        }
+      }
+    },
+    {
+      "name": "voto y público",
+      "wallMs": 8208,
+      "sql": 2275,
+      "requests": 1020,
+      "errors": 0,
+      "codes": {
+        "200": 1020
+      },
+      "p50": 2367,
+      "p95": 7156,
+      "p99": 7646,
+      "max": 7756,
+      "overFiveSeconds": 266,
+      "bytes": 771131298,
+      "failures": [],
+      "groups": {
+        "voto": {
+          "requests": 220,
+          "errors": 0,
+          "codes": {
+            "200": 220
+          },
+          "p50": 5219,
+          "p95": 5343,
+          "p99": 5484,
+          "max": 5657,
+          "overFiveSeconds": 131,
+          "bytes": 12098,
+          "failures": []
+        },
+        "publico": {
+          "requests": 800,
+          "errors": 0,
+          "codes": {
+            "200": 800
+          },
+          "p50": 701,
+          "p95": 7289,
+          "p99": 7670,
+          "max": 7756,
+          "overFiveSeconds": 135,
+          "bytes": 771119200,
+          "failures": []
+        }
+      }
+    },
+    {
+      "name": "palabra y público",
+      "wallMs": 14086,
+      "sql": 1564,
+      "requests": 1020,
+      "errors": 60,
+      "codes": {
+        "200": 800,
+        "201": 160,
+        "500": 60
+      },
+      "p50": 2510,
+      "p95": 13211,
+      "p99": 13709,
+      "max": 13845,
+      "overFiveSeconds": 296,
+      "bytes": 771183702,
+      "failures": [],
+      "groups": {
+        "palabra": {
+          "requests": 220,
+          "errors": 60,
+          "codes": {
+            "201": 160,
+            "500": 60
+          },
+          "p50": 9128,
+          "p95": 11570,
+          "p99": 12152,
+          "max": 12304,
+          "overFiveSeconds": 177,
+          "bytes": 64502,
+          "failures": []
+        },
+        "publico": {
+          "requests": 800,
+          "errors": 0,
+          "codes": {
+            "200": 800
+          },
+          "p50": 424,
+          "p95": 13338,
+          "p99": 13732,
+          "max": 13845,
+          "overFiveSeconds": 119,
+          "bytes": 771119200,
+          "failures": []
+        }
+      }
+    },
+    {
+      "name": "paneles y público",
+      "wallMs": 14758,
+      "sql": 9090,
+      "requests": 2560,
+      "errors": 0,
+      "codes": {
+        "200": 2560
+      },
+      "p50": 5464,
+      "p95": 12763,
+      "p99": 14078,
+      "max": 14321,
+      "overFiveSeconds": 1371,
+      "bytes": 806401376,
+      "failures": [],
+      "groups": {
+        "panel": {
+          "requests": 1760,
+          "errors": 0,
+          "codes": {
+            "200": 1760
+          },
+          "p50": 3528,
+          "p95": 8167,
+          "p99": 10787,
+          "max": 11067,
+          "overFiveSeconds": 571,
+          "bytes": 35282176,
+          "failures": []
+        },
+        "publico": {
+          "requests": 800,
+          "errors": 0,
+          "codes": {
+            "200": 800
+          },
+          "p50": 8773,
+          "p95": 13873,
+          "p99": 14249,
+          "max": 14321,
+          "overFiveSeconds": 800,
+          "bytes": 771119200,
+          "failures": []
+        }
+      }
+    }
+  ],
+  "checks": {}
+}
