@@ -2,18 +2,8 @@ import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
 import { db, usersTable, withInstitutionDb } from "@workspace/db";
 import { logger } from "../lib/logger";
-import { rateLimitHit, rateLimitPeek } from "../lib/rate-limit";
 import { checkPassword, PasswordQueueFullError } from "../lib/password-check";
 import type { RequestUser } from "../lib/request-user";
-
-// Throttle failed login attempts so a member's short password can't be
-// brute-forced. Only failures count toward the limit (successful logins never
-// increment), so normal usage is unaffected. The per-username limit is strict
-// (targets brute force of one account); the per-IP limit is looser because many
-// legitimate members may share one campus/NAT address.
-const LOGIN_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
-const LOGIN_MAX_FAILURES_PER_USERNAME = 5;
-const LOGIN_MAX_FAILURES_PER_IP = 30;
 
 declare module "express-session" {
   interface SessionData {
@@ -33,33 +23,7 @@ router.post("/auth/login", async (req, res): Promise<void> => {
     return;
   }
 
-  const ip = req.ip ?? "unknown";
-  const ipKey = `login:ip:${ip}`;
   const institutionId = process.env.INSTITUTION_ID ?? "00000000-0000-4000-8000-000000000001";
-  const userKey = `login:user:${institutionId}:${String(username).trim().toLowerCase()}`;
-
-  // Gate up-front on prior failures so a successful login never increments the
-  // counter. Block both the brute-forced account and the abusive source IP.
-  const userBlock = rateLimitPeek(userKey, LOGIN_MAX_FAILURES_PER_USERNAME);
-  const ipBlock = rateLimitPeek(ipKey, LOGIN_MAX_FAILURES_PER_IP);
-  if (userBlock.limited || ipBlock.limited) {
-    const retryAfter = Math.max(
-      userBlock.retryAfterSeconds,
-      ipBlock.retryAfterSeconds,
-    );
-    req.log.warn({ ip, username }, "Inicio de sesión limitado por intentos fallidos");
-    res.setHeader("Retry-After", String(retryAfter));
-    res
-      .status(429)
-      .json({ error: "Demasiados intentos fallidos. Intenta más tarde." });
-    return;
-  }
-
-  // Records a failed attempt against both the username and the source IP.
-  const recordFailure = (): void => {
-    rateLimitHit(userKey, LOGIN_MAX_FAILURES_PER_USERNAME, LOGIN_WINDOW_MS);
-    rateLimitHit(ipKey, LOGIN_MAX_FAILURES_PER_IP, LOGIN_WINDOW_MS);
-  };
 
   const [user] = await withInstitutionDb(institutionId, (tx) => tx
     .select()
@@ -67,7 +31,6 @@ router.post("/auth/login", async (req, res): Promise<void> => {
     .where(eq(usersTable.username, username)));
 
   if (!user) {
-    recordFailure();
     res.status(401).json({ error: "Credenciales inválidas" });
     return;
   }
@@ -82,14 +45,12 @@ router.post("/auth/login", async (req, res): Promise<void> => {
     return;
   }
   if (!valid) {
-    recordFailure();
     res.status(401).json({ error: "Credenciales inválidas" });
     return;
   }
 
   const [current] = await withInstitutionDb(institutionId, (tx) => tx.select().from(usersTable).where(eq(usersTable.id, user.id)));
   if (!current || current.password !== user.password) {
-    recordFailure();
     res.status(401).json({ error: "Credenciales inválidas" });
     return;
   }
