@@ -4,6 +4,7 @@ import { db, usersTable, withInstitutionDb } from "@workspace/db";
 import { logger } from "../lib/logger";
 import { rateLimitHit, rateLimitPeek } from "../lib/rate-limit";
 import { checkPassword, PasswordQueueFullError } from "../lib/password-check";
+import type { RequestUser } from "../lib/request-user";
 
 // Throttle failed login attempts so a member's short password can't be
 // brute-forced. Only failures count toward the limit (successful logins never
@@ -144,10 +145,10 @@ router.get("/auth/me", async (req, res): Promise<void> => {
     return;
   }
 
-  const [user] = await db
+  const user = (res.locals.currentUser as RequestUser | undefined) ?? (await db
     .select()
     .from(usersTable)
-    .where(eq(usersTable.id, req.session.userId));
+    .where(eq(usersTable.id, req.session.userId)))[0];
 
   if (!user) {
     req.session.destroy(() => {});

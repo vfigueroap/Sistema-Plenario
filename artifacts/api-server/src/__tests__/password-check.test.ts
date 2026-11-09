@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 const { compare } = vi.hoisted(() => ({ compare: vi.fn() }));
-vi.mock("bcryptjs", () => ({ default: { compare } }));
+vi.mock("bcrypt", () => ({ default: { compare } }));
 import { checkPassword } from "../lib/password-check";
 
 describe("verificación de claves bajo ráfaga", () => {

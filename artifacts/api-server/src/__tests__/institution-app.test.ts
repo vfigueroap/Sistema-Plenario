@@ -26,6 +26,21 @@ afterAll(async () => {
 });
 
 describe("application institution boundary", () => {
+  it("protege las lecturas compartidas ante acceso anónimo e integrante inhabilitado", async () => {
+    await request(app).get("/api/sessions").expect(401);
+    const [inactive] = await db.insert(usersTable).values({
+      institutionId, username: `inactive-${crypto.randomUUID()}`, displayName: "Inhabilitado ficticio",
+      password: await bcrypt.hash("ficticia-inactiva", 4), active: false,
+    }).returning();
+    try {
+      const agent = request.agent(app);
+      await agent.post("/api/auth/login").set("Origin", "http://localhost:3000")
+        .send({ username: inactive.username, password: "ficticia-inactiva" }).expect(200);
+      await agent.get("/api/sessions").expect(403);
+    } finally {
+      await db.delete(usersTable).where(eq(usersTable.id, inactive.id));
+    }
+  });
   it("authenticates only the configured institution when usernames match", async () => {
     const response = await request(app).post("/api/auth/login")
       .set("Origin", "http://localhost:3000")

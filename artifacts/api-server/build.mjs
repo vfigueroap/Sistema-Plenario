@@ -31,6 +31,7 @@ async function buildAll() {
     external: [
       "*.node",
       "bcryptjs",
+      "bcrypt",
       "pg-native",
     ],
     sourcemap: "linked",

@@ -14,6 +14,21 @@ afterEach(() => {
 });
 
 describe("lecturas públicas compartidas", () => {
+  it("entrega el mismo JSON comprimido y respeta gzip deshabilitado", async () => {
+    const app = express();
+    const body = { rows: Array.from({ length: 100 }, () => "Dato público de prueba") };
+    const load = vi.fn(async () => body);
+    app.get("/history", publicRead(load, "public", 1000));
+    const compressed = await request(app).get("/history").set("Accept-Encoding", "gzip");
+    const plain = await request(app).get("/history").set("Accept-Encoding", "gzip;q=0, identity");
+    expect(compressed.body).toEqual(body);
+    expect(plain.body).toEqual(body);
+    expect(compressed.headers["content-encoding"]).toBe("gzip");
+    expect(plain.headers["content-encoding"]).toBeUndefined();
+    expect(compressed.headers.vary).toContain("Accept-Encoding");
+    expect(Number(compressed.headers["content-length"])).toBeLessThan(Number(plain.headers["content-length"]) / 5);
+    expect(load).toHaveBeenCalledOnce();
+  });
   it("agrupa visitantes simultáneos en una transacción y conserva ETag", async () => {
     const app = express();
     const load = vi.fn(async () => {

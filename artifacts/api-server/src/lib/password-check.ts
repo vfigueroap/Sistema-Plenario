@@ -1,4 +1,4 @@
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 import { setImmediate } from "node:timers/promises";
 
 const MAX_ACTIVE = 2;

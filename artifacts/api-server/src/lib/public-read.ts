@@ -1,5 +1,9 @@
 import type { RequestHandler } from "express";
 import { withInstitutionDb } from "@workspace/db";
+import { gzip } from "node:zlib";
+import { promisify } from "node:util";
+
+const compress = promisify(gzip);
 
 export function publicRead(
   load: () => Promise<unknown>,
@@ -8,7 +12,7 @@ export function publicRead(
 ): RequestHandler {
   const entries = new Map<
     string,
-    { expires: number; value: Promise<string> }
+    { expires: number; value: Promise<{ text: string; gzip: Buffer }> }
   >();
   return async (_req, res) => {
     const institutionId =
@@ -20,7 +24,7 @@ export function publicRead(
         expires: Infinity,
         value: withInstitutionDb(institutionId, async () =>
           JSON.stringify(await load()),
-        ),
+        ).then(async (text) => ({ text, gzip: await compress(text) })),
       };
       entries.set(institutionId, entry);
       const created = entry;
@@ -35,9 +39,15 @@ export function publicRead(
       );
     }
     try {
-      const text = await entry.value;
+      const content = await entry.value;
       res.setHeader("Cache-Control", cacheControl);
-      res.type("application/json").send(text);
+      res.vary("Accept-Encoding");
+      if (_req.acceptsEncodings("gzip")) {
+        res.setHeader("Content-Encoding", "gzip");
+        res.type("application/json").send(content.gzip);
+      } else {
+        res.type("application/json").send(content.text);
+      }
     } catch (error) {
       _req.log?.error({ error }, "Public read failed");
       res

@@ -11,6 +11,7 @@ import { createAllowedOrigin, httpUrlOrigin } from "./lib/allowed-origin";
 import { pulseHandler } from "./routes/pulse";
 import { clearSharedCache } from "./lib/shared-cache";
 import { committedResponse } from "./lib/committed-response";
+import { requestUserColumns, type RequestUser } from "./lib/request-user";
 
 const app: Express = express();
 
@@ -116,20 +117,24 @@ const isAllowedBeforePasswordChange = (method: string, path: string): boolean =>
   path === "/api/auth/logout" ||
   (method === "PATCH" && path === "/api/members/me/password");
 
-type CurrentUser = { rol: typeof usersTable.rol._.data; active: boolean; mustChangePassword: boolean };
+type CurrentUser = RequestUser;
 const CURRENT_USER_TTL_MS = 2000;
 const isMemberActionPath = (path: string): boolean =>
   /^\/api\/(topics\/\d+\/vote|sessions\/\d+\/(attendance|speaking-turns))$/.test(path);
 const currentUserCache = new Map<number, { at: number; value: CurrentUser }>();
+const currentUserReads = new Map<number, Promise<CurrentUser | undefined>>();
+const isSharedReadPath = (path: string): boolean =>
+  /^\/api\/(sessions(?:\/\d+\/(attendance|agenda|topics|speaking-turns))?|auth\/me|topics\/\d+\/(results|ballots))$/.test(path);
+
+function cachedCurrentUser(userId: number): CurrentUser | undefined {
+  const hit = currentUserCache.get(userId);
+  return hit && !hit.value.mustChangePassword && Date.now() - hit.at < CURRENT_USER_TTL_MS ? hit.value : undefined;
+}
 
 async function loadCurrentUser(userId: number, allowCache: boolean): Promise<CurrentUser | undefined> {
-  const hit = currentUserCache.get(userId);
-  if (allowCache && hit && !hit.value.mustChangePassword && Date.now() - hit.at < CURRENT_USER_TTL_MS) return hit.value;
-  const [row] = await db.select({
-    rol: usersTable.rol,
-    active: usersTable.active,
-    mustChangePassword: usersTable.mustChangePassword,
-  }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+  const hit = allowCache ? cachedCurrentUser(userId) : undefined;
+  if (hit) return hit;
+  const [row] = await db.select(requestUserColumns).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
   if (!row) {
     currentUserCache.delete(userId);
     return undefined;
@@ -139,11 +144,49 @@ async function loadCurrentUser(userId: number, allowCache: boolean): Promise<Cur
   return row;
 }
 
+async function loadSharedReadUser(userId: number): Promise<CurrentUser | undefined> {
+  const hit = cachedCurrentUser(userId);
+  if (hit) return hit;
+  const pending = currentUserReads.get(userId);
+  if (pending) return pending;
+  const read = withInstitutionDb(institutionId, () => loadCurrentUser(userId, true));
+  currentUserReads.set(userId, read);
+  try {
+    return await read;
+  } finally {
+    if (currentUserReads.get(userId) === read) currentUserReads.delete(userId);
+  }
+}
+
 app.use((req, res, next) => {
   if (req.path === "/api/healthz" || req.path === "/api/auth/login") return next();
   if (req.session.userId && req.session.institutionId !== institutionId) {
     req.session.destroy(() => {});
     res.status(401).json({ error: "La sesión pertenece a otra institución" });
+    return;
+  }
+  if (req.method === "GET" && req.session.userId && isSharedReadPath(req.path)) {
+    res.setHeader("Cache-Control", "private, no-store");
+    void loadSharedReadUser(req.session.userId).then((user) => {
+      if (res.destroyed) return;
+      if (!user) {
+        req.session.destroy(() => {});
+        res.status(401).json({ error: "Usuario no encontrado" });
+        return;
+      }
+      if (user.mustChangePassword && !isAllowedBeforePasswordChange(req.method, req.path)) {
+        res.status(403).json({ error: "Debes cambiar tu contraseña inicial antes de continuar", code: "password_change_required" });
+        return;
+      }
+      req.session.rol = user.rol;
+      req.session.active = user.active;
+      res.locals.sharedReadInstitutionId = institutionId;
+      res.locals.currentUser = user;
+      next();
+    }).catch((error) => {
+      req.log.error({ error }, "Shared read authorization failed");
+      if (!res.destroyed && !res.headersSent) res.status(503).json({ error: "No disponible" });
+    });
     return;
   }
   const response = committedResponse(res);

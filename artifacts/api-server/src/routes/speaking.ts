@@ -213,18 +213,12 @@ router.post("/sessions/:id/speaking-turns", requireAuth, async (req, res): Promi
     duration = Math.max(1, Math.floor(parsed));
   }
 
-  await db.execute(sql`select pg_advisory_xact_lock(${SPEAKING_QUEUE_LOCK}::int, ${sessionId}::int)`);
   const inserted = await db.execute(sql`
-    WITH queue AS (
-      SELECT coalesce(max(position), -1) + 1 AS next_position,
-        coalesce(bool_or(user_id = ${speakerUserId} AND status <> 'finalizada' AND kind = 'individual'), false) AS duplicated
-      FROM speaking_turns
-      WHERE session_id = ${sessionId} AND agenda_point_id IS NOT DISTINCT FROM ${pointId}
-    ), turn AS (
-      INSERT INTO speaking_turns (session_id, agenda_point_id, category, kind, user_id, speaker_name, duration_seconds, position)
-      SELECT ${sessionId}, ${pointId}, ${category}, 'individual', ${speakerUserId}, ${speakerName}, ${duration}, next_position
-      FROM queue WHERE NOT duplicated
-      RETURNING *
+    WITH turn AS MATERIALIZED (
+      SELECT * FROM enqueue_individual_speaking_turn(
+        ${sessionId}, ${pointId}, ${category}::speaker_category,
+        ${speakerUserId}::integer, ${speakerName}::text, ${duration}
+      )
     ), participant AS (
       INSERT INTO speaking_turn_participants (turn_id, user_id)
       SELECT id, user_id FROM turn WHERE user_id IS NOT NULL

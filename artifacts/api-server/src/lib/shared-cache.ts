@@ -1,5 +1,5 @@
 import type { Response } from "express";
-import { currentInstitutionId } from "@workspace/db";
+import { currentInstitutionId, withInstitutionDb } from "@workspace/db";
 
 const TTL_MS = process.env.NODE_ENV === "test" ? 0 : 1500;
 const MAX_ENTRIES = 512;
@@ -51,7 +51,8 @@ export async function sendShared(
   load: () => Promise<{ status: number; body: unknown }>,
 ): Promise<void> {
   const shared = await sharedValue(key, async () => {
-    const { status, body } = await load();
+    const institutionId = res.locals.sharedReadInstitutionId as string | undefined;
+    const { status, body } = institutionId ? await withInstitutionDb(institutionId, load) : await load();
     return { status, text: JSON.stringify(body) };
   });
   res.status(shared.status).type("application/json").send(shared.text);

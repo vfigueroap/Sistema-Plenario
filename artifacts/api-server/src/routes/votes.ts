@@ -10,6 +10,7 @@ import {
   attendanceTable,
   usersTable,
   plenariasTable,
+  withInstitutionDb,
 } from "@workspace/db";
 import { requireAuth, requireAdmin } from "../middlewares/auth";
 import { computeTopicResult, computeCandidateResult } from "../lib/results";
@@ -22,6 +23,7 @@ import {
 import { emitVotesChanged } from "../lib/realtime";
 import { sharedValue } from "../lib/shared-cache";
 import { buildCandidatoRows, type DetailRow } from "../lib/candidate-votes";
+import type { RequestUser } from "../lib/request-user";
 
 const router: IRouter = Router();
 
@@ -50,8 +52,8 @@ async function getValidCandidateIds(topicId: number): Promise<Set<number>> {
   return new Set(rows.map((c) => c.id));
 }
 
-async function loadTopicData(topicId: number) {
-  return sharedValue(`topic-data:${topicId}`, async () => {
+async function loadTopicData(topicId: number, institutionId?: string) {
+  const load = async () => {
     const [topic] = await db.select().from(topicsTable).where(eq(topicsTable.id, topicId));
     if (!topic) return null;
     const [liveVotes, allMembers, attendanceRows, eligibleSet, [plenaria], weightMap, candidates] = await Promise.all([
@@ -65,7 +67,8 @@ async function loadTopicData(topicId: number) {
         .orderBy(topicCandidatesTable.position, topicCandidatesTable.id),
     ]);
     return { topic, liveVotes, allMembers, attendanceRows, eligibleSet, plenaria, weightMap, candidates };
-  });
+  };
+  return sharedValue(`topic-data:${topicId}`, () => institutionId ? withInstitutionDb(institutionId, load) : load());
 }
 
 router.post("/topics/:topicId/vote", requireAuth, async (req, res): Promise<void> => {
@@ -201,13 +204,13 @@ router.get("/topics/:topicId/results", requireAuth, async (req, res): Promise<vo
 
   const userId = req.session.userId!;
 
-  const shared = await loadTopicData(topicId);
+  const shared = await loadTopicData(topicId, res.locals.sharedReadInstitutionId);
   if (!shared) {
     res.status(404).json({ error: "Tema no encontrado" });
     return;
   }
   const { topic, liveVotes, allMembers, attendanceRows, eligibleSet, plenaria, weightMap, candidates } = shared;
-  const [me] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
+  const me = (res.locals.currentUser as RequestUser | undefined) ?? (await db.select().from(usersTable).where(eq(usersTable.id, userId)))[0];
 
   const allVotes = topic.electorateSnapshot?.votes ?? liveVotes;
   const attendeeIds = new Set(
@@ -334,7 +337,7 @@ router.get("/topics/:topicId/ballots", requireAuth, async (req, res): Promise<vo
     return;
   }
 
-  const shared = await loadTopicData(topicId);
+  const shared = await loadTopicData(topicId, res.locals.sharedReadInstitutionId);
   if (!shared) {
     res.status(404).json({ error: "Tema no encontrado" });
     return;

@@ -65,6 +65,7 @@ catalog:
 autoInstallPeers: false
 
 allowBuilds:
+  bcrypt: true
   '@swc/core': true
   esbuild: true
   msw: true
