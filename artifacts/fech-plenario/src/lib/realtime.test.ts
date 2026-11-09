@@ -210,7 +210,7 @@ describe("REST realtime polling", () => {
     client.clear();
   });
 
-  it("refreshes the public page every ninety seconds and pauses on hidden tabs", async () => {
+  it("actualiza el panel público cada diez minutos y pausa las pestañas ocultas", async () => {
     vi.useFakeTimers();
     vi.spyOn(Math, "random").mockReturnValue(0);
     const { subscribePublicRefresh } = await import("./realtime");
@@ -226,19 +226,19 @@ describe("REST realtime polling", () => {
     const otherBaseline = fetchOther.mock.calls.length;
     const baseline = fetchHistory.mock.calls.length;
     const stop = subscribePublicRefresh(client);
-    await vi.advanceTimersByTimeAsync(89000);
+    await vi.advanceTimersByTimeAsync(599000);
     expect(fetchHistory.mock.calls.length).toBe(baseline);
     await vi.advanceTimersByTimeAsync(2000);
     expect(fetchHistory.mock.calls.length).toBe(baseline + 1);
     expect(fetchOther.mock.calls.length).toBe(otherBaseline);
     const visibility = vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
-    await vi.advanceTimersByTimeAsync(200000);
+    await vi.advanceTimersByTimeAsync(1200000);
     expect(fetchHistory.mock.calls.length).toBe(baseline + 1);
     visibility.mockReturnValue("visible");
-    await vi.advanceTimersByTimeAsync(91000);
+    await vi.advanceTimersByTimeAsync(600000);
     expect(fetchHistory.mock.calls.length).toBe(baseline + 2);
     stop();
-    await vi.advanceTimersByTimeAsync(200000);
+    await vi.advanceTimersByTimeAsync(1200000);
     expect(fetchHistory.mock.calls.length).toBe(baseline + 2);
     unobserve();
     unobserveOther();

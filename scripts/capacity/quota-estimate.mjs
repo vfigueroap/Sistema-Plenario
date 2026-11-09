@@ -14,7 +14,8 @@ for (const hours of [2, 4]) {
     const privateReads = version === "antes"
       ? members * Math.ceil(seconds / 90) * 6
       : members * (Math.ceil(seconds / 300) * 5 + Math.ceil(seconds / 60));
-    const publicRequests = visitors * Math.ceil(seconds / 90) * 2;
+    const publicRefreshSeconds = version === "antes" ? 90 : 600;
+    const publicRequests = visitors * Math.ceil(seconds / publicRefreshSeconds) * 2;
     const pulses = members * Math.ceil(seconds / pulseInterval);
     const browserRequests = privateReads + publicRequests + pulses + initialAndActions;
     for (const cacheNodes of [1, 10, 0]) {
@@ -23,7 +24,7 @@ for (const hours of [2, 4]) {
       const invocations = privateReads + initialAndActions + originPublic;
       const cpuSeconds = invocations * cpuPerInvocationSeconds;
       scenarios.push({
-        version, hours, cacheNodes, browserRequests, invocations,
+        version, hours, cacheNodes, publicRefreshSeconds, browserRequests, invocations,
         estimatedCpuMinutes: Math.round(cpuSeconds / 60 * 10) / 10,
         remainingCpuPercent: Math.round(cpuSeconds / remainingCpuSeconds * 1000) / 10,
         estimatedMemoryGBhAtHistoricalAverage: Math.round(invocations * 16.9 / 25462 * 10) / 10,

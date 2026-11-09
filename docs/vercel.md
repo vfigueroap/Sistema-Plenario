@@ -35,15 +35,15 @@ debe registrarse explícitamente.
 
 ## Tiempo real
 
-El build activa consultas REST con un pulso compartido cada 15 segundos. La fase inicial aleatoria reparte los clientes. Solo se actualizan los apartados que cambiaron, con una lectura de seguridad cada 5 a 10 minutos y una comprobaci?n por minuto de las consultas sin versi?n. Las acciones propias mantienen su actualizaci?n inmediata. El pulso se cachea 5 segundos en el CDN, por lo que la visibilidad de una acci?n ajena puede sumar ese tiempo al intervalo.
+El build activa consultas REST con un pulso compartido cada 15 segundos. La fase inicial aleatoria reparte los clientes. Solo se actualizan los apartados que cambiaron, con una lectura de seguridad cada 5 a 10 minutos y una comprobación por minuto de las consultas sin versión. Las acciones propias mantienen su actualización inmediata. El pulso se cachea 5 segundos en el CDN, por lo que la visibilidad de una acción ajena puede sumar ese tiempo al intervalo.
 
-El panel p?blico conserva su actualizaci?n cada 90 a 100 segundos. Las pesta?as ocultas o sin red dejan de consultar. Al cerrar el pleno, el polling autenticado se pausa. Para detectar una sesi?n nueva se pulsa Actualizar o se vuelve a la pesta?a. Fuera de un pleno, la mensajer?a se consulta al abrirla o actualizar manualmente.
+El panel público se actualiza automáticamente cada 10 minutos, con hasta 10 segundos adicionales para repartir las consultas. El botón Actualizar permite consultar antes. Las pestañas ocultas o sin red dejan de consultar. Al cerrar el pleno, el polling autenticado se pausa. Para detectar una sesión nueva se pulsa Actualizar o se vuelve a la pestaña. Fuera de un pleno, la mensajería se consulta al abrirla o actualizar manualmente.
 
-VITE_POLL_INTERVAL_MS permite ampliar el intervalo de 15000 ms al construir el frontend. Los valores menores o inv?lidos vuelven a 15000. El servidor conserva la comprobaci?n de acceso de cada solicitud y la cach? de usuario de 2 segundos. Las respuestas privadas nunca se almacenan en el CDN.
+VITE_POLL_INTERVAL_MS permite ampliar el intervalo de 15000 ms al construir el frontend. Los valores menores o inválidos vuelven a 15000. El servidor conserva la comprobación de acceso de cada solicitud y la caché de usuario de 2 segundos. Las respuestas privadas nunca se almacenan en el CDN.
 
-La compilaci?n de producci?n ejecuta scripts/deploy-migrations.mjs antes de publicar. Usa DATABASE_URL del entorno de Vercel, verifica el pooler de transacciones y aplica ?nicamente la funci?n idempotente 0006. No cambia registros. Si falla, la compilaci?n se detiene. Los previews no ejecutan esta migraci?n y requieren su base separada preparada.
+La compilación de producción ejecuta scripts/deploy-migrations.mjs antes de publicar. Usa DATABASE_URL del entorno de Vercel, verifica el pooler de transacciones y aplica únicamente la función idempotente 0006. No cambia registros. Si falla, la compilación se detiene. Los previews no ejecutan esta migración y requieren su base separada preparada.
 
-En producci?n se reemplaza el registro de cada petici?n por un agregado por ruta cada minuto de actividad. Incluye recuento, errores y latencias, adem?s de CPU del proceso completo. Esta CPU incluye todas las solicitudes concurrentes y no representa CPU individual por ruta ni la factura de Vercel. Los registros son por instancia y pueden perder el ?ltimo intervalo al reciclarse. Los fallos 5xx se registran de inmediato.
+En producción se reemplaza el registro de cada petición por un agregado por ruta cada minuto de actividad. Incluye recuento, errores y latencias, además de CPU del proceso completo. Esta CPU incluye todas las solicitudes concurrentes y no representa CPU individual por ruta ni la factura de Vercel. Los registros son por instancia y pueden perder el último intervalo al reciclarse. Los fallos 5xx se registran de inmediato.
 
 ## Lista previa al tráfico
 

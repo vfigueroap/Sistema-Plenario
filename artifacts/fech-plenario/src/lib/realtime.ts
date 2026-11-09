@@ -9,7 +9,7 @@ const configuredInterval = Number(import.meta.env.VITE_POLL_INTERVAL_MS ?? 15000
 export const pollIntervalMs = Number.isFinite(configuredInterval) && configuredInterval >= 15000 ? configuredInterval : 15000;
 const SAFETY_REFRESH_MS = 300000;
 const UNMAPPED_MIN_INTERVAL_MS = 60000;
-const PUBLIC_REFRESH_MS = 90000;
+const PUBLIC_REFRESH_MS = 600000;
 const PUBLIC_REFRESH_JITTER_MS = 10000;
 const MEMBER_DRIVEN_COMPONENTS = ["a", "x"];
 
