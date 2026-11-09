@@ -5,21 +5,23 @@ export const usesRealtimePolling = import.meta.env.VITE_REALTIME_TRANSPORT === "
 export const liveQueryInterval = usesRealtimePolling ? false : 30000;
 
 const PULSE_URL = "/api/public/pulse";
-const SAFETY_REFRESH_MS = 60000;
-const UNMAPPED_MIN_INTERVAL_MS = 15000;
+const configuredInterval = Number(import.meta.env.VITE_POLL_INTERVAL_MS ?? 15000);
+export const pollIntervalMs = Number.isFinite(configuredInterval) && configuredInterval >= 15000 ? configuredInterval : 15000;
+const SAFETY_REFRESH_MS = 300000;
+const UNMAPPED_MIN_INTERVAL_MS = 60000;
 const PUBLIC_REFRESH_MS = 90000;
 const PUBLIC_REFRESH_JITTER_MS = 10000;
 const MEMBER_DRIVEN_COMPONENTS = ["a", "x"];
 
-type Pulse = { v: string; c: Record<string, string> };
+type Pulse = { v: string; c: Record<string, string>; live?: boolean };
 
 async function fetchPulse(): Promise<Pulse | null> {
   try {
     const response = await fetch(PULSE_URL, { signal: AbortSignal.timeout(10000) });
     if (!response.ok) return null;
-    const body = (await response.json()) as { v?: unknown; c?: unknown };
+    const body = (await response.json()) as { v?: unknown; c?: unknown; live?: unknown };
     if (typeof body.v !== "string" || typeof body.c !== "object" || body.c === null) return null;
-    return { v: body.v, c: body.c as Record<string, string> };
+    return { v: body.v, c: body.c as Record<string, string>, live: typeof body.live === "boolean" ? body.live : undefined };
   } catch {
     return null;
   }
@@ -36,24 +38,48 @@ export function pulseComponentsFor(queryKey: readonly unknown[]): string[] | nul
   return null;
 }
 
-// One timer per QueryClient even when user, lobby and session hooks coexist.
-// Each tick asks a tiny shared endpoint what changed and only refreshes the
-// mounted, enabled queries that depend on it. REST remains the authorization boundary.
-const pollers = new WeakMap<QueryClient, { users: number; stop: () => void }>();
+const pollers = new WeakMap<QueryClient, { users: number; stop: () => void; wake: () => void }>();
+
+function hasOpenSession(client: QueryClient): boolean {
+  return client.getQueryCache().getAll().some((query) => {
+    if (!query.isActive()) return false;
+    if (!/^\/api\/sessions(?:\/\d+)?$/.test(String(query.queryKey[0]))) return false;
+    const data = query.state.data;
+    return (Array.isArray(data) ? data : [data]).some((session) => session?.status === "abierta");
+  });
+}
+
+export async function refreshActiveQueries(client: QueryClient): Promise<void> {
+  await client.refetchQueries({ type: "active", predicate: (query) => query.state.fetchStatus !== "fetching" }, { cancelRefetch: false });
+  pollers.get(client)?.wake();
+}
 
 export function subscribeRealtimePolling(client: QueryClient): () => void {
   let poller = pollers.get(client);
   if (!poller) {
     let running = false;
+    let idle = false;
+    let stopped = false;
+    let failures = 0;
+    let nextAttempt = 0;
     let last: Pulse | null = null;
     let lastFullRefresh = Date.now();
     const safetyMs = SAFETY_REFRESH_MS + Math.floor(Math.random() * SAFETY_REFRESH_MS);
     const refresh = async (force = false) => {
-      if (running || document.visibilityState === "hidden" || !navigator.onLine) return;
+      if (stopped || running || document.visibilityState === "hidden" || !navigator.onLine) return;
+      if (!force && (idle || Date.now() < nextAttempt)) return;
       running = true;
       try {
         const pulse = await fetchPulse();
+        if (stopped) return;
         const now = Date.now();
+        if (!pulse) {
+          failures++;
+          nextAttempt = now + Math.min(120000, pollIntervalMs * 2 ** failures);
+          return;
+        }
+        failures = 0;
+        nextAttempt = 0;
         const full = force || (pulse !== null && last === null) || now - lastFullRefresh >= safetyMs;
         const changed = new Set<string>();
         if (pulse && last) {
@@ -61,7 +87,6 @@ export function subscribeRealtimePolling(client: QueryClient): () => void {
         }
         if (pulse) last = pulse;
         if (!window.location.pathname.includes("/admin")) for (const component of MEMBER_DRIVEN_COMPONENTS) changed.delete(component);
-        if (!full && changed.size === 0) return;
         if (full) lastFullRefresh = now;
         await client.refetchQueries(
           {
@@ -76,20 +101,30 @@ export function subscribeRealtimePolling(client: QueryClient): () => void {
           },
           { cancelRefetch: false },
         );
+        idle = pulse.live === false && !hasOpenSession(client);
       } finally {
         running = false;
       }
     };
     const onVisible = () => void refresh(true);
-    // Jitter spreads clients across time; slow requests never get cancelled by
-    // the next tick. Catch-up after visibility/network recovery is immediate.
-    const timer = setInterval(() => void refresh(), 3000 + Math.floor(Math.random() * 1000));
+    let timer: ReturnType<typeof setInterval> | undefined;
+    const initial = setTimeout(() => {
+      void refresh();
+      timer = setInterval(() => void refresh(), pollIntervalMs);
+    }, Math.floor(Math.random() * pollIntervalMs));
+    const unsubscribe = client.getQueryCache().subscribe((event) => {
+      if (idle && event.type === "updated" && hasOpenSession(client)) idle = false;
+    });
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("online", onVisible);
     poller = {
       users: 0,
+      wake: () => { idle = false; nextAttempt = 0; },
       stop: () => {
+        stopped = true;
+        clearTimeout(initial);
         clearInterval(timer);
+        unsubscribe();
         document.removeEventListener("visibilitychange", onVisible);
         window.removeEventListener("online", onVisible);
       },

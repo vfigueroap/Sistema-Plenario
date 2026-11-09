@@ -34,6 +34,11 @@ if (!connectionString) {
 }
 
 const configuredPoolMax = Number(process.env.DB_POOL_MAX ?? (process.env.NODE_ENV === "production" ? 5 : 20));
+const statementTimeout = Number(process.env.DB_STATEMENT_TIMEOUT_MS ?? 12000);
+const lockTimeout = Number(process.env.DB_LOCK_TIMEOUT_MS ?? 8000);
+if (![statementTimeout, lockTimeout].every((value) => Number.isInteger(value) && value >= 100 && value <= 25000)) {
+  throw new Error("Los tiempos máximos de consulta deben estar entre 100 y 25000 ms");
+}
 if (!Number.isInteger(configuredPoolMax) || configuredPoolMax < 1) {
   throw new Error("DB_POOL_MAX must be a positive integer");
 }
@@ -102,7 +107,7 @@ export async function withInstitutionDb<T>(
     throw new Error("A valid institutionId is required");
   }
   return baseDb.transaction(async (tx) => {
-    await tx.execute(sql`select set_config('role', 'plenario_runtime', true), set_config('app.institution_id', ${institutionId}, true)`);
+    await tx.execute(sql`select set_config('role', 'plenario_runtime', true), set_config('app.institution_id', ${institutionId}, true), set_config('statement_timeout', ${String(statementTimeout)}, true), set_config('lock_timeout', ${String(lockTimeout)}, true), set_config('idle_in_transaction_session_timeout', '15000', true)`);
     const checkedAt = institutionChecked.get(institutionId);
     if (checkedAt === undefined || Date.now() - checkedAt > INSTITUTION_CHECK_TTL_MS) {
       const result = await tx.execute(sql`select id from institutions where id = ${institutionId}::uuid and active`);

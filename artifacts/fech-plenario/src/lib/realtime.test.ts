@@ -30,7 +30,7 @@ describe("REST realtime polling", () => {
     const query=new QueryObserver(client,{queryKey:["/api/sessions/1/topics"],initialData:"cerrado",staleTime:Infinity,queryFn:async () => "abierto"});
     const unobserve=query.subscribe(() => {});
     const stop=subscribeRealtimePolling(client);
-    await vi.advanceTimersByTimeAsync(4000);
+    await vi.advanceTimersByTimeAsync(15000);
     expect(client.getQueryData(["/api/sessions/1/topics"])).toBe("abierto");
     stop();
     unobserve();
@@ -85,17 +85,17 @@ describe("REST realtime polling", () => {
     await client.fetchQuery({ queryKey: ["inactive"], queryFn: inactive });
     const stop1 = subscribeRealtimePolling(client);
     const stop2 = subscribeRealtimePolling(client);
-    await vi.advanceTimersByTimeAsync(3000);
+    await vi.advanceTimersByTimeAsync(15000);
     const attendanceCalls = fetchAttendance.mock.calls.length;
     const agendaCalls = fetchAgenda.mock.calls.length;
 
-    await vi.advanceTimersByTimeAsync(3000);
+    await vi.advanceTimersByTimeAsync(15000);
     expect(fetchAttendance.mock.calls.length).toBe(attendanceCalls);
     expect(fetchAgenda.mock.calls.length).toBe(agendaCalls);
 
     attendance = 2;
     pulse = { ...pulse, a: "2" };
-    await vi.advanceTimersByTimeAsync(3000);
+    await vi.advanceTimersByTimeAsync(15000);
     expect(client.getQueryData(["/api/sessions/1/attendance"])).toBe(2);
     expect(fetchAttendance.mock.calls.length).toBe(attendanceCalls + 1);
     expect(fetchAgenda.mock.calls.length).toBe(agendaCalls);
@@ -104,7 +104,7 @@ describe("REST realtime polling", () => {
     const visibility = vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
     attendance = 3;
     pulse = { ...pulse, a: "3" };
-    await vi.advanceTimersByTimeAsync(6000);
+    await vi.advanceTimersByTimeAsync(30000);
     expect(client.getQueryData(["/api/sessions/1/attendance"])).toBe(2);
     visibility.mockReturnValue("visible");
     document.dispatchEvent(new Event("visibilitychange"));
@@ -114,12 +114,12 @@ describe("REST realtime polling", () => {
     stop1();
     attendance = 4;
     pulse = { ...pulse, a: "4" };
-    await vi.advanceTimersByTimeAsync(3000);
+    await vi.advanceTimersByTimeAsync(15000);
     expect(client.getQueryData(["/api/sessions/1/attendance"])).toBe(4);
     stop2();
     attendance = 5;
     pulse = { ...pulse, a: "5" };
-    await vi.advanceTimersByTimeAsync(6000);
+    await vi.advanceTimersByTimeAsync(30000);
     expect(client.getQueryData(["/api/sessions/1/attendance"])).toBe(4);
     unobserveAttendance();
     unobserveAgenda();
@@ -137,11 +137,11 @@ describe("REST realtime polling", () => {
     const unobserve = observer.subscribe(() => {});
     await observer.refetch();
     const stop = subscribeRealtimePolling(client);
-    await vi.advanceTimersByTimeAsync(3000);
+    await vi.advanceTimersByTimeAsync(15000);
     const baseline = fetchAttendance.mock.calls.length;
-    await vi.advanceTimersByTimeAsync(54000);
+    await vi.advanceTimersByTimeAsync(270000);
     expect(fetchAttendance.mock.calls.length).toBe(baseline);
-    await vi.advanceTimersByTimeAsync(7000);
+    await vi.advanceTimersByTimeAsync(16000);
     expect(fetchAttendance.mock.calls.length).toBe(baseline + 1);
     stop();
     unobserve();
@@ -165,7 +165,7 @@ describe("REST realtime polling", () => {
     const unobserve = observer.subscribe(() => {});
     const unobserveDisabled = disabled.subscribe(() => {});
     const stop = subscribeRealtimePolling(client);
-    await vi.advanceTimersByTimeAsync(12000);
+    await vi.advanceTimersByTimeAsync(60000);
     expect(slow).toHaveBeenCalledOnce();
     expect(disabledFetch).not.toHaveBeenCalled();
     finish(2);
@@ -193,16 +193,16 @@ describe("REST realtime polling", () => {
     await attendance.refetch();
     await topics.refetch();
     const stop = subscribeRealtimePolling(client);
-    await vi.advanceTimersByTimeAsync(3000);
+    await vi.advanceTimersByTimeAsync(15000);
     const attendanceCalls = fetchAttendance.mock.calls.length;
     const topicCalls = fetchTopics.mock.calls.length;
 
     pulse = { ...pulse, a: "2" };
-    await vi.advanceTimersByTimeAsync(3000);
+    await vi.advanceTimersByTimeAsync(15000);
     expect(fetchAttendance.mock.calls.length).toBe(attendanceCalls + (reacts ? 1 : 0));
 
     pulse = { ...pulse, t: "2" };
-    await vi.advanceTimersByTimeAsync(3000);
+    await vi.advanceTimersByTimeAsync(15000);
     expect(fetchTopics.mock.calls.length).toBe(topicCalls + 1);
     stop();
     unobserveAttendance();

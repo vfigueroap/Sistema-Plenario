@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthGuard } from "@/lib/auth-guard";
+import { usesRealtimePolling } from "@/lib/realtime";
 const Login = lazy(() => import("@/pages/login"));
 const AdminDashboard = lazy(() => import("@/pages/admin/dashboard"));
 const AdminSessionDetail = lazy(() => import("@/pages/admin/session-detail"));
@@ -20,14 +21,11 @@ const PublicHome = lazy(() => import("@/pages/public-home"));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // Realtime (Socket.io) is the instant path; polling is only a fallback.
-      // Disabling focus refetch avoids refetch storms when ~200 attendees
-      // switch tabs during a session. Reconnect refetch closes gaps after a
-      // network blip; a short staleTime de-dupes bursts of identical fetches.
       refetchOnWindowFocus: false,
-      refetchOnReconnect: true,
+      refetchOnReconnect: !usesRealtimePolling,
       staleTime: 10_000,
-      retry: 1,
+      retry: (attempt, error) => attempt < 1 && !("status" in error && [400, 401, 403, 404, 409, 429].includes(Number(error.status))),
+      retryDelay: (attempt) => Math.min(30000, 2000 * 2 ** attempt) + Math.floor(Math.random() * 1000),
     },
   },
 });

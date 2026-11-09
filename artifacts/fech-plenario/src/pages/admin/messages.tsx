@@ -1,3 +1,4 @@
+import { liveQueryInterval } from "@/lib/realtime";
 import { useState, useMemo } from "react";
 import {
   useListAdminMessages,
@@ -373,7 +374,7 @@ function Respuestas({ mensaje }: { mensaje: AdminMessage }) {
 
 export default function AdminMessages() {
   const { data: mensajes, isLoading } = useListAdminMessages({
-    query: { refetchInterval: 30000, queryKey: getListAdminMessagesQueryKey() },
+    query: { refetchInterval: liveQueryInterval, queryKey: getListAdminMessagesQueryKey() },
   });
   const queryClient = useQueryClient();
   const [redactando, setRedactando] = useState(false);

@@ -1,4 +1,4 @@
-import { liveQueryInterval } from "@/lib/realtime";
+import { liveQueryInterval, refreshActiveQueries } from "@/lib/realtime";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useGetMe, useListSessions, useMarkAttendance, useListTopics, useListAttendance, useListAgendaPoints, useCheckOutAttendance, useRejoinAttendance, getGetMeQueryKey, getListTopicsQueryKey, getListSessionsQueryKey, getListAttendanceQueryKey, getListAgendaPointsQueryKey, type AttendanceInputModality } from "@workspace/api-client-react";
@@ -77,13 +77,11 @@ export default function MemberDashboard() {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: getListSessionsQueryKey() }),
-      queryClient.invalidateQueries({ queryKey: getListTopicsQueryKey(sessionId) }),
-      queryClient.invalidateQueries({ queryKey: getListAttendanceQueryKey(sessionId) }),
-      queryClient.invalidateQueries({ queryKey: getListAgendaPointsQueryKey(sessionId) }),
-    ]);
-    setRefreshing(false);
+    try {
+      await refreshActiveQueries(queryClient);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const handleCheckOut = () => {
@@ -375,7 +373,7 @@ export default function MemberDashboard() {
           <Card>
             <CardContent className="p-12 text-center text-muted-foreground">
               <div className="text-xl font-semibold text-foreground mb-2">No hay sesiones abiertas</div>
-              <p>Le administradore debe abrir una sesión para que puedas marcar asistencia y votar.</p>
+              <p>Cuando la Mesa anuncie la apertura, pulsa Actualizar para ingresar. Las consultas automáticas se pausan mientras no haya una sesión abierta.</p>
             </CardContent>
           </Card>
         )}

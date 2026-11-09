@@ -1,3 +1,4 @@
+import { liveQueryInterval } from "@/lib/realtime";
 import { useState } from "react";
 import {
   useListMyMessages,
@@ -234,7 +235,7 @@ function Responder({ mensaje }: { mensaje: InboxMessage }) {
 
 export default function MemberMessages() {
   const { data: mensajes, isLoading } = useListMyMessages({
-    query: { refetchInterval: 60000, queryKey: getListMyMessagesQueryKey() },
+    query: { refetchInterval: liveQueryInterval, queryKey: getListMyMessagesQueryKey() },
   });
   const marcarLeido = useMarkMessageRead();
 

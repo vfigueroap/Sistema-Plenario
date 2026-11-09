@@ -1,6 +1,7 @@
 import { RefreshCw } from "lucide-react";
 import { useIsFetching, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { refreshActiveQueries } from "@/lib/realtime";
 
 export function RefreshButton({
   iconOnly = false,
@@ -22,7 +23,8 @@ export function RefreshButton({
       className={className}
       aria-label="Actualizar ahora"
       title="Actualizar ahora"
-      onClick={() => void queryClient.refetchQueries({ type: "active" })}
+      disabled={fetching}
+      onClick={() => void refreshActiveQueries(queryClient)}
     >
       <RefreshCw className={`h-4 w-4 ${iconOnly ? "" : "mr-2"} ${fetching ? "animate-spin" : ""}`} />
       {!iconOnly && "Actualizar"}

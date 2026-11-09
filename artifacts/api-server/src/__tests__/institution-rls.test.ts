@@ -23,6 +23,16 @@ afterAll(async () => {
 });
 
 describe("institution RLS context", () => {
+  it("limita consultas y bloqueos dentro de la transacción y libera la conexión después de un timeout", async () => {
+    const settings = await withInstitutionDb(first, (tx) => tx.execute(sql`select current_setting('statement_timeout') as statement, current_setting('lock_timeout') as lock, current_setting('idle_in_transaction_session_timeout') as idle`));
+    expect(settings.rows[0]).toEqual({ statement: "12s", lock: "8s", idle: "15s" });
+    await expect(withInstitutionDb(first, async (tx) => {
+      await tx.execute(sql`select set_config('statement_timeout', '100', true)`);
+      await tx.execute(sql`select pg_sleep(0.3)`);
+    })).rejects.toThrow();
+    const rows = await withInstitutionDb(first, (tx) => tx.select().from(usersTable));
+    expect(rows).toHaveLength(1);
+  });
   it("separa lecturas simultáneas de la caché entre instituciones",async () => {
     const read=(id:string) => withInstitutionDb(id,async () => sharedValue("same-key",async () => {
       await new Promise((resolve) => setTimeout(resolve,20));

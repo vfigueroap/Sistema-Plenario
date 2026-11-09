@@ -1,3 +1,4 @@
+import { liveQueryInterval } from "@/lib/realtime";
 import { useState, useMemo } from "react";
 import { useListMembers, useUpdateMember, useResetMemberPassword, useCreateMember, useDeleteMember, getListMembersQueryKey, useGetMemberAttendance, getGetMemberAttendanceQueryKey, useListUnidadesAcademicas, useCreateUnidadAcademica, useDeleteUnidadAcademica, getListUnidadesAcademicasQueryKey } from "@workspace/api-client-react";
 import type { Member } from "@workspace/api-client-react";
@@ -673,7 +674,7 @@ type SortKey = "displayName" | "username" | "group";
 
 export default function AdminMembers() {
   const { data: members, isLoading, isFetching, refetch } = useListMembers({
-    query: { refetchInterval: 10000, queryKey: getListMembersQueryKey() },
+    query: { refetchInterval: liveQueryInterval, queryKey: getListMembersQueryKey() },
   });
   const [sortKey, setSortKey] = useState<SortKey>("displayName");
   // Con casi cien integrantes, buscar es más frecuente que ordenar.

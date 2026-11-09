@@ -12,6 +12,7 @@ import { pulseHandler } from "./routes/pulse";
 import { clearSharedCache } from "./lib/shared-cache";
 import { committedResponse } from "./lib/committed-response";
 import { requestUserColumns, type RequestUser } from "./lib/request-user";
+import { requestMetrics } from "./lib/request-metrics";
 
 const app: Express = express();
 
@@ -33,6 +34,7 @@ app.use((_req, res, next) => {
 app.use(
   pinoHttp({
     logger,
+    autoLogging: !isProduction,
     serializers: {
       req(req) {
         return {
@@ -49,6 +51,7 @@ app.use(
     },
   }),
 );
+if (isProduction) app.use(requestMetrics());
 
 const isAllowedOrigin = createAllowedOrigin(process.env);
 app.use(cors({
