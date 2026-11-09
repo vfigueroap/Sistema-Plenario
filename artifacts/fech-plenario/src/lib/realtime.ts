@@ -35,6 +35,7 @@ export function pulseComponentsFor(queryKey: readonly unknown[]): string[] | nul
   if (/^\/api\/sessions\/\d+\/topics/.test(path)) return ["t", "x"];
   if (/^\/api\/topics\//.test(path)) return ["t", "x"];
   if (/^\/api\/sessions(\/\d+)?$/.test(path)) return ["s"];
+  if (path === "/api/auth/me") return [];
   return null;
 }
 

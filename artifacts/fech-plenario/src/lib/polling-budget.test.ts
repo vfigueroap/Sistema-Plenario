@@ -85,9 +85,9 @@ it("mide dos horas virtuales sin cambios con seis consultas visibles y un solo p
   const stops = [subscribeRealtimePolling(client), subscribeRealtimePolling(client), subscribeRealtimePolling(client)];
   await vi.advanceTimersByTimeAsync(7200000 - 1);
   expect(pulses).toBe(480);
-  expect(calls.get("/api/auth/me")).toBe(120);
+  expect(calls.get("/api/auth/me")).toBe(24);
   expect(calls.get("/api/sessions/1/topics")).toBe(24);
-  expect([...calls.values()].reduce((a, b) => a + b, 0)).toBe(240);
+  expect([...calls.values()].reduce((a, b) => a + b, 0)).toBe(144);
   stops.forEach((stop) => stop()); unobserves.forEach((stop) => stop()); client.clear();
 });
 

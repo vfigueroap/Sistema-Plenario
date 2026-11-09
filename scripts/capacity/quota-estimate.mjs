@@ -13,7 +13,7 @@ for (const hours of [2, 4]) {
     const pulseInterval = version === "antes" ? 3.5 : 15;
     const privateReads = version === "antes"
       ? members * Math.ceil(seconds / 90) * 6
-      : members * (Math.ceil(seconds / 300) * 5 + Math.ceil(seconds / 60));
+      : members * Math.ceil(seconds / 300) * 6;
     const publicRefreshSeconds = version === "antes" ? 90 : 600;
     const publicRequests = visitors * Math.ceil(seconds / publicRefreshSeconds) * 2;
     const pulses = members * Math.ceil(seconds / pulseInterval);

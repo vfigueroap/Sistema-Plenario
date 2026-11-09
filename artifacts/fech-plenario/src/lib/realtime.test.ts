@@ -62,6 +62,7 @@ describe("REST realtime polling", () => {
     expect(pulseComponentsFor(["/api/topics/9/results"])).toEqual(["t", "x"]);
     expect(pulseComponentsFor(["/api/sessions"])).toEqual(["s"]);
     expect(pulseComponentsFor(["/api/messages"])).toBeNull();
+    expect(pulseComponentsFor(["/api/auth/me"])).toEqual([]);
   });
 
   it("refreshes only changed components, pauses hidden tabs and cleans up", async () => {
