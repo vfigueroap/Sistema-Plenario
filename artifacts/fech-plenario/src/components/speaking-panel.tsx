@@ -9,6 +9,7 @@ import {
   useControlSpeakingTurn,
   useDeleteSpeakingTurn,
   useListUnidadesAcademicas,
+  getListUnidadesAcademicasQueryKey,
   getListSpeakingTurnsQueryKey,
   type SpeakingTurn,
   type AgendaPoint,
@@ -143,7 +144,7 @@ export function SpeakingPanel({
     : [];
 
   // Managed catalog of unidades académicas (feature: CRUD from members section).
-  const { data: unidades } = useListUnidadesAcademicas();
+  const { data: unidades } = useListUnidadesAcademicas({ query: { enabled: isAdmin, queryKey: getListUnidadesAcademicasQueryKey() } });
   const { data: regularSpeakers } = useRegularSpeakers(isAdmin);
   const activeRegulars = (regularSpeakers ?? []).filter((r) => r.active);
 

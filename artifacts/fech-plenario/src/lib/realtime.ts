@@ -65,9 +65,9 @@ export function subscribeRealtimePolling(client: QueryClient): () => void {
     let last: Pulse | null = null;
     let lastFullRefresh = Date.now();
     const safetyMs = SAFETY_REFRESH_MS + Math.floor(Math.random() * SAFETY_REFRESH_MS);
-    const refresh = async (force = false) => {
+    const refresh = async () => {
       if (stopped || running || document.visibilityState === "hidden" || !navigator.onLine) return;
-      if (!force && (idle || Date.now() < nextAttempt)) return;
+      if (idle || Date.now() < nextAttempt) return;
       running = true;
       try {
         const pulse = await fetchPulse();
@@ -80,7 +80,7 @@ export function subscribeRealtimePolling(client: QueryClient): () => void {
         }
         failures = 0;
         nextAttempt = 0;
-        const full = force || (pulse !== null && last === null) || now - lastFullRefresh >= safetyMs;
+        const full = last === null || now - lastFullRefresh >= safetyMs;
         const changed = new Set<string>();
         if (pulse && last) {
           for (const [key, value] of Object.entries(pulse.c)) if (last.c[key] !== value) changed.add(key);
@@ -106,7 +106,11 @@ export function subscribeRealtimePolling(client: QueryClient): () => void {
         running = false;
       }
     };
-    const onVisible = () => void refresh(true);
+    const onVisible = () => {
+      idle = false;
+      nextAttempt = 0;
+      void refresh();
+    };
     let timer: ReturnType<typeof setInterval> | undefined;
     const initial = setTimeout(() => {
       void refresh();

@@ -17,8 +17,8 @@ import { SessionResources } from "@/components/session-resources";
 import { useSessionLive } from "@/hooks/use-session-live";
 import { getSocket } from "@/lib/realtime";
 import { useLobbyLive } from "@/hooks/use-lobby-live";
-import { TopicBallotsPanel } from "@/components/topic-ballots-panel";
-import { ArrowRight, RefreshCw, MapPin, Clock, Wifi, LogOut, CheckCircle2, Hand, ChevronDown, Users, LogIn } from "lucide-react";
+import { TopicBallotDetails } from "@/components/topic-ballot-details";
+import { ArrowRight, RefreshCw, MapPin, Clock, Wifi, LogOut, CheckCircle2, Hand, ChevronDown, LogIn } from "lucide-react";
 
 
 // Botón para plegar un apartado. Va junto al título y no sobre la cabecera
@@ -342,27 +342,7 @@ export default function MemberDashboard() {
                       Cómo votó cada integrante
                     </div>
                     {(topics ?? []).map((t) => (
-                      <details key={t.id} className="border">
-                        <summary className="flex cursor-pointer select-none items-center justify-between gap-3 px-3 py-2 text-sm hover:bg-muted/40">
-                          <span className="flex min-w-0 items-center gap-2">
-                            <Users className="h-4 w-4 shrink-0 text-muted-foreground" />
-                            <span className="truncate font-medium">{t.title}</span>
-                          </span>
-                          <span className={`shrink-0 px-2 py-0.5 text-[10px] font-bold tracking-wider text-white ${
-                            t.status === "abierto" ? "bg-lime-600" : "bg-gray-500"}`}>
-                            {t.status === "abierto" ? "EN VOTACIÓN" : "CERRADA"}
-                          </span>
-                        </summary>
-                        <div className="border-t p-3">
-                          {t.status === "abierto" && (
-                            <p className="mb-3 border-l-[3px] border-amber-500 bg-amber-50/60 px-3 py-2 text-xs leading-snug">
-                              Esta votación sigue abierta: el recuento no es definitivo y puede
-                              cambiar hasta que la Mesa la cierre.
-                            </p>
-                          )}
-                          <TopicBallotsPanel topicId={t.id} sessionId={sessionId} live />
-                        </div>
-                      </details>
+                      <TopicBallotDetails key={t.id} topic={t} sessionId={sessionId} />
                     ))}
                   </div>
                 )}
