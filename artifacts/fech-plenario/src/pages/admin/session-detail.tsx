@@ -48,7 +48,8 @@ import { TopicResultsView } from "@/components/topic-results-view";
 import { TopicBallotsPanel } from "@/components/topic-ballots-panel";
 import { EditVotesDialog } from "@/components/edit-votes-dialog";
 import { AttendanceByGroup } from "@/components/attendance-by-group";
-import { AttendanceBarChart } from "@/components/attendance-bar-chart";
+import { AttendanceHemicycle } from "@/components/attendance-hemicycle";
+import { useViewport } from "@/hooks/use-viewport";
 import { LiveRoster } from "@/components/live-roster";
 import { SpeakingPanel } from "@/components/speaking-panel";
 import { CurrentSpeaker } from "@/components/current-speaker";
@@ -69,7 +70,7 @@ const ESTAMENTO_OPTIONS: { value: string; label: string }[] = [
 
 // Fracción de la ponderación total necesaria para sesionar y votar.
 // REVISAR contra los Estatutos de la FECh antes de darlo por definitivo.
-const QUORUM_MINIMO = 0.5;
+const QUORUM_MINIMO = 0.6;
 
 // Botón para plegar un apartado. Va en la cabecera, junto al título, y no
 // sobre ella: varias cabeceras traen sus propios controles y hacerlas
@@ -150,8 +151,7 @@ export default function AdminSessionDetail() {
   // Al abrir hay que declarar si la apertura es oficial: solo esas registran
   // horario y suman al total de horas de pleno.
   const [openConfirmOpen, setOpenConfirmOpen] = useState(false);
-  // Quórum a pantalla completa, para proyectar en la sala igual que el código.
-  const [quorumOpen, setQuorumOpen] = useState(false);
+  const viewport = useViewport();
   // Cada apartado se puede plegar para concentrarse en lo que toca ahora.
   const [abierto, setAbierto] = useState<Record<string, boolean>>({
     asistencia: true, tabla: true, palabra: true, mociones: true,
@@ -455,7 +455,7 @@ export default function AdminSessionDetail() {
                   <div className="border-t pt-4">
                     <button
                       type="button"
-                      onClick={() => setQuorumOpen(true)}
+                      onClick={() => setQrOpen(true)}
                       className="w-full transition-transform hover:scale-[1.02] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       aria-label="Ampliar el quórum a pantalla completa"
                     >
@@ -491,7 +491,7 @@ export default function AdminSessionDetail() {
 
               <div className="border-t pt-4 mt-4 space-y-4">
                 <div className="text-sm font-medium text-muted-foreground">Asistencia por estamento</div>
-                <AttendanceBarChart present={attendance?.present ?? []} absent={[...(attendance?.absent ?? []), ...(attendance?.checkedOut ?? [])]} height={180} />
+                <AttendanceHemicycle present={attendance?.present ?? []} absent={[...(attendance?.absent ?? []), ...(attendance?.checkedOut ?? [])]} />
                 <AttendanceByGroup present={attendance?.present ?? []} absent={[...(attendance?.absent ?? []), ...(attendance?.checkedOut ?? [])]} />
               </div>
 
@@ -1016,39 +1016,45 @@ export default function AdminSessionDetail() {
         </div>
       </div>
 
-      <Dialog open={quorumOpen} onOpenChange={setQuorumOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-3xl">
+      <Dialog open={qrOpen} onOpenChange={setQrOpen}>
+        <DialogContent className="flex h-[94vh] w-[98vw] max-w-[98vw] flex-col gap-3 p-5 sm:max-w-[98vw]">
           <DialogHeader>
             <DialogTitle className="text-center text-2xl">{session.title}</DialogTitle>
           </DialogHeader>
-          <div className="flex flex-col items-center gap-4 py-4">
-            <QuorumPie
-              presente={attendance?.presentWeight ?? 0}
-              total={attendance?.totalWeight ?? 0}
-              minimo={QUORUM_MINIMO}
-              size={Math.min(520, typeof window !== "undefined" ? window.innerWidth * 0.7 : 520)}
-              grande
-            />
-            <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 text-lg">
-              <span><b className="tabular-nums">{attendance?.present.length ?? 0}</b> presentes</span>
-              {(attendance?.checkedOut.length ?? 0) > 0 && (
-                <span><b className="tabular-nums">{attendance?.checkedOut.length}</b> retirades</span>
-              )}
-              <span><b className="tabular-nums">{attendance?.absent.length ?? 0}</b> ausentes</span>
+          <div className="text-center">
+            <div className="font-bold tracking-[0.3em]" style={{ fontSize: "clamp(3rem, 13vh, 9rem)", lineHeight: 1 }}>
+              {session.sessionCode}
+            </div>
+            <div className="mt-2 text-muted-foreground" style={{ fontSize: "clamp(0.9rem, 2.2vh, 1.3rem)" }}>
+              Ingresa este código de sesión para registrar tu asistencia
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={qrOpen} onOpenChange={setQrOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-center">{session.title}</DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col items-center gap-6 py-4">
-            <div className="text-center">
-              <div className="text-6xl sm:text-8xl font-bold tracking-[0.3em]">{session.sessionCode}</div>
-              <div className="text-muted-foreground mt-4">Ingresa este código de sesión para registrar tu asistencia</div>
+          <div className="grid min-h-0 flex-1 grid-cols-1 items-center gap-6 overflow-y-auto md:grid-cols-2">
+            <div className="flex flex-col items-center gap-3">
+              <QuorumPie
+                presente={attendance?.presentWeight ?? 0}
+                total={attendance?.totalWeight ?? 0}
+                minimo={QUORUM_MINIMO}
+                size={Math.max(160, Math.min(viewport.h * 0.36, viewport.w * 0.36))}
+                grande
+              />
+              <div className="flex flex-wrap justify-center gap-x-8 gap-y-1 text-lg">
+                <span><b className="tabular-nums">{attendance?.present.length ?? 0}</b> presentes</span>
+                {(attendance?.checkedOut.length ?? 0) > 0 && (
+                  <span><b className="tabular-nums">{attendance?.checkedOut.length}</b> retirades</span>
+                )}
+                <span><b className="tabular-nums">{attendance?.absent.length ?? 0}</b> ausentes</span>
+              </div>
+            </div>
+            <div className="flex flex-col items-center">
+              <div className="mb-2 text-center text-lg font-semibold">Asistencia por estamento</div>
+              <div style={{ width: Math.min(viewport.w * 0.44, viewport.h * 0.7) }}>
+                <AttendanceHemicycle
+                  present={attendance?.present ?? []}
+                  absent={[...(attendance?.absent ?? []), ...(attendance?.checkedOut ?? [])]}
+                  grande
+                />
+              </div>
             </div>
           </div>
         </DialogContent>

@@ -210,7 +210,7 @@ const realMinutes = (s: AdminHistorySession) => s.officialMinutes ?? null;
 
 // ─── Encabezado de sección ───────────────────────────────────────────────────
 
-function CountUp({ value }: { value: number }) {
+function CountUp({ value, format }: { value: number; format?: (n: number) => string }) {
   const [shown, setShown] = useState(0);
   useEffect(() => {
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
@@ -227,7 +227,7 @@ function CountUp({ value }: { value: number }) {
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
   }, [value]);
-  return <>{shown}</>;
+  return <>{format ? format(shown) : shown}</>;
 }
 
 function SectionHeading({ icon, title, subtitle, color }: {
@@ -1245,7 +1245,7 @@ export default function PublicHome() {
                 {[
                   { v: members?.length ?? "—", l: "Integrantes", icon: Users, c: "text-blue-700" },
                   { v: past.length, l: "Sesiones realizadas", icon: CalendarDays, c: "text-emerald-700" },
-                  { v: totalMinutes > 0 ? hhmm(totalMinutes * 60) : "—", l: "Horas de pleno", icon: Hourglass, c: "text-orange-700" },
+                  { v: totalMinutes > 0 ? totalMinutes : "—", l: "Horas de pleno", icon: Hourglass, c: "text-orange-700", fmt: (m: number) => hhmm(m * 60) },
                   { v: totalVotes, l: "Votaciones", icon: BarChart2, c: "text-violet-700" },
                 ].map((s, i) => {
                   const Icon = s.icon;
@@ -1254,7 +1254,7 @@ export default function PublicHome() {
                       style={{ animationDelay: `${i * 160}ms` }}>
                       <Icon className={`mb-2 h-4 w-4 ${s.c}`} />
                       <div className={`text-xl font-black tabular-nums ${s.c}`}>
-                        {typeof s.v === "number" ? <CountUp value={s.v} /> : s.v}
+                        {typeof s.v === "number" ? <CountUp value={s.v} format={s.fmt} /> : s.v}
                       </div>
                       <div className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">{s.l}</div>
                     </div>
